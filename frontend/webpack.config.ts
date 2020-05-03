@@ -10,6 +10,7 @@ import {
 } from "webpack";
 import * as DevServer from "webpack-dev-server";
 
+const AntdDayjsWebpackPlugin = require("antd-dayjs-webpack-plugin");
 const ENV: "production" | "development" = process.env.ENV
   ? "production"
   : "development";
@@ -77,6 +78,7 @@ const modules: Module = {
 };
 
 const plugins: Plugin[] = [
+  new AntdDayjsWebpackPlugin(),
   new DefinePlugin({
     "process.env": {
       NODE_ENV: JSON.stringify(ENV),
@@ -104,7 +106,8 @@ const devServerConfig: DevServer.Configuration = {
   publicPath: "/",
   inline: true,
   hot: true,
-  clientLogLevel: "info"
+  clientLogLevel: "info",
+  historyApiFallback: true
 };
 
 const Config: Configuration = {

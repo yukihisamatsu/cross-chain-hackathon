@@ -18,7 +18,6 @@
     "prettier/@typescript-eslint"
   ],
   "env": {
-    "node": true,
     "es6": true,
     "jest": true
   },
@@ -41,7 +40,8 @@
     "prettier/prettier": "error",
     "import/first": "off",
     "import/newline-after-import": "off",
-    "import/no-duplicates": "off"
+    "import/no-duplicates": "off",
+    "import/named": 0
   },
   "overrides": [
     {
@@ -59,10 +59,6 @@
     }
   ],
   "settings": {
-    "import/resolver": {
-      "webpack": {
-        "config": "webpack.config.ts"
-      }
-    }
+    "import/resolver": "webpack"
   }
 }
