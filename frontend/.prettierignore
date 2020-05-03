@@ -1,0 +1,5 @@
+*.d.ts
+/dist/
+coverage/
+node_modules/
+typings/

@@ -1,0 +1,100 @@
+{
+  "name": "contract-viewer",
+  "version": "0.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:datachainlab/contract-viewer.git",
+  "author": "toshihiko-okubo <toshihiko.okubo@speee.jp>",
+  "license": "None",
+  "private": true,
+  "engines": {
+    "node": "^10.20.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint . --ext .js,.ts"
+    ]
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "start": "webpack-dev-server --config webpack.config.ts --watch=true",
+    "build:dev": "webpack --config webpack.config.ts",
+    "build:prod": "webpack --config webpack.config.ts --production --vervose",
+    "lint": "tslint --project .",
+    "lint:fix": "tslint --fix --project .",
+    "test:unit": "NODE_ENV=test jest -u --silent=false",
+    "test:unit:watch": "yarn test:unit --watch --verbose"
+  },
+  "dependencies": {
+    "antd": "^4.2.0",
+    "bech32": "^1.1.4",
+    "bip32": "^2.0.5",
+    "bip39": "^3.0.2",
+    "bn.js": "^5.0.0",
+    "buffer": "^5.4.3",
+    "cross-fetch": "^3.0.4",
+    "lodash": "^4.17.15",
+    "loglevel": "^1.6.8",
+    "luxon": "^1.23.0",
+    "query-string": "^6.12.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-router-dom": "^5.1.2",
+    "secp256k1": "^3.7.1",
+    "styled-components": "^5.1.0",
+    "valid-url": "^1.0.9"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^4.11.6",
+    "@types/enzyme": "^3.10.3",
+    "@types/enzyme-adapter-react-16": "^1.0.6",
+    "@types/jest": "^25.2.1",
+    "@types/lodash": "^4.14.150",
+    "@types/react": "^16.9.34",
+    "@types/react-dom": "^16.9.7",
+    "@types/react-router-dom": "^5.1.5",
+    "@types/secp256k1": "^3.5.0",
+    "@types/styled-components": "^5.1.0",
+    "@types/valid-url": "^1.0.3",
+    "@types/webpack": "^4.41.12",
+    "@types/webpack-dev-server": "^3.10.1",
+    "@types/yargs": "^15.0.4",
+    "@typescript-eslint/eslint-plugin": "^2.30.0",
+    "@typescript-eslint/parser": "^2.30.0",
+    "@typescript-eslint/typescript-estree": "^2.30.0",
+    "css-loader": "^3.5.3",
+    "del": "^5.1.0",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.2",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-import-resolver-webpack": "^0.12.1",
+    "eslint-loader": "^4.0.2",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-prettier": "^3.1.3",
+    "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-simple-import-sort": "^5.0.3",
+    "husky": "^4.2.5",
+    "jest": "^25.5.4",
+    "jest-css-modules": "^2.1.0",
+    "jest-environment-enzyme": "^7.1.2",
+    "jest-enzyme": "^7.1.2",
+    "lint-staged": "^10.2.2",
+    "prettier": "^2.0.5",
+    "pretty-quick": "^2.0.1",
+    "style-loader": "^1.2.1",
+    "ts-jest": "^25.4.0",
+    "ts-loader": "^7.0.2",
+    "ts-node": "^8.10.1",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^3.8.3",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3",
+    "yargs": "^15.3.1"
+  }
+}
