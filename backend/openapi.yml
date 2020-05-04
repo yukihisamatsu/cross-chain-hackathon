@@ -1,0 +1,565 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: cross-chain-hackathon api
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/api/
+paths:
+  /estates:
+    get:
+      summary: get all estates
+      operationId: getEstates
+      tags:
+        - estate
+      responses:
+        "200":
+          description: success to get all estates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Estates"
+  /estate/{estateId}:
+    get:
+      summary: get estate
+      operationId: getEstateById
+      tags:
+        - estate
+      parameters:
+        - name: estateId
+          in: path
+          description: query target estate id
+          required: true
+          schema:
+            $ref: "#/components/schemas/estate_id"
+      responses:
+        "200":
+          description: success to get the target estate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetEstateOutput"
+  /user/{id}:
+    get:
+      summary: get user information
+      operationId: getUser
+      tags:
+        - user
+      parameters:
+        - name: id
+          in: path
+          description: user id
+          required: true
+          schema:
+            $ref: "#/components/schemas/user_id"
+      responses:
+        "200":
+          description: success to get an user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /trades:
+    post:
+      summary: post a new sell offer
+      operationId: postTrade
+      tags:
+        - trade
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Trade"
+      responses:
+        "200":
+          description: success to post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+    delete:
+      summary: cancel a trade
+      operationId: deleteTrade
+      tags:
+        - trade
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/trade_id"
+      responses:
+        "200":
+          description: success to cancel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+  /trade/request:
+    post:
+      summary: post a new trade request
+      operationId: postTradeRequest
+      tags:
+        - trade
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostTradeRequestInput"
+      responses:
+        "200":
+          description: success to post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeRequest"
+    delete:
+      summary: cancel a request
+      operationId: deleteTradeRequest
+      tags:
+        - trade
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/trade_request_id"
+      responses:
+        "200":
+          description: success to cancel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeRequest"
+  /tx/trade/request:
+    get:
+      summary: get a CrossTx to be signed
+      tags:
+        - tx
+        - trade
+      parameters:
+        - name: tradeId
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/trade_id"
+        - name: from
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/AccAddress"
+      responses:
+        "200":
+          description: success to get a CrossTx
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrossTx"
+  /tx/dividend:
+    get:
+      summary: get a CrossTx to be signed
+      tags:
+        - tx
+        - dividend
+      parameters:
+        - name: estateId
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/estate_id"
+        - name: perShare
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/dividend_per_share"
+      responses:
+        "200":
+          description: success to get a CrossTx
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrossTx"
+
+components:
+  schemas:
+    user_id:
+      type: string
+      example: alice
+
+    estate_id:
+      type: string
+      example: 108000000000078c000000000000000000000000000000000000000000000839
+      maxLength: 64
+      minLength: 64
+
+    trade_id:
+      description: generated by the API server
+      type: integer
+      format: int64
+      minimum: 0
+      example: 0
+
+    trade_request_id:
+      description: generated by the API server
+      type: integer
+      format: int64
+      minimum: 0
+      example: 0
+
+    dividend_id:
+      type: integer
+      format: int64
+      minimum: 0
+      example: 0
+
+    dividend_per_share:
+      type: integer
+      format: int64
+      minimum: 0
+      example: 2
+
+    # TODO determine
+    Trade:
+      type: object
+      required:
+        - id
+        - estateId
+        - price
+        - buyer
+        - seller
+        - type
+        - requests
+        - status
+        - updatedAt
+      properties:
+        id:
+          $ref: "#/components/schemas/trade_id"
+        estateId:
+          $ref: "#/components/schemas/estate_id"
+        price:
+          # or double?
+          type: integer
+          format: int64
+          minimum: 0
+          example: 500
+        buyer:
+          $ref: "#/components/schemas/AccAddress"
+        seller:
+          $ref: "#/components/schemas/AccAddress"
+        type:
+          type: string
+          enum:
+            - buy
+            - sell
+        requests:
+          type: array
+          items:
+            $ref: "#/components/schemas/TradeRequest"
+        status:
+          type: string
+          enum:
+            - open
+            - canceled
+            # TODO Should the API server trace its cross tx?
+            - transferring
+            - completed
+            - failed
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2020-05-01 00:00:00Z"
+
+    TradeRequest:
+      type: object
+      required:
+        - id
+        - tradeId
+        - from
+        - crossTx
+        - canceled
+        - updatedAt
+      properties:
+        id:
+          $ref: "#/components/schemas/trade_request_id"
+        # needed? (though it's natural for a DB entity to have this property)
+        tradeId:
+          $ref: "#/components/schemas/trade_id"
+        from:
+          $ref: "#/components/schemas/AccAddress"
+        crossTx:
+          $ref: "#/components/schemas/CrossTx"
+        canceled:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2020-05-01 00:00:00Z"
+
+    PostTradeRequestInput:
+      type: object
+      required:
+        - tradeId
+        - from
+        - crossTx
+      properties:
+        tradeId:
+          $ref: "#/components/schemas/trade_id"
+        from:
+          $ref: "#/components/schemas/AccAddress"
+        crossTx:
+          $ref: "#/components/schemas/CrossTx"
+
+    Estate:
+      type: object
+      required:
+        - tokenId
+        - name
+        - imagePath
+        - description
+        - expectedYieldRatio
+        - dividendDate
+        - issuedBy
+      properties:
+        tokenId:
+          $ref: "#/components/schemas/estate_id"
+        name:
+          type: string
+          example: Ginza Resort
+        imagePath:
+          type: string
+          example: /img/sample.jpg
+        description:
+          type: string
+          example: Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
+            Aenean commodo ligula eget dolor. Aenean massa.
+            Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+            Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.
+        expectedYieldRatio:
+          type: number
+          format: double
+          example: 0.05
+          minimum: 0
+          maximum: 1
+        dividendDate:
+          description: next dividend date
+          type: string
+          format: date
+          example: "2020-11-01"
+        issuedBy:
+          $ref: "#/components/schemas/AccAddress"
+
+    Estates:
+      type: array
+      items:
+        $ref: "#/components/schemas/Estate"
+
+    GetEstateOutput:
+      description: for frontend's convenience
+      type: object
+      required:
+        - estate
+        - trades
+      properties:
+        estate:
+          $ref: "#/components/schemas/Estate"
+        trades:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trade"
+
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - mnemonic
+      properties:
+        id:
+          $ref: "#/components/schemas/user_id"
+        name:
+          type: string
+          example: Alice
+        mnemonic:
+          type: string
+          example: bullet client worth sleep claw carpet gallery rent sketch media north panel disagree taxi ship
+
+    AccAddress:
+      type: string
+      example: cosmos14rvdh4uv8r02nj5dgxxstrahhktqxxj6xnwr0k
+
+    CrossTx:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+          example: cosmos-sdk/StdTx
+        value:
+          $ref: "#/components/schemas/StdTx"
+
+    StdTx:
+      description: same as cosmos sdk
+      type: object
+      required:
+        - msg
+        - fee
+        - memo
+      properties:
+        msg:
+          type: array
+          items:
+            $ref: "#/components/schemas/Msg"
+        fee:
+          $ref: "#/components/schemas/StdFee"
+        # nullable
+        signatures:
+          type: array
+          items:
+            $ref: "#/components/schemas/StdSignature"
+        memo:
+          type: string
+    Msg:
+      description: for MsgInitiate
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+          example: cross/MsgInitiate
+        value:
+          $ref: "#/components/schemas/MsgInitiate"
+
+    StdFee:
+      type: object
+      required:
+        - amount
+        - gas
+      properties:
+        amount:
+          type: array
+          items:
+            $ref: "#/components/schemas/Coin"
+        gas:
+          type: integer
+          format: int64
+          minimum: 0
+
+    StdSignature:
+      type: object
+      required:
+        - signature
+      properties:
+        pub_key:
+          type: string
+        signature:
+          type: string
+    Coin:
+      type: object
+      required:
+        - amount
+      properties:
+        # "omitempty"
+        denom:
+          type: string
+        amount:
+          type: integer
+          # TODO 256bit big.Int
+          format: int64
+    MsgInitiate:
+      description: a message type defined by cross
+      type: object
+      required:
+        - Sender
+        - ChainID
+        - ContractTransactions
+        - TimeoutHeight
+        - Nonce
+      properties:
+        Sender:
+          $ref: "#/components/schemas/AccAddress"
+        ChainID:
+          type: string
+          example: ibc0
+        ContractTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractTransaction"
+        TimeoutHeight:
+          type: integer
+          format: int64
+          example: 149
+        Nonce:
+          type: integer
+          format: int64
+          minimum: 0
+          example: 0
+
+    ContractTransaction:
+      type: object
+      required:
+        - source
+        - signers
+        - contract
+        - ops
+      properties:
+        source:
+          $ref: "#/components/schemas/ChannelInfo"
+        signers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccAddress"
+        contract:
+          type: string
+          # base64 encoded
+          format: byte
+          example: GqH1iNgKBXRyYWluEgdyZXNlcnZlGgQAAAAB
+        ops:
+          type: array
+          items:
+            $ref: "#/components/schemas/Op"
+
+    ChannelInfo:
+      description: defined by cross
+      type: object
+      required:
+        - port
+        - channel
+      properties:
+        port:
+          type: string
+          example: cross
+        channel:
+          type: string
+          example: ibcconexfer
+
+    Op:
+      type: object
+      required:
+        - type
+        - value
+      properties:
+        type:
+          type: string
+          example: store/lock/Write
+        value:
+          $ref: "#/components/schemas/OpValue"
+
+    OpValue:
+      description: Write(K, V) or Read(K)
+      type: object
+      required:
+        - K
+      properties:
+        K:
+          type: string
+          # base64 encoded
+          format: byte
+          example: c2VhdC8x
+        V:
+          type: string
+          # base64 encoded
+          format: byte
+          example: lVQdOCByHHXglq1Y2xCO69tQXso=
