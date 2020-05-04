@@ -33,9 +33,8 @@ run-mock-server:
 	${DOCKER} run --rm -v ${shell pwd}:/local -p 8000:8000 danielgtaylor/apisprout /local/${OPENAPI_SRC} 
 
 run-doc:
-	${DOCKER} run --rm -v ${shell pwd}:/local -p 80:8080 -e SWAGGER_JSON=/local/${OPENAPI_SRC} swaggerapi/swagger-ui
+	${DOCKER} run --rm -v ${shell pwd}:/local -p 8080:8080 -e SWAGGER_JSON=/local/${OPENAPI_SRC} swaggerapi/swagger-ui
 
 # TODO
 #run-server:
 #	${GO} run ${shell pwd}/${SERVER_OUTDIR}/main.go
-

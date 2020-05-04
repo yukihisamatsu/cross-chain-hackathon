@@ -1,13 +1,13 @@
 openapi: "3.0.0"
 info:
   version: 1.0.0
-  title: oas3_go_flutter_exam Employee
+  title: cross-chain-hackathon api
   license:
     name: MIT
 servers:
   - url: http://localhost:8080/api/
 paths:
-  /estate:
+  /estates:
     get:
       summary: get all estates
       operationId: getEstates
@@ -32,8 +32,7 @@ paths:
           description: query target estate id
           required: true
           schema:
-            # TODO use $ref
-            type: string
+            $ref: "#/components/schemas/estate_id"
       responses:
         "200":
           description: success to get the target estate
@@ -61,7 +60,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-  /trade:
+  /trades:
     post:
       summary: post a new sell offer
       operationId: postTrade
@@ -218,26 +217,6 @@ components:
       minimum: 0
       example: 2
 
-    CoinToken:
-      type: object
-      description: not the 1st layer token (coin)
-      required:
-        - id
-        - name
-        - value
-      properties:
-        id:
-          type: string
-          example: dcc
-        name:
-          type: string
-          example: DatachainCoin
-        value:
-          type: integer
-          format: int64
-          example: 100
-          minimum: 0
-
     # TODO determine
     Trade:
       type: object
@@ -287,7 +266,7 @@ components:
         updatedAt:
           type: string
           format: date-time
-          example: 2020-05-01 00:00:00
+          example: "2020-05-01 00:00:00Z"
 
     TradeRequest:
       type: object
@@ -301,7 +280,7 @@ components:
       properties:
         id:
           $ref: "#/components/schemas/trade_request_id"
-        # needed?
+        # needed? (though it's natural for a DB entity to have this property)
         tradeId:
           $ref: "#/components/schemas/trade_id"
         from:
@@ -313,7 +292,7 @@ components:
         updatedAt:
           type: string
           format: date-time
-          example: 2020-05-01 00:00:00
+          example: "2020-05-01 00:00:00Z"
 
     PostTradeRequestInput:
       type: object
@@ -337,8 +316,8 @@ components:
         - imagePath
         - description
         - expectedYieldRatio
+        - dividendDate
         - issuedBy
-        - dividends
       properties:
         tokenId:
           $ref: "#/components/schemas/estate_id"
@@ -360,12 +339,13 @@ components:
           example: 0.05
           minimum: 0
           maximum: 1
+        dividendDate:
+          description: next dividend date
+          type: string
+          format: date
+          example: "2020-11-01"
         issuedBy:
           $ref: "#/components/schemas/AccAddress"
-        dividends:
-          type: array
-          items:
-            $ref: "#/components/schemas/Dividend"
 
     Estates:
       type: array
@@ -386,43 +366,12 @@ components:
           items:
             $ref: "#/components/schemas/Trade"
 
-    Dividend:
-      description: dividend info
-      type: object
-      required:
-        - id
-        - perShare
-        - dividedAt
-      properties:
-        id:
-          $ref: "#/components/schemas/dividend_id"
-        perShare:
-          $ref: "#/components/schemas/dividend_per_share"
-        dividedAt:
-          type: string
-          format: date-time
-          example: 2020-05-01 00:00:00
-
-    # TODO
-    # Is this needed?
-    Tx:
-      type: object
-      required:
-        - id
-      properties:
-        id:
-          type: string
-          example: 693818A100F0F723D483B77ECC9B49441F11F5A5F4D28A20E18214418324E6C5
-
     User:
       type: object
-      # TODO
-      # Is `isWhitelisted` needed?
       required:
         - id
         - name
         - mnemonic
-        - coins # TODO Is this needed?
       properties:
         id:
           $ref: "#/components/schemas/user_id"
@@ -432,10 +381,7 @@ components:
         mnemonic:
           type: string
           example: bullet client worth sleep claw carpet gallery rent sketch media north panel disagree taxi ship
-        coins:
-          type: array
-          items:
-            $ref: "#/components/schemas/Coin"
+
     AccAddress:
       type: string
       example: cosmos14rvdh4uv8r02nj5dgxxstrahhktqxxj6xnwr0k
