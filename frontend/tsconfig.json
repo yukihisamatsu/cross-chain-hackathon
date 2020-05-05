@@ -25,6 +25,8 @@
     "baseUrl": "./",
     "paths": {
       "~src/*": ["src/*"],
+      "~helpers/*": ["src/helpers/*"],
+      "~pages/*": ["src/pages/*"],
       "~test/*": ["tests/*"],
       "*": [
         "node_modules/*",

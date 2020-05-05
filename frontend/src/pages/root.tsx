@@ -1,32 +1,55 @@
 import {Layout} from "antd";
 import React from "react";
-import {BrowserRouter} from "react-router-dom";
+import {HashRouter, Route} from "react-router-dom";
 import styled from "styled-components";
+import {Reset} from "styled-reset";
 
-import {FooterComponent} from "~src/pages/commons/footer";
-import {HeaderComponent} from "~src/pages/commons/header";
-import {SiderComponent} from "~src/pages/commons/sider";
-import {ContentSwitch} from "~src/pages/contents/content.switch";
+import {FooterComponent} from "~pages/commons/footer";
+import {HeaderComponent} from "~pages/commons/header";
+import {SiderComponent} from "~pages/commons/sider";
+import {ContentSwitch} from "~pages/contents/content.switch";
 
 const {Content} = Layout;
 
-export class Root extends React.Component {
+interface State {
+  headerTitle: string;
+}
+
+export class Root extends React.Component<{}, State> {
+  constructor(props: {}) {
+    super(props);
+    this.state = {
+      headerTitle: "Home"
+    };
+  }
+
+  setHeaderTitle = (headerTitle: string) => {
+    this.setState({headerTitle});
+  };
+
   render() {
     return (
-      <BrowserRouter>
-        <MainLayout>
-          <HeaderComponent />
-          <Layout>
-            <SiderComponent />
-            <ContentLayout>
-              <ContentWrap>
-                <ContentSwitch />
-              </ContentWrap>
-            </ContentLayout>
-          </Layout>
-          <FooterComponent />
-        </MainLayout>
-      </BrowserRouter>
+      <HashRouter>
+        <Reset />
+        <Route
+          render={props => {
+            return (
+              <MainLayout>
+                <HeaderComponent headerTitle={this.state.headerTitle} />
+                <Layout>
+                  <SiderComponent history={props.history} />
+                  <ContentLayout>
+                    <ContentWrap>
+                      <ContentSwitch setHeaderTitle={this.setHeaderTitle} />
+                    </ContentWrap>
+                  </ContentLayout>
+                </Layout>
+                <FooterComponent />
+              </MainLayout>
+            );
+          }}
+        />
+      </HashRouter>
     );
   }
 }
@@ -34,6 +57,7 @@ export class Root extends React.Component {
 const MainLayout = styled(Layout)`
   height: 100%;
   min-height: 768px;
+  font-size: 100%;
 `;
 
 const ContentLayout = styled(Layout)`
@@ -41,7 +65,6 @@ const ContentLayout = styled(Layout)`
 `;
 
 const ContentWrap = styled(Content)`
-  background: #fff;
   padding: 24px;
   margin: 0;
   overflow: scroll;

@@ -4,11 +4,15 @@ import styled from "styled-components";
 
 const {Header} = Layout;
 
-export const HeaderComponent = () => {
+interface Props {
+  headerTitle: string;
+}
+
+export const HeaderComponent = (props: Props) => {
   return (
     <Header className="header">
       <HeaderTextWrap>
-        <HeaderText>Test</HeaderText>
+        <HeaderText>{props.headerTitle}</HeaderText>
       </HeaderTextWrap>
     </Header>
   );
@@ -21,5 +25,5 @@ const HeaderTextWrap = styled.div`
 
 const HeaderText = styled.div`
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
 `;

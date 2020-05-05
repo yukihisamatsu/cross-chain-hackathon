@@ -7,7 +7,7 @@ interface Props {
   id: string;
 }
 
-export class MarketDetail extends React.Component<Props> {
+export class OwnedEstateDetail extends React.Component<Props> {
   constructor(props: Props) {
     super(props);
   }
@@ -15,7 +15,7 @@ export class MarketDetail extends React.Component<Props> {
     const {id} = this.props;
     return (
       <div>
-        <EstateDetail type={ESTATE_LIST_TYPE.MARKET} tokenId={id} />
+        <EstateDetail type={ESTATE_LIST_TYPE.OWNED} tokenId={id} />
       </div>
     );
   }

@@ -99,7 +99,7 @@ const stats: Options.Stats = {
 };
 
 const devServerConfig: DevServer.Configuration = {
-  contentBase: `${__dirname}/public`,
+  contentBase: `${__dirname}/public/`,
   host: "localhost",
   port: 4000,
   open: false,
@@ -136,6 +136,8 @@ const Config: Configuration = {
     modules: ["node_modules"],
     alias: {
       "~src": path.resolve(__dirname, "src"),
+      "~helpers": path.resolve(__dirname, "src/helpers"),
+      "~pages": path.resolve(__dirname, "src/pages"),
       "~tests": path.resolve(__dirname, "tests")
     }
   },
