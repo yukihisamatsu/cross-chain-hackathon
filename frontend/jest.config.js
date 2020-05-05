@@ -1,6 +1,7 @@
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
+// eslint-disable-next-line no-undef
 module.exports = {
   // All imported modules in your tests should be mocked automatically
   automock: false,
@@ -79,7 +80,9 @@ module.exports = {
 
   // A map from regular expressions to module names that allow to stub out resources with a single module
   moduleNameMapper: {
-    "\\.(css|scss|sass|less)$": "<rootDir>/node_modules/jest-css-modules"
+    "\\.(css|scss|sass|less)$": "<rootDir>/node_modules/jest-css-modules",
+    "^~src/(.*)$": "<rootDir>/src/$1",
+    "^~tests/(.*)$": "<rootDir>/tests/$1"
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
