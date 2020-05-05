@@ -25,7 +25,7 @@ services:
     ports:
       - "26659-26660:26656-26657"
     command: >
-      sh -c 'cp -a /root/data/securityz/n0/simappcli /root/cli && simappd --home /root/data/securityz/n0/simappd start --pruning=nothing'
+      sh -c 'cp -a /root/data/securityz/n0/simappcli /root/cli && simappd --home /root/data/securityz/n0/simappd start --pruning=nothing --contract-mode=hotel'
     volumes:
       - ./data/cli/securityz:/root/cli
 
@@ -39,7 +39,7 @@ services:
     ports:
       - "26661-26662:26656-26657"
     command: >
-      sh -c 'cp -a /root/data/coinz/n0/simappcli /root/cli && simappd --home /root/data/coinz/n0/simappd start --pruning=nothing'
+      sh -c 'cp -a /root/data/coinz/n0/simappcli /root/cli && simappd --home /root/data/coinz/n0/simappd start --pruning=nothing --contract-mode=train'
     volumes:
       - ./data/cli/coinz:/root/cli
 
