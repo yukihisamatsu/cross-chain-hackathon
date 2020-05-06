@@ -1,0 +1,1 @@
+{"src":{"chain-id":"coordinatorz","client-id":"ibctwoclient","connection-id":"ibctwoconnection","channel-id":"ibctwoxfer","port-id":"cross","order":"ordered"},"dst":{"chain-id":"securityz","client-id":"ibczeroclient","connection-id":"ibczeroconnection","channel-id":"ibczeroxfer","port-id":"cross","order":"ordered"},"strategy":{"type":"naive"}}
