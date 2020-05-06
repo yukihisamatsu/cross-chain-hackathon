@@ -15,22 +15,22 @@ export const SiderComponent = (props: Props) => {
     <Sider width={170}>
       <Menu theme={"dark"} mode="inline" style={{height: "100%"}}>
         <Menu.Item
-          key="Market"
+          key="MarketPlace"
           icon={<DollarOutlined />}
           onClick={() => {
             props.history.push(PATHS.MARKET);
           }}
         >
-          Market
+          MarketPlace
         </Menu.Item>
         <Menu.Item
-          key="OwnedEstates"
+          key="Mypage"
           icon={<UserAddOutlined />}
           onClick={() => {
             props.history.push(PATHS.OWNED);
           }}
         >
-          Owned Estates
+          Mypage
         </Menu.Item>
       </Menu>
     </Sider>

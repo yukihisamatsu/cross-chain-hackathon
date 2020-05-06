@@ -1,9 +1,10 @@
+import UserOutlined from "@ant-design/icons/UserOutlined";
 import {Card, Tag} from "antd";
 import React from "react";
 import styled from "styled-components";
 
+import {Estate, ESTATE_STATUS} from "~models/estate";
 import {OwnedEstateStatusTagColorMap} from "~pages/consts";
-import {Estate} from "~pages/types";
 import {Unbox} from "~src/heplers/util-types";
 
 export type EstateListType = Unbox<typeof ESTATE_LIST_TYPE>;
@@ -31,30 +32,38 @@ export class EstateList extends React.Component<Props> {
         <EstateListWrap>
           {estateList.map(estate => {
             return (
-              <EstateStyled
+              <EstateStyledCard
                 key={estate.tokenId}
                 hoverable
                 onClick={onClick(estate.tokenId)}
-                cover={<img alt={estate.name} src={estate.imagePath} />}
+                cover={
+                  <img
+                    style={{height: "266px"}}
+                    alt={estate.name}
+                    src={estate.imagePath}
+                  />
+                }
               >
                 <EstateTextWrap>
                   <EstateTitle>{estate.name}</EstateTitle>
-                  <div>ID: {estate.tokenId}</div>
-                  <EstateIssuerName>{estate.issuedBy}</EstateIssuerName>
+                  <EstateTokenId>ID: {estate.tokenId}</EstateTokenId>
+                  <EstateIssuerName>
+                    <UserOutlined /> Owned by {estate.issuedBy}
+                  </EstateIssuerName>
                   <EstateUnits>Units: {estate.units ?? "0"}</EstateUnits>
-                  {type == ESTATE_LIST_TYPE.OWNED && estate.status && (
-                    <div>
-                      <Tag
-                        color={
-                          OwnedEstateStatusTagColorMap[estate.status] ?? "green"
-                        }
-                      >
-                        {estate.status}
-                      </Tag>
-                    </div>
-                  )}
+                  {type == ESTATE_LIST_TYPE.OWNED &&
+                    estate.status &&
+                    estate.status !== ESTATE_STATUS.OWNED && (
+                      <div>
+                        <Tag
+                          color={OwnedEstateStatusTagColorMap[estate.status]}
+                        >
+                          {estate.status}
+                        </Tag>
+                      </div>
+                    )}
                 </EstateTextWrap>
-              </EstateStyled>
+              </EstateStyledCard>
             );
           })}
         </EstateListWrap>
@@ -70,9 +79,8 @@ const EstateListWrap = styled.div`
   word-break: break-all;
 `;
 
-const EstateStyled = styled(Card)`
-  flex-basis: 240px;
-  width: 240px;
+const EstateStyledCard = styled(Card)`
+  flex-basis: 400px;
   margin: 10px;
 `;
 
@@ -83,13 +91,24 @@ const EstateTextWrap = styled.div`
 
 const EstateTitle = styled.div`
   font-weight: 900;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  padding: 0 0 5px;
+  color: black;
+`;
+
+const EstateTokenId = styled.div`
+  font-size: 0.8rem;
+  font-weight: 200;
   padding: 0 0 15px;
+  color: darkgray;
 `;
 
 const EstateIssuerName = styled.div`
-  font-size: 1.1rem;
-  padding: 0 0 5px;
+  font-size: 0.8rem;
+  font-weight: 200;
+  color: darkgray;
+
+  padding-bottom: 20px;
 `;
 
 const EstateUnits = styled.div`

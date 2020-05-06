@@ -1,14 +1,15 @@
-import {
-  DIVIDEND_STATUS,
-  OWNED_ESTATE_STATUS,
-  SELL_ESTATE_ORDER_STATUS
-} from "~pages/types";
+import {DIVIDEND_STATUS} from "~models/dividend";
+import {ESTATE_STATUS} from "~models/estate";
+import {ORDER_STATUS} from "~models/order";
 
-export const DENOM = "DCC";
-
-export const OwnedEstateStatusTagColorMap: {[key: string]: string} = {
-  [OWNED_ESTATE_STATUS.SELLING]: "red",
-  [OWNED_ESTATE_STATUS.BUYING]: "blue"
+export const OwnedEstateStatusTagColorMap: {
+  [ESTATE_STATUS.OWNED]: string;
+  [ESTATE_STATUS.SELLING]: string;
+  [ESTATE_STATUS.BUYING]: string;
+} = {
+  [ESTATE_STATUS.OWNED]: "green",
+  [ESTATE_STATUS.SELLING]: "red",
+  [ESTATE_STATUS.BUYING]: "blue"
 };
 
 export const DividendStatusTagColorMap: {[key: string]: string} = {
@@ -16,8 +17,9 @@ export const DividendStatusTagColorMap: {[key: string]: string} = {
   [DIVIDEND_STATUS.RECEIVED]: "blue"
 };
 
-export const SellEstateOrderStatusTagColorMap: {[key: string]: string} = {
-  [SELL_ESTATE_ORDER_STATUS.OFFERING]: "orange",
-  [SELL_ESTATE_ORDER_STATUS.ONGOING]: "cyan",
-  [SELL_ESTATE_ORDER_STATUS.RESPONDING]: "blue"
+export const OrderStatusTagColorMap: {[key: string]: string} = {
+  [ORDER_STATUS.REQUESTING]: "orange",
+  [ORDER_STATUS.ONGOING]: "blue",
+  [ORDER_STATUS.SUCCEEDED]: "green",
+  [ORDER_STATUS.FAILED]: "red"
 };

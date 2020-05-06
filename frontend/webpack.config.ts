@@ -108,6 +108,9 @@ const devServerConfig: DevServer.Configuration = {
   hot: true,
   clientLogLevel: "info",
   historyApiFallback: true
+  // {
+  //   rewrites: [{from: /^\/*/, to: "/index.html"}]
+  // }
 };
 
 const Config: Configuration = {
@@ -137,6 +140,7 @@ const Config: Configuration = {
     alias: {
       "~src": path.resolve(__dirname, "src"),
       "~helpers": path.resolve(__dirname, "src/helpers"),
+      "~models": path.resolve(__dirname, "src/models"),
       "~pages": path.resolve(__dirname, "src/pages"),
       "~tests": path.resolve(__dirname, "tests")
     }

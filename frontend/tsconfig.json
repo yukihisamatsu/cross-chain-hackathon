@@ -26,6 +26,7 @@
     "paths": {
       "~src/*": ["src/*"],
       "~helpers/*": ["src/helpers/*"],
+      "~models/*": ["src/models/*"],
       "~pages/*": ["src/pages/*"],
       "~test/*": ["tests/*"],
       "*": [
