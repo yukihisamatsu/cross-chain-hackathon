@@ -1,9 +1,10 @@
-package contract
+package coinchain
 
 import (
 	"fmt"
 
-	"github.com/datachainlab/cross-chain-hackathon/contract/simapp/contract/safemath"
+	"github.com/datachainlab/cross-chain-hackathon/contract/simapp/common"
+	"github.com/datachainlab/cross-chain-hackathon/contract/simapp/safemath"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/datachainlab/cross/x/ibc/contract"
@@ -11,7 +12,6 @@ import (
 	"github.com/datachainlab/cross/x/ibc/store/lock"
 )
 
-// TODO
 const (
 	DatachainCoinContractID = "dcc"
 	FnNameBalanceOf         = "balanceOf"
@@ -33,16 +33,16 @@ func DatachainCoinContractHandler(k contract.Keeper) cross.ContractHandler {
 func GetDatachainCoinContract() contract.Contract {
 	return contract.NewContract([]contract.Method{
 		{
-			FnNameBalanceOf, balanceOf,
+			Name: FnNameBalanceOf, F: balanceOf,
 		},
 		{
-			FnNameMint, mint,
+			Name: FnNameMint, F: mint,
 		},
 		{
-			FnNameTotalSupply, totalSupply,
+			Name: FnNameTotalSupply, F: totalSupply,
 		},
 		{
-			FnNameTransfer, transfer,
+			Name: FnNameTransfer, F: transfer,
 		},
 	})
 }
@@ -50,33 +50,38 @@ func GetDatachainCoinContract() contract.Contract {
 // function balanceOf(address _owner) public view returns (uint256 balance)
 func balanceOf(ctx contract.Context, store cross.Store) ([]byte, error) {
 	args := ctx.Args()
-	if len(args) != 1 {
-		return nil, fmt.Errorf("invalid argument length")
+	if err := common.VerifyArgsLength(args, 1); err != nil {
+		return nil, err
 	}
-	return contract.ToBytes(getAmount(args[0], store)), nil
+	addr := args[0]
+	if err := common.VerifyAddress(addr); err != nil {
+		return nil, err
+	}
+	return contract.ToBytes(getAmount(addr, store)), nil
 }
 
+// HACK set owner
 // function mint(address account, uint256 amount) public returns (bool success) {
 func mint(ctx contract.Context, store cross.Store) ([]byte, error) {
 	args := ctx.Args()
-	if len(args) != 2 {
-		return nil, fmt.Errorf("invalid argument length")
+	if err := common.VerifyArgsLength(args, 2); err != nil {
+		return nil, err
 	}
 	to := args[0]
-	if err := verifyAddress(to); err != nil {
-		return nil, fmt.Errorf("invalid 'to' address: %v", to)
+	if err := common.VerifyAddress(to); err != nil {
+		return nil, err
 	}
 	value := contract.UInt64(args[1])
 	if toAmount, ok := safemath.Add64(getAmount(to, store), value); ok {
 		setAmount(to, toAmount, store)
 	} else {
-		return nil, fmt.Errorf("addition overflow: %d + %d", getAmount(to, store), value)
+		return nil, ErrorAdditionOverflow
 	}
 
 	if totalSupply, ok := safemath.Add64(getTotalSupply(store), value); ok {
 		setTotalSupply(totalSupply, store)
 	} else {
-		return nil, fmt.Errorf("addition overflow for totalSupply: %d + %d", getTotalSupply(store), value)
+		return nil, ErrorAdditionOverflow
 	}
 
 	emitTransfer(ctx, []byte{}, to, value)
@@ -90,13 +95,13 @@ func totalSupply(ctx contract.Context, store cross.Store) ([]byte, error) {
 // almost same as ERC20: transfer(address _to, uint256 _value) public returns (bool success)
 func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 	args := ctx.Args()
-	if len(args) != 2 {
-		return nil, fmt.Errorf("invalid argument length")
+	if err := common.VerifyArgsLength(args, 2); err != nil {
+		return nil, err
 	}
 	from := ctx.Signers()[0]
 	to := args[0]
-	if err := verifyAddress(to); err != nil {
-		return nil, fmt.Errorf("invalid 'to' address: %v", to)
+	if err := common.VerifyAddress(to); err != nil {
+		return nil, err
 	}
 	value := contract.UInt64(args[1])
 
@@ -108,7 +113,7 @@ func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if toAmount, ok := safemath.Add64(getAmount(to, store), value); ok {
 		setAmount(to, toAmount, store)
 	} else {
-		return nil, fmt.Errorf("addition overflow: %d + %d", getAmount(to, store), value)
+		return nil, ErrorAdditionOverflow
 	}
 	emitTransfer(ctx, from, to, value)
 	return contract.ToBytes(true), nil
@@ -121,10 +126,6 @@ func emitTransfer(ctx contract.Context, from, to []byte, value uint64) {
 			sdk.NewAttribute("to", fmt.Sprint(to)),
 			sdk.NewAttribute("value", fmt.Sprint(value)),
 		))
-}
-
-func verifyAddress(addr []byte) error {
-	return sdk.VerifyAddressFormat(addr)
 }
 
 func getAmount(addr []byte, store cross.Store) uint64 {

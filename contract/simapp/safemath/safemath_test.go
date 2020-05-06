@@ -3,10 +3,6 @@ package safemath
 import (
 	"math"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestAdd64(t *testing.T) {
@@ -116,12 +112,6 @@ func TestDiv64(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestHoge(t *testing.T) {
-	addr, err := sdk.AccAddressFromHex("")
-	assert.Equal(t, "", err)
-	assert.Equal(t, "", addr.String())
 }
 
 func TestMod64(t *testing.T) {

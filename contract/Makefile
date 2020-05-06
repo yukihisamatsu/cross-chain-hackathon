@@ -7,5 +7,8 @@ build:
 test:
 	go test -v -count=1 ./...
 
+lint:
+	golangci-lint run ./...
+
 e2e-test:
 	$(MAKE) -C ./tests e2e-test

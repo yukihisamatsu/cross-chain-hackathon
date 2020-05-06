@@ -15,8 +15,10 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
+	"github.com/datachainlab/cross-chain-hackathon/contract/simapp/coinchain"
+	"github.com/datachainlab/cross-chain-hackathon/contract/simapp/securitychain"
+
 	codecstd "github.com/cosmos/cosmos-sdk/codec/std"
-	appcontract "github.com/datachainlab/cross-chain-hackathon/contract/simapp/contract"
 	"github.com/datachainlab/cross/example/simapp"
 	app "github.com/datachainlab/cross/example/simapp"
 	"github.com/spf13/cobra"
@@ -127,8 +129,10 @@ func getContractHandler(mode string) app.ContractHandlerProvider {
 	switch mode {
 	case "":
 		return app.DefaultContractHandlerProvider
-	case appcontract.DatachainCoinContractID:
-		return appcontract.DatachainCoinContractHandler
+	case coinchain.DatachainCoinContractID:
+		return coinchain.DatachainCoinContractHandler
+	case securitychain.EstateTokenContractID:
+		return securitychain.EstateTokenContractHandler
 	default:
 		panic(fmt.Sprintf("unknown contract mode: %v", mode))
 	}
