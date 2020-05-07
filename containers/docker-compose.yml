@@ -10,8 +10,12 @@ services:
         - REPO_URL=https://github.com/datachainlab/cross
     ports:
       - "26656-26657:26656-26657"
+      - "1317:1317"
     command: >
-      sh -c 'cp -a /root/data/coordinatorz/n0/simappcli /root/cli && simappd --home /root/data/coordinatorz/n0/simappd start --pruning=nothing'
+      sh -c 'cp -a /root/data/coordinatorz/n0/simappcli /root/cli && goreman -f /root/Procfile --set-ports=false -exit-on-error=true start'
+    environment:
+      - CHAIN_ID=coordinatorz
+      - CONTRACT_MODE=
     volumes:
       - ./data/cli/coordinatorz:/root/cli
 
@@ -24,8 +28,12 @@ services:
         - REPO_URL=https://github.com/datachainlab/cross
     ports:
       - "26659-26660:26656-26657"
+      - "1318:1317"
     command: >
-      sh -c 'cp -a /root/data/securityz/n0/simappcli /root/cli && simappd --home /root/data/securityz/n0/simappd start --pruning=nothing --contract-mode=hotel'
+      sh -c 'cp -a /root/data/securityz/n0/simappcli /root/cli && goreman -f /root/Procfile --set-ports=false -exit-on-error=true start'
+    environment:
+      - CHAIN_ID=securityz
+      - CONTRACT_MODE=hotel
     volumes:
       - ./data/cli/securityz:/root/cli
 
@@ -38,8 +46,12 @@ services:
         - REPO_URL=https://github.com/datachainlab/cross
     ports:
       - "26661-26662:26656-26657"
+      - "1319:1317"
     command: >
-      sh -c 'cp -a /root/data/coinz/n0/simappcli /root/cli && simappd --home /root/data/coinz/n0/simappd start --pruning=nothing --contract-mode=train'
+      sh -c 'cp -a /root/data/coinz/n0/simappcli /root/cli && goreman -f /root/Procfile --set-ports=false -exit-on-error=true start'
+    environment:
+      - CHAIN_ID=coinz
+      - CONTRACT_MODE=train
     volumes:
       - ./data/cli/coinz:/root/cli
 
