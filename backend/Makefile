@@ -37,3 +37,15 @@ run-doc:
 # TODO
 run-server:
 	${MAKE} -C apiserver run
+
+setup-db: migrate-reset migrate-up
+	${PWD}/scripts/initdata.sh
+
+migrate-reset:
+	goose -dir ${PWD}/db/migrations sqlite3 ./demo.db reset 
+
+migrate-up:
+	goose -dir ${PWD}/db/migrations sqlite3 ./demo.db up
+
+migrate-down:
+	goose -dir ${PWD}/db/migrations sqlite3 ./demo.db down 
