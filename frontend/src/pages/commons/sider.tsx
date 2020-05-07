@@ -1,4 +1,5 @@
 import DollarOutlined from "@ant-design/icons/DollarOutlined";
+import ToolOutlined from "@ant-design/icons/ToolOutlined";
 import UserAddOutlined from "@ant-design/icons/UserAddOutlined";
 import {Layout, Menu} from "antd";
 import React from "react";
@@ -15,22 +16,31 @@ export const SiderComponent = (props: Props) => {
     <Sider width={170}>
       <Menu theme={"dark"} mode="inline" style={{height: "100%"}}>
         <Menu.Item
-          key="Market"
+          key="MarketPlace"
           icon={<DollarOutlined />}
           onClick={() => {
             props.history.push(PATHS.MARKET);
           }}
         >
-          Market
+          MarketPlace
         </Menu.Item>
         <Menu.Item
-          key="OwnedEstates"
+          key="Mypage"
           icon={<UserAddOutlined />}
           onClick={() => {
             props.history.push(PATHS.OWNED);
           }}
         >
-          Owned Estates
+          Mypage
+        </Menu.Item>
+        <Menu.Item
+          key="Issuer"
+          icon={<ToolOutlined />}
+          onClick={() => {
+            props.history.push(PATHS.ISSUE);
+          }}
+        >
+          Issuer
         </Menu.Item>
       </Menu>
     </Sider>

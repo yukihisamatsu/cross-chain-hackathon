@@ -8,7 +8,7 @@ import {
   EstateListType
 } from "~pages/commons/estate/estate-list";
 import {OwnedEstateStatusTagColorMap} from "~pages/consts";
-import {Estate} from "~pages/types";
+import {Estate} from "~src/models/estate";
 
 export const renderEstateDetailInfo = (
   type: EstateListType,

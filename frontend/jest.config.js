@@ -83,6 +83,7 @@ module.exports = {
     "\\.(css|scss|sass|less)$": "<rootDir>/node_modules/jest-css-modules",
     "^~src/(.*)$": "<rootDir>/src/$1",
     "^~helpers/(.*)$": "<rootDir>/src/helpers/$1",
+    "^~models/(.*)$": "<rootDir>/src/models/$1",
     "^~pages/(.*)$": "<rootDir>/src/pages/$1",
     "^~tests/(.*)$": "<rootDir>/tests/$1"
   },
