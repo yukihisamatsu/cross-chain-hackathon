@@ -20,7 +20,7 @@ export const renderEstateDetailInfo = (
         <img
           width={"auto"}
           style={{
-            maxHeight: "300px",
+            width: "100%",
             display: "block"
           }}
           src={estate.imagePath}
