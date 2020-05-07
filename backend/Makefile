@@ -4,10 +4,10 @@ GO?=go
 PWD=${shell pwd}
 OPENAPI_SRC=./openapi.yml
 SERVER_CONFIG=./server-config.json
-SERVER_OUTDIR=./out/apiserver
+SERVER_OUTDIR=./apiserver
 
 GIT_USER_ID=datachainlab
-SERVER_REPO_ID=cross-chain-hackathon/api-server
+SERVER_REPO_ID=cross-chain-hackathon/backend/api-server
 SERVER_PACKAGE_NAME=api
 SERVER_GENERATED_SRC=api
 
