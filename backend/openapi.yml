@@ -19,10 +19,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Estates"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Estate"
   /estate/{estateId}:
     get:
-      summary: get estate
+      summary: get an estate and its trade data
       operationId: getEstateById
       tags:
         - estate
@@ -60,6 +62,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+
+  # if needed, add 'get'
+  /trade/{id}:
+    delete:
+      summary: cancel a trade
+      operationId: deleteTrade
+      tags:
+        - trade
+      parameters:
+        - name: id
+          in: path
+          description: trade id
+          required: true
+          schema:
+            $ref: "#/components/schemas/trade_id"
+      responses:
+        "200":
+          description: success to cancel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
   /trades:
     post:
       summary: post a new sell offer
@@ -78,24 +102,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Trade"
-    delete:
-      summary: cancel a trade
-      operationId: deleteTrade
-      tags:
-        - trade
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/trade_id"
-      responses:
-        "200":
-          description: success to cancel
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Trade"
-  /trade/request:
+
+  /trade/requests:
     post:
       summary: post a new trade request
       operationId: postTradeRequest
@@ -113,16 +121,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TradeRequest"
+
+  /trade/request/{id}:
     delete:
-      summary: cancel a request
+      summary: cancel a trade request
       operationId: deleteTradeRequest
       tags:
         - trade
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/trade_request_id"
+      parameters:
+        - name: id
+          in: path
+          description: trade request id
+          required: true
+          schema:
+            $ref: "#/components/schemas/trade_request_id"
       responses:
         "200":
           description: success to cancel
@@ -130,6 +142,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TradeRequest"
+
   /tx/trade/request:
     get:
       summary: get a CrossTx to be signed
@@ -154,6 +167,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CrossTx"
+
   /tx/dividend:
     get:
       summary: get a CrossTx to be signed
@@ -215,7 +229,7 @@ components:
       type: integer
       format: int64
       minimum: 0
-      example: 2
+      example: 200
 
     # TODO determine
     Trade:
@@ -260,9 +274,9 @@ components:
             - open
             - canceled
             # TODO Should the API server trace its cross tx?
-            - transferring
-            - completed
-            - failed
+            # - transferring
+            # - completed
+            # - failed
         updatedAt:
           type: string
           format: date-time
@@ -315,7 +329,7 @@ components:
         - name
         - imagePath
         - description
-        - expectedYieldRatio
+        - expectedYield
         - dividendDate
         - issuedBy
       properties:
@@ -333,12 +347,12 @@ components:
             Aenean commodo ligula eget dolor. Aenean massa.
             Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
             Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.
-        expectedYieldRatio:
-          type: number
-          format: double
-          example: 0.05
+        expectedYield:
+          description: expected yield amount per share
+          type: integer
+          format: int64
+          example: 500
           minimum: 0
-          maximum: 1
         dividendDate:
           description: next dividend date
           type: string
@@ -346,11 +360,6 @@ components:
           example: "2020-11-01"
         issuedBy:
           $ref: "#/components/schemas/AccAddress"
-
-    Estates:
-      type: array
-      items:
-        $ref: "#/components/schemas/Estate"
 
     GetEstateOutput:
       description: for frontend's convenience
