@@ -9,9 +9,9 @@ import {Unbox} from "~src/heplers/util-types";
 
 export type EstateListType = Unbox<typeof ESTATE_LIST_TYPE>;
 export const ESTATE_LIST_TYPE = {
-  OWNED: "owned",
+  OWNED: "mypage",
   MARKET: "market",
-  ISSUER: "issuer"
+  ISSUE: "issue"
 } as const;
 
 interface Props {

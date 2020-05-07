@@ -1,4 +1,5 @@
 import React from "react";
+import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
 
 import {MarketEstate} from "~models/estate";
@@ -7,12 +8,12 @@ import {ESTATE_LIST_TYPE} from "~pages/commons/estate/estate-list";
 import {MarketSellOrderModal} from "~pages/contents/market/parts/market-sell-order-modal-tsx";
 import {renderMarketSellOrderTable} from "~pages/contents/market/parts/market-sell-order-table";
 import {dummyMarketEstateList} from "~pages/dummy-var";
+import {PATHS} from "~pages/routes";
 
-interface Props {
-  id: string;
-}
+type Props = RouteComponentProps<{id: string}>;
 
 interface State {
+  estate: MarketEstate;
   sellOrderModalVisible: boolean;
   sellOrderModalConfirmLoading: boolean;
   selectedOwner: string;
@@ -22,10 +23,29 @@ export class MarketDetail extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
+      estate: MarketEstate.default(),
       selectedOwner: "",
       sellOrderModalVisible: false,
       sellOrderModalConfirmLoading: false
     };
+  }
+
+  componentDidMount() {
+    // TODO get Estate Request & setState({estate)
+    const {
+      match: {
+        params: {id}
+      },
+      history
+    } = this.props;
+    const estate = dummyMarketEstateList.find(e => e.tokenId === id);
+    if (!estate) {
+      history.push(PATHS.MARKET);
+      return;
+    }
+    this.setState({
+      estate
+    });
   }
 
   handleSellOrderButtonClick = (selectedOwner: string) => () => {
@@ -42,6 +62,13 @@ export class MarketDetail extends React.Component<Props, State> {
       sellOrderModalConfirmLoading
     } = this.state;
 
+    const resetState = () =>
+      this.setState({
+        selectedOwner: "",
+        sellOrderModalVisible: false,
+        sellOrderModalConfirmLoading: false
+      });
+
     return (
       <MarketSellOrderModal
         estate={estate}
@@ -52,29 +79,20 @@ export class MarketDetail extends React.Component<Props, State> {
           this.setState({sellOrderModalConfirmLoading: true}, () => {
             // TODO sign & broadcastTx
             setTimeout(() => {
-              this.setState({
-                selectedOwner: "",
-                sellOrderModalVisible: false,
-                sellOrderModalConfirmLoading: false
-              });
+              resetState();
             }, 2000);
           });
         }}
         onCancel={() => {
-          this.setState({
-            selectedOwner: "",
-            sellOrderModalVisible: false,
-            sellOrderModalConfirmLoading: false
-          });
+          resetState();
         }}
       />
     );
   };
 
   render() {
-    const {id} = this.props;
-    const estate = dummyMarketEstateList.find(e => e.tokenId === id);
-    return estate ? (
+    const {estate} = this.state;
+    return (
       <EstateDetailWrap>
         {renderEstateDetailInfo(ESTATE_LIST_TYPE.MARKET, estate)}
         {renderMarketSellOrderTable(
@@ -83,11 +101,6 @@ export class MarketDetail extends React.Component<Props, State> {
         )}
         {this.renderSellOrderModal(estate)}
       </EstateDetailWrap>
-    ) : (
-      <div>
-        <div>Id: {id}</div>
-        <div>estate not found</div>
-      </div>
     );
   }
 }

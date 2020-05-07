@@ -21,6 +21,7 @@ export const renderMarketSellOrderTable = (
         rowKey={(o: SellOrder) => o.owner}
         dataSource={orders}
         pagination={false}
+        bordered
         scroll={{y: 245}}
         size={"small"}
       >
@@ -36,6 +37,7 @@ export const renderMarketSellOrderTable = (
           title=""
           dataIndex="owner"
           key="owner"
+          align="center"
           render={(owner: string, _: SellOrder) => (
             <Button type={"default"} onClick={onClick(owner)}>
               BUY NOW

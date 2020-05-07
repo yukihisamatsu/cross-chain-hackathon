@@ -1,5 +1,6 @@
 export const PATHS = {
   SIGN_UP: "/sign_up",
   MARKET: "/market",
-  OWNED: "/owned"
+  OWNED: "/owned",
+  ISSUE: "/issue"
 } as const;

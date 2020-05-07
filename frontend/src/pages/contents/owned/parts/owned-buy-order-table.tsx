@@ -16,6 +16,7 @@ export const renderOwnedBuyOrderTable = (
         rowKey={(o: BuyOrder) => o.offerer}
         dataSource={[order]}
         pagination={false}
+        bordered
         scroll={{y: 245}}
         size={"small"}
       >
@@ -41,6 +42,7 @@ export const renderOwnedBuyOrderTable = (
           title=""
           dataIndex="offerer"
           key="offerer"
+          align="center"
           render={(_: string, order: BuyOrder) =>
             order.status === ORDER_STATUS.REQUESTING && (
               <Button type={"default"} danger onClick={onCancel(order)}>

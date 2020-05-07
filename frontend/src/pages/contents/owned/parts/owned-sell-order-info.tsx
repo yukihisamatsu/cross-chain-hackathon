@@ -14,6 +14,7 @@ export const renderOwnedSellOrderInfo = (
       rowKey={(o: OwnedEstate) => o.owner}
       dataSource={[estate]}
       pagination={false}
+      bordered
       scroll={{y: 245}}
       size={"small"}
     >

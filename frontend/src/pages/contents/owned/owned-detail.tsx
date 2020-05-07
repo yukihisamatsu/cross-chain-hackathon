@@ -15,9 +15,7 @@ import {renderEstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
 import {dummyOwnedEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
 
-interface Props extends Pick<RouteComponentProps, "history"> {
-  id: string;
-}
+type Props = RouteComponentProps<{id: string}>;
 
 interface State {
   estate: OwnedEstate;
@@ -56,7 +54,12 @@ export class OwnedDetail extends React.Component<Props, State> {
 
   componentDidMount() {
     // TODO get Estate Request & setState({estate)
-    const {id, history} = this.props;
+    const {
+      match: {
+        params: {id}
+      },
+      history
+    } = this.props;
     const estate = dummyOwnedEstateList.find(e => e.tokenId === id);
     if (!estate) {
       history.push(PATHS.OWNED);
@@ -243,8 +246,8 @@ export class OwnedDetail extends React.Component<Props, State> {
     return (
       <EstateDetailWrap>
         {renderEstateDetailInfo(ESTATE_LIST_TYPE.OWNED, estate)}
-        {estate.dividend.length > 0 &&
-          renderOwnedDividendTable(estate.dividend)}
+        {estate.userDividend.length > 0 &&
+          renderOwnedDividendTable(estate.userDividend)}
         {renderEstateOrderTab(
           estate,
           this.handleSellOrderButtonClick,

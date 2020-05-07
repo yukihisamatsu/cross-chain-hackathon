@@ -20,6 +20,7 @@ export const renderOwnedBuyOfferTable = (
         rowKey={(o: BuyOrder) => o.offerer}
         dataSource={orders}
         pagination={false}
+        bordered
         scroll={{y: 245}}
         size={"small"}
       >
@@ -45,6 +46,7 @@ export const renderOwnedBuyOfferTable = (
           title=""
           dataIndex="offerer"
           key="offerer"
+          align="center"
           render={(_: string, order: BuyOrder) =>
             order.status === ORDER_STATUS.REQUESTING && (
               <Button type={"default"} onClick={onClick(order)}>

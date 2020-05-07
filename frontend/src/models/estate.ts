@@ -1,5 +1,9 @@
+import {
+  IssuerDividend,
+  IssuerDividendHistory,
+  UserDividend
+} from "~models/dividend";
 import {Unbox} from "~src/heplers/util-types";
-import {Dividend} from "~src/models/dividend";
 import {BuyOrder, SellOrder} from "~src/models/order";
 
 export const ESTATE_STATUS = {
@@ -22,7 +26,7 @@ export class Estate {
   units?: number;
   perUnit?: number;
   status?: EstateStatusType;
-  dividend?: Dividend[];
+  userDividend?: UserDividend[];
   sellOrder?: SellOrder;
 
   constructor({
@@ -57,7 +61,7 @@ export class OwnedEstate extends Estate {
   units: number;
   perUnit: number;
   status: EstateStatusType;
-  dividend: Dividend[];
+  userDividend: UserDividend[];
   buyOffers: BuyOrder[];
 
   constructor({
@@ -86,7 +90,7 @@ export class OwnedEstate extends Estate {
     units: number;
     perUnit: number;
     status: EstateStatusType;
-    dividend: Dividend[];
+    dividend: UserDividend[];
     buyOffers: BuyOrder[];
   }) {
     super({
@@ -103,7 +107,7 @@ export class OwnedEstate extends Estate {
     this.units = units;
     this.perUnit = perUnit;
     this.status = status;
-    this.dividend = dividend;
+    this.userDividend = dividend;
     this.buyOffers = buyOffers;
   }
 
@@ -160,4 +164,71 @@ export class MarketEstate extends Estate {
 
     this.sellOrders = sellOrders;
   }
+
+  static default = (): MarketEstate => {
+    return new MarketEstate({
+      tokenId: "",
+      name: "",
+      imagePath: "",
+      description: "",
+      expectedYieldRatio: "",
+      dividendDate: "",
+      issuedBy: "",
+      sellOrders: []
+    });
+  };
+}
+
+export class IssuerEstate extends Estate {
+  issuerDividend: IssuerDividend[];
+  histories: IssuerDividendHistory[];
+
+  constructor({
+    tokenId,
+    name,
+    imagePath,
+    description,
+    expectedYieldRatio,
+    dividendDate,
+    issuedBy,
+    issuerDividend,
+    histories
+  }: {
+    tokenId: string;
+    name: string;
+    imagePath: string;
+    description: string;
+    expectedYieldRatio: string;
+    dividendDate: string;
+    issuedBy: string;
+    issuerDividend: IssuerDividend[];
+    histories: IssuerDividendHistory[];
+  }) {
+    super({
+      tokenId,
+      name,
+      imagePath,
+      description,
+      expectedYieldRatio,
+      dividendDate,
+      issuedBy
+    });
+
+    this.issuerDividend = issuerDividend;
+    this.histories = histories;
+  }
+
+  static default = (): IssuerEstate => {
+    return new IssuerEstate({
+      tokenId: "",
+      name: "",
+      imagePath: "",
+      description: "",
+      expectedYieldRatio: "",
+      dividendDate: "",
+      issuedBy: "",
+      issuerDividend: [],
+      histories: []
+    });
+  };
 }

@@ -1,7 +1,13 @@
-import {DIVIDEND_STATUS} from "~src/models/dividend";
+import {
+  ISSUER_DIVIDEND_HISTORY_STATUS,
+  IssuerDividend,
+  IssuerDividendHistory,
+  USER_DIVIDEND_STATUS
+} from "~models/dividend";
 import {
   Estate,
   ESTATE_STATUS,
+  IssuerEstate,
   MarketEstate,
   OwnedEstate
 } from "~src/models/estate";
@@ -80,20 +86,20 @@ export const dummyOwnedEstateList: OwnedEstate[] = dummyEstateList.map(e => {
     status: status,
     units: id * 2,
     perUnit: id + 1,
-    dividend: [
+    userDividend: [
       {
         dividendDate: "2021/05/05 00:00:00",
-        status: DIVIDEND_STATUS.NOT_RECEIVED,
+        status: USER_DIVIDEND_STATUS.NOT_RECEIVED,
         totalAmount: id
       },
       {
         dividendDate: "2020/05/05 00:00:00",
-        status: DIVIDEND_STATUS.RECEIVED,
+        status: USER_DIVIDEND_STATUS.RECEIVED,
         totalAmount: id
       },
       {
         dividendDate: "2019/05/05 00:00:00",
-        status: DIVIDEND_STATUS.RECEIVED,
+        status: USER_DIVIDEND_STATUS.RECEIVED,
         totalAmount: id
       }
     ],
@@ -146,6 +152,49 @@ export const dummyMarketEstateList: MarketEstate[] = dummyEstateList.map(e => {
         total: 100000,
         status: ORDER_STATUS.FAILED,
         buyOffers: status === ESTATE_STATUS.SELLING ? buyOffers : []
+      })
+    ]
+  };
+});
+
+export const dummyIssuerEstateList: IssuerEstate[] = dummyEstateList.map(e => {
+  return {
+    ...e,
+    issuerDividend: [
+      new IssuerDividend({
+        userName: "userName1",
+        userAddress: "userAddress1",
+        purchaseDate: "2020/05/05 00:00:00"
+      }),
+      new IssuerDividend({
+        userName: "userName2",
+        userAddress: "userAddress2",
+        purchaseDate: "2020/05/05 00:00:00"
+      }),
+      new IssuerDividend({
+        userName: "userName3",
+        userAddress: "userAddress3",
+        purchaseDate: "2020/05/05 00:00:00"
+      })
+    ],
+    histories: [
+      new IssuerDividendHistory({
+        id: "history1",
+        dividendDate: "2021/05/05 00:00:00",
+        total: 100000,
+        status: ISSUER_DIVIDEND_HISTORY_STATUS.NOT_DISTRIBUTED
+      }),
+      new IssuerDividendHistory({
+        id: "history2",
+        dividendDate: "2019/05/05 00:00:00",
+        total: 100000,
+        status: ISSUER_DIVIDEND_HISTORY_STATUS.ONGOING
+      }),
+      new IssuerDividendHistory({
+        id: "history3",
+        dividendDate: "2018/05/05 00:00:00",
+        total: 100000,
+        status: ISSUER_DIVIDEND_HISTORY_STATUS.DISTRIBUTED
       })
     ]
   };

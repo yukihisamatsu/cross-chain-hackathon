@@ -1,6 +1,8 @@
 import React from "react";
 import {Route, RouteComponentProps, Switch} from "react-router-dom";
 
+import {IssueDetail} from "~pages/contents/issue/issue-detail";
+import {IssueList} from "~pages/contents/issue/issue-list";
 import {MarketDetail} from "~pages/contents/market/market-detail";
 import {OwnedDetail} from "~pages/contents/owned/owned-detail";
 import {OwnedList} from "~pages/contents/owned/owned-list";
@@ -38,6 +40,16 @@ export const ContentSwitch = (props: Props) => {
         render={props => renderOwnedDetail(props)}
         exact={true}
       />
+      <Route
+        path={PATHS.ISSUE}
+        render={props => renderIssueList(props, setHeaderTitle)}
+        exact={true}
+      />
+      <Route
+        path={`${PATHS.ISSUE}/:id`}
+        render={props => renderIssueDetail(props)}
+        exact={true}
+      />
       <Route path={PATHS.SIGN_UP} component={renderSignUp} exact={false} />
       <Route path={"/"} component={renderSignUp} exact={false} />
     </Switch>
@@ -52,7 +64,7 @@ const renderMarketList = (
 };
 
 const renderMarketDetail = (rProps: RouteComponentProps<{id: string}>) => {
-  return <MarketDetail id={rProps.match.params.id} />;
+  return <MarketDetail {...rProps} />;
 };
 
 const renderOwnedList = (
@@ -63,7 +75,18 @@ const renderOwnedList = (
 };
 
 const renderOwnedDetail = (rProps: RouteComponentProps<{id: string}>) => {
-  return <OwnedDetail id={rProps.match.params.id} history={rProps.history} />;
+  return <OwnedDetail {...rProps} />;
+};
+
+const renderIssueList = (
+  rProps: RouteComponentProps,
+  setHeaderTitle: (headerText: string) => void
+) => {
+  return <IssueList history={rProps.history} setHeaderText={setHeaderTitle} />;
+};
+
+const renderIssueDetail = (rProps: RouteComponentProps<{id: string}>) => {
+  return <IssueDetail {...rProps} />;
 };
 
 const renderSignUp = () => {
