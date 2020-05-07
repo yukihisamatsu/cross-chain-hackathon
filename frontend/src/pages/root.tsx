@@ -1,6 +1,6 @@
 import {Layout} from "antd";
 import React from "react";
-import {BrowserRouter, Route} from "react-router-dom";
+import {HashRouter, Route} from "react-router-dom";
 import styled from "styled-components";
 import {Reset} from "styled-reset";
 
@@ -29,7 +29,7 @@ export class Root extends React.Component<{}, State> {
 
   render() {
     return (
-      <BrowserRouter>
+      <HashRouter>
         <Reset />
         <Route
           render={props => {
@@ -49,7 +49,7 @@ export class Root extends React.Component<{}, State> {
             );
           }}
         />
-      </BrowserRouter>
+      </HashRouter>
     );
   }
 }
