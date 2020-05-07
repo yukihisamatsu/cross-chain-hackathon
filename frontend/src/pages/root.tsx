@@ -8,18 +8,25 @@ import {FooterComponent} from "~pages/commons/footer";
 import {HeaderComponent} from "~pages/commons/header";
 import {SiderComponent} from "~pages/commons/sider";
 import {ContentSwitch} from "~pages/contents/content.switch";
+import {Config} from "~src/heplers/config";
+import {Repositories} from "~src/repos/types";
 
 const {Content} = Layout;
+
+interface Props {
+  config: Config;
+  repos: Repositories;
+}
 
 interface State {
   headerTitle: string;
 }
 
-export class Root extends React.Component<{}, State> {
-  constructor(props: {}) {
+export class Root extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = {
-      headerTitle: "Home"
+      headerTitle: ""
     };
   }
 
@@ -28,6 +35,7 @@ export class Root extends React.Component<{}, State> {
   };
 
   render() {
+    const {config, repos} = this.props;
     return (
       <HashRouter>
         <Reset />
@@ -37,10 +45,14 @@ export class Root extends React.Component<{}, State> {
               <MainLayout>
                 <HeaderComponent headerTitle={this.state.headerTitle} />
                 <Layout>
-                  <SiderComponent history={props.history} />
+                  <SiderComponent {...props} />
                   <ContentLayout>
                     <ContentWrap>
-                      <ContentSwitch setHeaderTitle={this.setHeaderTitle} />
+                      <ContentSwitch
+                        config={config}
+                        repos={repos}
+                        setHeaderTitle={this.setHeaderTitle}
+                      />
                     </ContentWrap>
                   </ContentLayout>
                 </Layout>

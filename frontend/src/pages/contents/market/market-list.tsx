@@ -4,15 +4,19 @@ import {RouteComponentProps} from "react-router-dom";
 import {EstateList} from "~pages/commons/estate/estate-list";
 import {dummyOwnedEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
+import {Config} from "~src/heplers/config";
+import {Repositories} from "~src/repos/types";
 
-interface Props extends Pick<RouteComponentProps, "history"> {
+interface Props extends RouteComponentProps {
+  config: Config;
+  repos: Repositories;
   setHeaderText: (headerText: string) => void;
 }
 
 export class MarketList extends React.Component<Props> {
   constructor(props: Props) {
     super(props);
-    props.setHeaderText("");
+    props.setHeaderText("MarketPlace");
   }
 
   render() {

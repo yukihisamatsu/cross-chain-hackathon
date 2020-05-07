@@ -13,8 +13,14 @@ import {renderDividendRegisterForm} from "~pages/contents/issue/parts/issue-divi
 import {IssueDividendRegisterModal} from "~pages/contents/issue/parts/issue-diviend-register-modal";
 import {dummyIssuerEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
+import {Config} from "~src/heplers/config";
+import {Repositories} from "~src/repos/types";
 
-type Props = RouteComponentProps<{id: string}>;
+interface Props extends RouteComponentProps<{id: string}> {
+  config: Config;
+  repos: Repositories;
+  setHeaderText: (headerText: string) => void;
+}
 
 interface State {
   estate: IssuerEstate;
@@ -46,6 +52,7 @@ export class IssueDetail extends React.Component<Props, State> {
 
   componentDidMount() {
     const {
+      setHeaderText,
       match: {
         params: {id}
       },
@@ -57,6 +64,7 @@ export class IssueDetail extends React.Component<Props, State> {
       history.push(PATHS.MARKET);
       return;
     }
+    setHeaderText(estate.name);
     this.setState({
       estate,
       registeredQuantity: 10000

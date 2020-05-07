@@ -64,7 +64,7 @@ const dummyEstateList: Estate[] = [0, 1, 2, 3, 4, 5].map(i => {
     description:
       "288m parcel near Scripting Origin City, 378m from the origin, with a 16m build height and near to Power Piaza, Infin...",
     dividendDate: "2020/05/05 00:00:00 UTC",
-    expectedYieldRatio: "1",
+    expectedYield: 1,
     imagePath: `/assets/img/0${i + 1}.jpg`,
     issuedBy: "issuerName"
   };

@@ -1,5 +1,5 @@
-import {Address} from "~pages/types";
 import {Unbox} from "~src/heplers/util-types";
+import {Address} from "~src/types";
 
 export const ORDER_STATUS = {
   REQUESTING: "requesting",

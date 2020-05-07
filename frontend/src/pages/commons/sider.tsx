@@ -9,7 +9,7 @@ import {PATHS} from "~pages/routes";
 
 const {Sider} = Layout;
 
-type Props = Pick<RouteComponentProps, "history">;
+type Props = RouteComponentProps;
 
 export const SiderComponent = (props: Props) => {
   return (

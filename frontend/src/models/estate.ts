@@ -5,6 +5,7 @@ import {
 } from "~models/dividend";
 import {Unbox} from "~src/heplers/util-types";
 import {BuyOrder, SellOrder} from "~src/models/order";
+import {Address} from "~src/types";
 
 export const ESTATE_STATUS = {
   OWNED: "owned",
@@ -18,9 +19,9 @@ export class Estate {
   name: string;
   imagePath: string;
   description: string;
-  expectedYieldRatio: string;
+  expectedYield: number;
   dividendDate: string;
-  issuedBy: string;
+  issuedBy: Address;
 
   owner?: string;
   units?: number;
@@ -34,7 +35,7 @@ export class Estate {
     name,
     imagePath,
     description,
-    expectedYieldRatio,
+    expectedYield,
     dividendDate,
     issuedBy
   }: {
@@ -42,15 +43,15 @@ export class Estate {
     name: string;
     imagePath: string;
     description: string;
-    expectedYieldRatio: string;
+    expectedYield: number;
     dividendDate: string;
-    issuedBy: string;
+    issuedBy: Address;
   }) {
     this.tokenId = tokenId;
     this.name = name;
     this.imagePath = imagePath;
     this.description = description;
-    this.expectedYieldRatio = expectedYieldRatio;
+    this.expectedYield = expectedYield;
     this.dividendDate = dividendDate;
     this.issuedBy = issuedBy;
   }
@@ -70,7 +71,7 @@ export class OwnedEstate extends Estate {
     name,
     imagePath,
     description,
-    expectedYieldRatio,
+    expectedYield,
     dividendDate,
     issuedBy,
     units,
@@ -84,9 +85,9 @@ export class OwnedEstate extends Estate {
     name: string;
     imagePath: string;
     description: string;
-    expectedYieldRatio: string;
+    expectedYield: number;
     dividendDate: string;
-    issuedBy: string;
+    issuedBy: Address;
     units: number;
     perUnit: number;
     status: EstateStatusType;
@@ -98,7 +99,7 @@ export class OwnedEstate extends Estate {
       name,
       imagePath,
       description,
-      expectedYieldRatio,
+      expectedYield,
       dividendDate,
       issuedBy
     });
@@ -117,7 +118,7 @@ export class OwnedEstate extends Estate {
       name: "",
       imagePath: "",
       description: "",
-      expectedYieldRatio: "",
+      expectedYield: 0,
       dividendDate: "",
       issuedBy: "",
       owner: "",
@@ -138,7 +139,7 @@ export class MarketEstate extends Estate {
     name,
     imagePath,
     description,
-    expectedYieldRatio,
+    expectedYield,
     dividendDate,
     issuedBy,
     sellOrders
@@ -147,9 +148,9 @@ export class MarketEstate extends Estate {
     name: string;
     imagePath: string;
     description: string;
-    expectedYieldRatio: string;
+    expectedYield: number;
     dividendDate: string;
-    issuedBy: string;
+    issuedBy: Address;
     sellOrders: SellOrder[];
   }) {
     super({
@@ -157,7 +158,7 @@ export class MarketEstate extends Estate {
       name,
       imagePath,
       description,
-      expectedYieldRatio,
+      expectedYield,
       dividendDate,
       issuedBy
     });
@@ -171,7 +172,7 @@ export class MarketEstate extends Estate {
       name: "",
       imagePath: "",
       description: "",
-      expectedYieldRatio: "",
+      expectedYield: 0,
       dividendDate: "",
       issuedBy: "",
       sellOrders: []
@@ -188,7 +189,7 @@ export class IssuerEstate extends Estate {
     name,
     imagePath,
     description,
-    expectedYieldRatio,
+    expectedYield,
     dividendDate,
     issuedBy,
     issuerDividend,
@@ -198,9 +199,9 @@ export class IssuerEstate extends Estate {
     name: string;
     imagePath: string;
     description: string;
-    expectedYieldRatio: string;
+    expectedYield: number;
     dividendDate: string;
-    issuedBy: string;
+    issuedBy: Address;
     issuerDividend: IssuerDividend[];
     histories: IssuerDividendHistory[];
   }) {
@@ -209,7 +210,7 @@ export class IssuerEstate extends Estate {
       name,
       imagePath,
       description,
-      expectedYieldRatio,
+      expectedYield,
       dividendDate,
       issuedBy
     });
@@ -224,7 +225,7 @@ export class IssuerEstate extends Estate {
       name: "",
       imagePath: "",
       description: "",
-      expectedYieldRatio: "",
+      expectedYield: 0,
       dividendDate: "",
       issuedBy: "",
       issuerDividend: [],

@@ -14,8 +14,14 @@ import {OwnedSellOrderModal} from "~pages/contents/owned/parts/owned-sell-order-
 import {renderEstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
 import {dummyOwnedEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
+import {Config} from "~src/heplers/config";
+import {Repositories} from "~src/repos/types";
 
-type Props = RouteComponentProps<{id: string}>;
+interface Props extends RouteComponentProps<{id: string}> {
+  config: Config;
+  repos: Repositories;
+  setHeaderText: (headerText: string) => void;
+}
 
 interface State {
   estate: OwnedEstate;
@@ -55,6 +61,7 @@ export class OwnedDetail extends React.Component<Props, State> {
   componentDidMount() {
     // TODO get Estate Request & setState({estate)
     const {
+      setHeaderText,
       match: {
         params: {id}
       },
@@ -65,6 +72,7 @@ export class OwnedDetail extends React.Component<Props, State> {
       history.push(PATHS.OWNED);
       return;
     }
+    setHeaderText(estate.name);
     this.setState({
       estate
     });

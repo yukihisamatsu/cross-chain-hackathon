@@ -9,8 +9,14 @@ import {MarketSellOrderModal} from "~pages/contents/market/parts/market-sell-ord
 import {renderMarketSellOrderTable} from "~pages/contents/market/parts/market-sell-order-table";
 import {dummyMarketEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
+import {Config} from "~src/heplers/config";
+import {Repositories} from "~src/repos/types";
 
-type Props = RouteComponentProps<{id: string}>;
+interface Props extends RouteComponentProps<{id: string}> {
+  config: Config;
+  repos: Repositories;
+  setHeaderText: (headerText: string) => void;
+}
 
 interface State {
   estate: MarketEstate;
@@ -33,6 +39,7 @@ export class MarketDetail extends React.Component<Props, State> {
   componentDidMount() {
     // TODO get Estate Request & setState({estate)
     const {
+      setHeaderText,
       match: {
         params: {id}
       },
@@ -43,6 +50,7 @@ export class MarketDetail extends React.Component<Props, State> {
       history.push(PATHS.MARKET);
       return;
     }
+    setHeaderText(estate.name);
     this.setState({
       estate
     });
