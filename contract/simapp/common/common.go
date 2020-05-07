@@ -2,16 +2,16 @@ package common
 
 import (
 	"errors"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
 	ErrorInvalidArgsLength = errors.New("invalid args length")
 )
 
+// HACK impl
 func VerifyAddress(addr []byte) error {
-	return sdk.VerifyAddressFormat(addr)
+	//return sdk.VerifyAddressFormat(addr)
+	return nil
 }
 
 func VerifyArgsLength(args [][]byte, expected int) error {

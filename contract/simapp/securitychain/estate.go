@@ -13,20 +13,22 @@ import (
 	"github.com/datachainlab/cross/x/ibc/store/lock"
 )
 
-// TODO
 const (
 	EstateTokenContractID = "estate"
-	FnNameBalanceOf       = "balanceOf"
-	//FnNameBalanceOfBatch  = "balanceOfBatch"
+	// TODO fix
+	MaxTokenOwner = 5
+
+	FnNameBalanceOf   = "balanceOf"
 	FnNameCreate      = "create"
 	FnNameCreatorOf   = "creatorOf"
 	FnNameMint        = "mint"
 	FnNameTransfer    = "transfer"
 	FnNameTotalSupply = "totalSupply"
+	//FnNameBalanceOfBatch  = "balanceOfBatch"
 
 	FnNameAddToWhitelist = "addToWhitelist"
+	FnNameIsWhitelisted  = "isWhitelisted"
 	// FnNameRemoveFromWhitelist  = "removeFromWhitelist"
-	FnNameIsWhitelisted = "isWhitelisted"
 
 	FnNameAddDividendPerShare = "addDividendPerShare"
 	FnNamePayDividend         = "payDividend"
@@ -49,12 +51,6 @@ func GetEstateTokenContract() contract.Contract {
 		{
 			Name: FnNameBalanceOf, F: balanceOf,
 		},
-		// to implement this, modify x/ibc/contract/types.go for slice
-		/*
-			{
-				Name: FnNameBalanceOfBatch, F: balanceOfBatch,
-			},
-		*/
 		{
 			Name: FnNameCreate, F: create,
 		},
@@ -74,16 +70,9 @@ func GetEstateTokenContract() contract.Contract {
 		{
 			Name: FnNameAddToWhitelist, F: addToWhitelist,
 		},
-		/*
-			{
-				Name: FnNameRemoveFromWhitelist, F: removeFromWhitelist,
-			},
-		*/
 		{
 			Name: FnNameIsWhitelisted, F: isWhitelisted,
 		},
-		// Logic
-
 		// Dividend
 		{
 			Name: FnNameAddDividendPerShare, F: addDividendPerShare,
@@ -111,13 +100,6 @@ func balanceOf(ctx contract.Context, store cross.Store) ([]byte, error) {
 	return contract.ToBytes(getAmount(addr, tokenID, store)), nil
 }
 
-// function balanceOfBatch(address[] calldata _owners, uint256[] calldata _ids) external view returns (uint256[] memory)
-/*
-func balanceOfBatch(ctx contract.Context, store cross.Store) ([]byte, error) {
-	return nil, ErrorNotImplemented
-}
-*/
-
 // TODO we won't use token URI
 //	function create(uint256 _initialSupply, string calldata _uri) external returns(uint256 _id) {
 func create(ctx contract.Context, store cross.Store) ([]byte, error) {
@@ -139,6 +121,7 @@ func create(ctx contract.Context, store cross.Store) ([]byte, error) {
 	supplyB := contract.ToBytes(supply)
 	store.Set(makeTotalSupplyKey(tokenID), supplyB)
 	store.Set(makeAccountKey(creator, tokenID), supplyB)
+	store.Set(makeTokenOwnerCountKey(tokenID), contract.ToBytes(uint64(1)))
 	emitTransfer(ctx, []byte{}, creator, tokenID, supply)
 	return tokenIDB, nil
 }
@@ -166,7 +149,8 @@ func mint(ctx contract.Context, store cross.Store) ([]byte, error) {
 
 	tokenID := contract.UInt64(args[0])
 	sender := ctx.Signers()[0]
-	if creator := getCreator(tokenID, store); creator == nil || bytes.Equal(creator, sender) {
+	creator := getCreator(tokenID, store)
+	if creator == nil || bytes.Equal(creator, sender) {
 		return nil, ErrorInvalidSender
 	}
 
@@ -174,21 +158,26 @@ func mint(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if err := common.VerifyAddress(to); err != nil {
 		return nil, err
 	}
-	if !getWhitelisted(to, sender, store) {
-		return nil, ErrorNotWhitelisted
-	}
-
 	value := contract.UInt64(args[2])
-	if toAmount, ok := safemath.Add64(getAmount(to, tokenID, store), value); ok {
+
+	ownerCount := getOwnerCount(tokenID, store)
+	toAmount := getAmount(to, tokenID, store)
+	if toAmount == 0 && value != 0 {
+		setOwnerCount(ownerCount+1, tokenID, store)
+	}
+	if toAmount, ok := safemath.Add64(toAmount, value); ok {
 		setAmount(to, tokenID, toAmount, store)
 	} else {
 		return nil, ErrorAdditionOverflow
 	}
-
 	if totalSupply, ok := safemath.Add64(getTotalSupply(tokenID, store), value); ok {
 		setTotalSupply(totalSupply, tokenID, store)
 	} else {
 		return nil, ErrorAdditionOverflow
+	}
+
+	if err := check([]byte{}, to, tokenID, store); err != nil {
+		return nil, err
 	}
 
 	emitTransfer(ctx, []byte{}, to, tokenID, value)
@@ -216,32 +205,56 @@ func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 		return nil, err
 	}
 	tokenID := contract.UInt64(args[0])
-	creator := getCreator(tokenID, store)
-	if creator == nil {
-		return nil, ErrorInvalidArg
-	}
 	to := args[1]
 	if err := common.VerifyAddress(to); err != nil {
 		return nil, err
 	}
-	if !getWhitelisted(to, creator, store) {
-		return nil, ErrorNotWhitelisted
-	}
-
-	value := contract.UInt64(args[2])
 	from := ctx.Signers()[0]
+	value := contract.UInt64(args[2])
+
+	ownerCount := getOwnerCount(tokenID, store)
 	if fromAmount, ok := safemath.Sub64(getAmount(from, tokenID, store), value); ok {
 		setAmount(from, tokenID, fromAmount, store)
+		if fromAmount == 0 && value != 0 {
+			ownerCount--
+		}
 	} else {
 		return nil, ErrorInsufficientAmount
 	}
-	if toAmount, ok := safemath.Add64(getAmount(to, tokenID, store), value); ok {
+	toAmount := getAmount(to, tokenID, store)
+	if toAmount == 0 && value != 0 {
+		ownerCount++
+	}
+	if toAmount, ok := safemath.Add64(toAmount, value); ok {
 		setAmount(to, tokenID, toAmount, store)
 	} else {
 		return nil, ErrorAdditionOverflow
 	}
+	setOwnerCount(ownerCount, tokenID, store)
+
+	if err := check(from, to, tokenID, store); err != nil {
+		return nil, err
+	}
+
 	emitTransfer(ctx, from, to, tokenID, value)
 	return contract.ToBytes(true), nil
+}
+
+// check logics for restricted transfer.
+func check(from, to []byte, tokenID uint64, store cross.Store) error {
+	creator := getCreator(tokenID, store)
+	if creator == nil {
+		return ErrorInvalidArg
+	}
+
+	if !getWhitelisted(to, creator, store) {
+		return ErrorNotWhitelisted
+	}
+	ownerCount := getOwnerCount(tokenID, store)
+	if ownerCount >= MaxTokenOwner {
+		return ErrorRestrictedTransfer
+	}
+	return nil
 }
 
 func emitTransfer(ctx contract.Context, from, to []byte, tokenID, value uint64) {
@@ -286,6 +299,14 @@ func getTotalSupply(tokenID uint64, store cross.Store) uint64 {
 	return 0
 }
 
+func getOwnerCount(tokenID uint64, store cross.Store) uint64 {
+	key := makeTokenOwnerCountKey(tokenID)
+	if store.Has(key) {
+		return contract.UInt64(store.Get(key))
+	}
+	return 0
+}
+
 func setAmount(addr []byte, tokenID, amount uint64, store cross.Store) uint64 {
 	key := makeAccountKey(addr, tokenID)
 	store.Set(key, contract.ToBytes(amount))
@@ -298,9 +319,15 @@ func setTokenID(id uint64, store cross.Store) uint64 {
 	return 0
 }
 
-func setTotalSupply(amount, tokenID uint64, store cross.Store) uint64 {
+func setTotalSupply(total, tokenID uint64, store cross.Store) uint64 {
 	key := makeTotalSupplyKey(tokenID)
-	store.Set(key, contract.ToBytes(amount))
+	store.Set(key, contract.ToBytes(total))
+	return 0
+}
+
+func setOwnerCount(count, tokenID uint64, store cross.Store) uint64 {
+	key := makeTokenOwnerCountKey(tokenID)
+	store.Set(key, contract.ToBytes(count))
 	return 0
 }
 
@@ -318,4 +345,8 @@ func makeLastTokenIDKey() []byte {
 
 func makeTotalSupplyKey(tokenID uint64) []byte {
 	return []byte(fmt.Sprintf("totalSupply/%v", contract.ToBytes(tokenID)))
+}
+
+func makeTokenOwnerCountKey(tokenID uint64) []byte {
+	return []byte(fmt.Sprintf("ownerCount/%v", contract.ToBytes(tokenID)))
 }
