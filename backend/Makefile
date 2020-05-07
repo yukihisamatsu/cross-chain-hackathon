@@ -1,5 +1,4 @@
 DOCKER?=docker
-GO?=go
 
 PWD=${shell pwd}
 OPENAPI_SRC=./openapi.yml
@@ -15,7 +14,7 @@ SERVER_GENERATED_SRC=api
 TS_CLIENT_TYPE=typescript-fetch
 
 gen-server-stub:
-	${DOCKER} run --rm -v ${shell pwd}:/local openapitools/openapi-generator-cli generate \
+	${DOCKER} run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
        --git-user-id=${GIT_USER_ID} \
 	   --git-repo-id=${SERVER_REPO_ID} \
 	   --config=/local/${SERVER_CONFIG} \
@@ -24,17 +23,17 @@ gen-server-stub:
  	   -o /local/${SERVER_OUTDIR}
 
 gen-client:
-	${DOCKER} run --rm -v ${shell pwd}:/local openapitools/openapi-generator-cli generate \
+	${DOCKER} run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
  	   -i /local/${OPENAPI_SRC} \
  	   -g ${TS_CLIENT_TYPE} \
  	   -o /local/out/${TS_CLIENT_TYPE}
 
 run-mock-server:
-	${DOCKER} run --rm -v ${shell pwd}:/local -p 8000:8000 danielgtaylor/apisprout /local/${OPENAPI_SRC} 
+	${DOCKER} run --rm -v ${PWD}:/local -p 8000:8000 danielgtaylor/apisprout /local/${OPENAPI_SRC} 
 
 run-doc:
-	${DOCKER} run --rm -v ${shell pwd}:/local -p 8080:8080 -e SWAGGER_JSON=/local/${OPENAPI_SRC} swaggerapi/swagger-ui
+	${DOCKER} run --rm -v ${PWD}:/local -p 8080:8080 -e SWAGGER_JSON=/local/${OPENAPI_SRC} swaggerapi/swagger-ui
 
 # TODO
-#run-server:
-#	${GO} run ${shell pwd}/${SERVER_OUTDIR}/main.go
+run-server:
+	${MAKE} -C apiserver run
