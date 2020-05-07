@@ -1,0 +1,2 @@
+node: simappd --home /root/data/${CHAIN_ID}/n0/simappd start --pruning=nothing --contract-mode=${CONTRACT_MODE}
+rest: sleep 10 && simappcli rest-server --home /root/data/${CHAIN_ID}/n0/simappcli --laddr=tcp://0.0.0.0:1317
