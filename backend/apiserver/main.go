@@ -13,14 +13,11 @@ import (
 	"log"
 	"net/http"
 
-	api "github.com/datachainlab/cross-chain-hackathon/backend/api-server/api"
+	api "github.com/datachainlab/cross-chain-hackathon/backend/apiserver/api"
 )
 
 func main() {
 	log.Printf("Server started")
-
-	DividendApiService := api.NewDividendApiService()
-	DividendApiController := api.NewDividendApiController(DividendApiService)
 
 	EstateApiService := api.NewEstateApiService()
 	EstateApiController := api.NewEstateApiController(EstateApiService)
@@ -34,7 +31,7 @@ func main() {
 	UserApiService := api.NewUserApiService()
 	UserApiController := api.NewUserApiController(UserApiService)
 
-	router := api.NewRouter(DividendApiController, EstateApiController, TradeApiController, TxApiController, UserApiController)
+	router := api.NewRouter(EstateApiController, TradeApiController, TxApiController, UserApiController)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

@@ -48,13 +48,13 @@ func (c *TxApiController) TxDividendGet(w http.ResponseWriter, r *http.Request) 
 	estateId := query.Get("estateId")
 	perShare, err := parseIntParameter(query.Get("perShare"))
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	result, err := c.service.TxDividendGet(estateId, perShare)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -66,14 +66,14 @@ func (c *TxApiController) TxTradeRequestGet(w http.ResponseWriter, r *http.Reque
 	query := r.URL.Query()
 	tradeId, err := parseIntParameter(query.Get("tradeId"))
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	from := query.Get("from")
 	result, err := c.service.TxTradeRequestGet(tradeId, from)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

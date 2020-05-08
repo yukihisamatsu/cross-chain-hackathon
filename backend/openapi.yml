@@ -148,7 +148,6 @@ paths:
       summary: get a CrossTx to be signed
       tags:
         - tx
-        - trade
       parameters:
         - name: tradeId
           in: query
@@ -173,7 +172,6 @@ paths:
       summary: get a CrossTx to be signed
       tags:
         - tx
-        - dividend
       parameters:
         - name: estateId
           in: query
@@ -238,11 +236,10 @@ components:
         - id
         - estateId
         - price
-        - buyer
         - seller
         - type
         - requests
-        - status
+        - canceled
         - updatedAt
       properties:
         id:
@@ -268,15 +265,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TradeRequest"
-        status:
-          type: string
-          enum:
-            - open
-            - canceled
-            # TODO Should the API server trace its cross tx?
-            # - transferring
-            # - completed
-            # - failed
+        canceled:
+          type: boolean
         updatedAt:
           type: string
           format: date-time
@@ -329,6 +319,7 @@ components:
         - name
         - imagePath
         - description
+        - offerPrice
         - expectedYield
         - dividendDate
         - issuedBy
@@ -347,6 +338,12 @@ components:
             Aenean commodo ligula eget dolor. Aenean massa.
             Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
             Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.
+        offerPrice:
+          description: public offering price
+          type: integer
+          format: int64
+          example: 10000
+          minimum: 0
         expectedYield:
           description: expected yield amount per share
           type: integer

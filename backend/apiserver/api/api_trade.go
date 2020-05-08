@@ -11,6 +11,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -24,12 +25,12 @@ type TradeApiController struct {
 
 // NewTradeApiController creates a default api controller
 func NewTradeApiController(s TradeApiServicer) Router {
-	return &TradeApiController{ service: s }
+	return &TradeApiController{service: s}
 }
 
 // Routes returns all of the api route for the TradeApiController
 func (c *TradeApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"DeleteTrade",
 			strings.ToUpper("Delete"),
@@ -54,100 +55,79 @@ func (c *TradeApiController) Routes() Routes {
 			"/api/trade/requests",
 			c.PostTradeRequest,
 		},
-		{
-			"TxTradeRequestGet",
-			strings.ToUpper("Get"),
-			"/api/tx/trade/request",
-			c.TxTradeRequestGet,
-		},
 	}
 }
 
 // DeleteTrade - cancel a trade
-func (c *TradeApiController) DeleteTrade(w http.ResponseWriter, r *http.Request) { 
+func (c *TradeApiController) DeleteTrade(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, err := parseIntParameter(params["id"])
 	if err != nil {
-		w.WriteHeader(500)
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	
+
 	result, err := c.service.DeleteTrade(id)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(HttpStatus(err))
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }
 
 // DeleteTradeRequest - cancel a trade request
-func (c *TradeApiController) DeleteTradeRequest(w http.ResponseWriter, r *http.Request) { 
+func (c *TradeApiController) DeleteTradeRequest(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, err := parseIntParameter(params["id"])
 	if err != nil {
-		w.WriteHeader(500)
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	
+
 	result, err := c.service.DeleteTradeRequest(id)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(HttpStatus(err))
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }
 
 // PostTrade - post a new sell offer
-func (c *TradeApiController) PostTrade(w http.ResponseWriter, r *http.Request) { 
+func (c *TradeApiController) PostTrade(w http.ResponseWriter, r *http.Request) {
 	trade := &Trade{}
 	if err := json.NewDecoder(r.Body).Decode(&trade); err != nil {
-		w.WriteHeader(500)
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	
+
 	result, err := c.service.PostTrade(*trade)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(HttpStatus(err))
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }
 
 // PostTradeRequest - post a new trade request
-func (c *TradeApiController) PostTradeRequest(w http.ResponseWriter, r *http.Request) { 
+func (c *TradeApiController) PostTradeRequest(w http.ResponseWriter, r *http.Request) {
 	postTradeRequestInput := &PostTradeRequestInput{}
 	if err := json.NewDecoder(r.Body).Decode(&postTradeRequestInput); err != nil {
-		w.WriteHeader(500)
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	
+
 	result, err := c.service.PostTradeRequest(*postTradeRequestInput)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(HttpStatus(err))
 		return
 	}
-	
-	EncodeJSONResponse(result, nil, w)
-}
 
-// TxTradeRequestGet - get a CrossTx to be signed
-func (c *TradeApiController) TxTradeRequestGet(w http.ResponseWriter, r *http.Request) { 
-	query := r.URL.Query()
-	tradeId, err := parseIntParameter(query.Get("tradeId"))
-	if err != nil {
-		w.WriteHeader(500)
-		return
-	}
-	
-	from := query.Get("from")
-	result, err := c.service.TxTradeRequestGet(tradeId, from)
-	if err != nil {
-		w.WriteHeader(500)
-		return
-	}
-	
 	EncodeJSONResponse(result, nil, w)
 }

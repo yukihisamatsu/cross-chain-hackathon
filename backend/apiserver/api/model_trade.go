@@ -22,7 +22,7 @@ type Trade struct {
 
 	Price int64 `json:"price"`
 
-	Buyer string `json:"buyer"`
+	Buyer string `json:"buyer,omitempty"`
 
 	Seller string `json:"seller"`
 
@@ -30,7 +30,7 @@ type Trade struct {
 
 	Requests []TradeRequest `json:"requests"`
 
-	Status string `json:"status"`
+	Canceled bool `json:"canceled"`
 
 	UpdatedAt time.Time `json:"updatedAt"`
 }

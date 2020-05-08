@@ -44,7 +44,7 @@ func (c *UserApiController) GetUser(w http.ResponseWriter, r *http.Request) {
 	id := params["id"]
 	result, err := c.service.GetUser(id)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(HttpStatus(err))
 		return
 	}
 

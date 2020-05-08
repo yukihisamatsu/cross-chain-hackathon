@@ -50,7 +50,7 @@ func (c *EstateApiController) GetEstateById(w http.ResponseWriter, r *http.Reque
 	estateId := params["estateId"]
 	result, err := c.service.GetEstateById(estateId)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(HttpStatus(err))
 		return
 	}
 
@@ -61,7 +61,7 @@ func (c *EstateApiController) GetEstateById(w http.ResponseWriter, r *http.Reque
 func (c *EstateApiController) GetEstates(w http.ResponseWriter, r *http.Request) {
 	result, err := c.service.GetEstates()
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(HttpStatus(err))
 		return
 	}
 

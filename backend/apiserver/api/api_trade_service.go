@@ -10,11 +10,14 @@
 package api
 
 import (
-	"errors"
+	"encoding/json"
+	"log"
+
+	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
 )
 
 // TradeApiService is a service that implents the logic for the TradeApiServicer
-// This service should implement the business logic for every endpoint for the TradeApi API. 
+// This service should implement the business logic for every endpoint for the TradeApi API.
 // Include any external packages or services that will be required by this service.
 type TradeApiService struct {
 }
@@ -26,35 +29,93 @@ func NewTradeApiService() TradeApiServicer {
 
 // DeleteTrade - cancel a trade
 func (s *TradeApiService) DeleteTrade(id int64) (interface{}, error) {
-	// TODO - update DeleteTrade with the required logic for this service method.
-	// Add api_trade_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'DeleteTrade' not implemented")
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+	q := `UPDATE trade SET canceled = 1 WHERE id = ?`
+	if _, err := db.Exec(q, id); err != nil {
+		return nil, ErrorFailedDBSet
+	}
+	trade := &Trade{}
+	q = `SELECT * FROM trade WHERE id = ?`
+	if err := db.Get(trade, q, id); err != nil {
+		return nil, err
+	}
+	return trade, nil
 }
 
 // DeleteTradeRequest - cancel a trade request
 func (s *TradeApiService) DeleteTradeRequest(id int64) (interface{}, error) {
-	// TODO - update DeleteTradeRequest with the required logic for this service method.
-	// Add api_trade_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'DeleteTradeRequest' not implemented")
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+	q := `UPDATE tradeRequest SET canceled = 1 WHERE id = ?`
+	if _, err := db.Exec(q, id); err != nil {
+		return nil, ErrorFailedDBSet
+	}
+	tr := &TradeRequest{}
+	q = `SELECT * FROM tradeRequest WHERE id = ?`
+	if err := db.Get(tr, q, id); err != nil {
+		return nil, err
+	}
+	return tr, nil
 }
 
 // PostTrade - post a new sell offer
 func (s *TradeApiService) PostTrade(trade Trade) (interface{}, error) {
-	// TODO - update PostTrade with the required logic for this service method.
-	// Add api_trade_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'PostTrade' not implemented")
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+
+	q := `INSERT INTO trade(estateId, price, seller, type) values(?, ?, ?, ?)`
+	if _, err := db.Exec(q, trade.EstateId, trade.Price, trade.Seller, trade.Type); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBSet
+	}
+
+	res := &Trade{}
+	if err := db.Get(res, "select id, estateId, price, seller, type, updatedAt from trade where rowid = last_insert_rowid()"); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return res, nil
 }
 
 // PostTradeRequest - post a new trade request
-func (s *TradeApiService) PostTradeRequest(postTradeRequestInput PostTradeRequestInput) (interface{}, error) {
-	// TODO - update PostTradeRequest with the required logic for this service method.
-	// Add api_trade_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'PostTradeRequest' not implemented")
-}
+func (s *TradeApiService) PostTradeRequest(in PostTradeRequestInput) (interface{}, error) {
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
 
-// TxTradeRequestGet - get a CrossTx to be signed
-func (s *TradeApiService) TxTradeRequestGet(tradeId int64, from string) (interface{}, error) {
-	// TODO - update TxTradeRequestGet with the required logic for this service method.
-	// Add api_trade_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'TxTradeRequestGet' not implemented")
+	j, err := json.Marshal(in.CrossTx)
+	if err != nil {
+		log.Println("json.Marshal error")
+		return nil, err
+	}
+	log.Println(string(j))
+
+	q := `INSERT INTO trade_request(tradeId, "from", crossTx) values(?, ?, ?)`
+	if _, err := db.Exec(q, in.TradeId, in.From, string(j)); err != nil {
+		log.Println("ccc")
+		log.Println(err)
+		return nil, ErrorFailedDBSet
+	}
+
+	res := &TradeRequest{}
+
+	q = `select id, tradeId, "from", canceled, updatedAt from trade_request where rowid = last_insert_rowid()`
+	if err := db.Get(res, q); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	res.CrossTx = in.CrossTx
+	return res, nil
 }

@@ -10,11 +10,13 @@
 package api
 
 import (
-	"errors"
+	"log"
+
+	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
 )
 
 // UserApiService is a service that implents the logic for the UserApiServicer
-// This service should implement the business logic for every endpoint for the UserApi API. 
+// This service should implement the business logic for every endpoint for the UserApi API.
 // Include any external packages or services that will be required by this service.
 type UserApiService struct {
 }
@@ -26,7 +28,17 @@ func NewUserApiService() UserApiServicer {
 
 // GetUser - get user information
 func (s *UserApiService) GetUser(id string) (interface{}, error) {
-	// TODO - update GetUser with the required logic for this service method.
-	// Add api_user_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'GetUser' not implemented")
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+
+	log.Printf("id: %s\n", id)
+	user := &User{}
+	if err := db.Get(user, "SELECT * FROM user WHERE id = ?", id); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+	return user, nil
 }

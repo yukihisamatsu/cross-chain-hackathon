@@ -10,11 +10,15 @@
 package api
 
 import (
-	"errors"
+	"database/sql"
+	"encoding/json"
+	"log"
+
+	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
 )
 
 // EstateApiService is a service that implents the logic for the EstateApiServicer
-// This service should implement the business logic for every endpoint for the EstateApi API. 
+// This service should implement the business logic for every endpoint for the EstateApi API.
 // Include any external packages or services that will be required by this service.
 type EstateApiService struct {
 }
@@ -26,14 +30,70 @@ func NewEstateApiService() EstateApiServicer {
 
 // GetEstateById - get an estate and its trade data
 func (s *EstateApiService) GetEstateById(estateId string) (interface{}, error) {
-	// TODO - update GetEstateById with the required logic for this service method.
-	// Add api_estate_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'GetEstateById' not implemented")
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+
+	/* HACK the following process should be improved. */
+	estate := &Estate{}
+	if err := db.Get(estate, "SELECT * FROM estate WHERE tokenId = ?", estateId); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+	trades := []Trade{}
+	rows, err := db.Query("SELECT id, estateId, price, buyer, seller, type, canceled, updatedAt FROM trade WHERE estateId = ?", estateId)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		t := Trade{}
+		var buyer sql.NullString
+		if err := rows.Scan(&t.Id, &t.EstateId, &t.Price, &buyer, &t.Seller, &t.Type, &t.Canceled, &t.UpdatedAt); err != nil {
+			log.Println(err)
+			return nil, ErrorFailedDBGet
+		}
+		trades = append(trades, t)
+	}
+
+	q := `SELECT id, tradeId, "from", crossTx, canceled, updatedAt FROM trade_request WHERE tradeId = ?`
+	for i := 0; i < len(trades); i++ {
+		reqs := []TradeRequest{}
+		rs, err := db.Query(q, trades[i].Id)
+		if err != nil {
+			return nil, err
+		}
+		for rs.Next() {
+			tr := TradeRequest{}
+			j := []byte{}
+			if err := rs.Scan(&tr.Id, &tr.TradeId, &tr.From, &j, &tr.Canceled, &tr.UpdatedAt); err != nil {
+				return nil, err
+			}
+			if err := json.Unmarshal(j, &tr.CrossTx); err != nil {
+				return nil, err
+			}
+			reqs = append(reqs, tr)
+		}
+		trades[i].Requests = reqs
+	}
+	return &GetEstateOutput{
+		Estate: *estate,
+		Trades: trades,
+	}, nil
 }
 
 // GetEstates - get all estates
 func (s *EstateApiService) GetEstates() (interface{}, error) {
-	// TODO - update GetEstates with the required logic for this service method.
-	// Add api_estate_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'GetEstates' not implemented")
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+	estates := &[]Estate{}
+	if err := db.Select(estates, "SELECT * FROM estate ORDER BY tokenId"); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+	return estates, nil
 }
