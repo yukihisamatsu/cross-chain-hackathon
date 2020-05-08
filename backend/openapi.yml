@@ -251,7 +251,8 @@ components:
       required:
         - id
         - estateId
-        - price
+        - unitPrice
+        - amount
         - seller
         - type
         - requests
@@ -262,12 +263,16 @@ components:
           $ref: "#/components/schemas/trade_id"
         estateId:
           $ref: "#/components/schemas/estate_id"
-        price:
-          # or double?
+        unitPrice:
           type: integer
           format: int64
           minimum: 0
           example: 500
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 5
         buyer:
           $ref: "#/components/schemas/AccAddress"
         seller:

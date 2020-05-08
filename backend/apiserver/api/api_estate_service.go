@@ -43,14 +43,14 @@ func (s *EstateApiService) GetEstateById(estateId string) (interface{}, error) {
 		return nil, ErrorFailedDBGet
 	}
 	trades := []Trade{}
-	rows, err := db.Query("SELECT id, estateId, price, buyer, seller, type, canceled, updatedAt FROM trade WHERE estateId = ?", estateId)
+	rows, err := db.Query("SELECT id, estateId, unitPrice, amount, buyer, seller, type, canceled, updatedAt FROM trade WHERE estateId = ?", estateId)
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
 		t := Trade{}
 		var buyer sql.NullString
-		if err := rows.Scan(&t.Id, &t.EstateId, &t.Price, &buyer, &t.Seller, &t.Type, &t.Canceled, &t.UpdatedAt); err != nil {
+		if err := rows.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &buyer, &t.Seller, &t.Type, &t.Canceled, &t.UpdatedAt); err != nil {
 			log.Println(err)
 			return nil, ErrorFailedDBGet
 		}

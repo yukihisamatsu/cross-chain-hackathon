@@ -36,6 +36,7 @@ func (s *TradeApiService) DeleteTrade(id int64) (interface{}, error) {
 	}
 	q := `UPDATE trade SET canceled = 1 WHERE id = ?`
 	if _, err := db.Exec(q, id); err != nil {
+		log.Println(err)
 		return nil, ErrorFailedDBSet
 	}
 	trade := &Trade{}
@@ -55,6 +56,7 @@ func (s *TradeApiService) DeleteTradeRequest(id int64) (interface{}, error) {
 	}
 	q := `UPDATE tradeRequest SET canceled = 1 WHERE id = ?`
 	if _, err := db.Exec(q, id); err != nil {
+		log.Println(err)
 		return nil, ErrorFailedDBSet
 	}
 	tr := &TradeRequest{}
@@ -73,15 +75,14 @@ func (s *TradeApiService) PostTrade(trade Trade) (interface{}, error) {
 		return nil, ErrorFailedDBConnect
 	}
 
-	q := `INSERT INTO trade(estateId, price, seller, type) values(?, ?, ?, ?)`
-	if _, err := db.Exec(q, trade.EstateId, trade.Price, trade.Seller, trade.Type); err != nil {
+	q := `INSERT INTO trade(estateId, unitPrice, amount, seller, type) values(?, ?, ?, ?, ?)`
+	if _, err := db.Exec(q, trade.EstateId, trade.UnitPrice, trade.Amount, trade.Seller, trade.Type); err != nil {
 		log.Println(err)
 		return nil, ErrorFailedDBSet
 	}
 
 	res := &Trade{}
-	if err := db.Get(res, "select id, estateId, price, seller, type, updatedAt from trade where rowid = last_insert_rowid()"); err != nil {
-		log.Println(err)
+	if err := db.Get(res, "select id, estateId, unitPrice, amount, seller, type, updatedAt from trade where rowid = last_insert_rowid()"); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -97,14 +98,12 @@ func (s *TradeApiService) PostTradeRequest(in PostTradeRequestInput) (interface{
 
 	j, err := json.Marshal(in.CrossTx)
 	if err != nil {
-		log.Println("json.Marshal error")
 		return nil, err
 	}
 	log.Println(string(j))
 
 	q := `INSERT INTO trade_request(tradeId, "from", crossTx) values(?, ?, ?)`
 	if _, err := db.Exec(q, in.TradeId, in.From, string(j)); err != nil {
-		log.Println("ccc")
 		log.Println(err)
 		return nil, ErrorFailedDBSet
 	}
@@ -113,7 +112,6 @@ func (s *TradeApiService) PostTradeRequest(in PostTradeRequestInput) (interface{
 
 	q = `select id, tradeId, "from", canceled, updatedAt from trade_request where rowid = last_insert_rowid()`
 	if err := db.Get(res, q); err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	res.CrossTx = in.CrossTx

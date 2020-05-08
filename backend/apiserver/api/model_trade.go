@@ -20,7 +20,9 @@ type Trade struct {
 
 	EstateId string `json:"estateId"`
 
-	Price int64 `json:"price"`
+	UnitPrice int64 `json:"unitPrice"`
+
+	Amount int64 `json:"amount"`
 
 	Buyer string `json:"buyer,omitempty"`
 
