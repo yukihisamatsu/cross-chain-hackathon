@@ -20,6 +20,7 @@ const (
 	CO_CHAIN_ID       = "ibc0"
 	TYPE_CROSS_TX     = "cosmos-sdk/StdTx"
 	TYPE_MSG_INITIATE = "cross/MsgInitiate"
+	GAS               = "200000"
 )
 
 // TxApiService is a service that implents the logic for the TxApiServicer
@@ -51,9 +52,9 @@ func (s *TxApiService) TxDividendGet(estateId string, perShare int64) (interface
 
 	ctxs := []ContractTransaction{}
 	// TODO
-	timeoutHeight := int64(100000)
+	timeoutHeight := "100000"
 	// TODO
-	nonce := int64(0)
+	nonce := "0"
 	return &CrossTx{
 		Type: TYPE_CROSS_TX,
 		Value: StdTx{
@@ -71,7 +72,7 @@ func (s *TxApiService) TxDividendGet(estateId string, perShare int64) (interface
 			},
 			Fee: StdFee{
 				Amount: []Coin{},
-				Gas:    20000,
+				Gas:    GAS,
 			},
 			Signatures: nil,
 			Memo:       "",

@@ -34,11 +34,26 @@ func (s *UserApiService) GetUser(id string) (interface{}, error) {
 		return nil, ErrorFailedDBConnect
 	}
 
-	log.Printf("id: %s\n", id)
 	user := &User{}
 	if err := db.Get(user, "SELECT * FROM user WHERE id = ?", id); err != nil {
 		log.Println(err)
 		return nil, ErrorFailedDBGet
 	}
 	return user, nil
+}
+
+// GetUsers - get all users
+func (s *UserApiService) GetUsers() (interface{}, error) {
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+
+	users := &[]User{}
+	if err := db.Select(users, "SELECT * FROM user"); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+	return users, nil
 }

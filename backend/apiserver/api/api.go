@@ -42,6 +42,7 @@ type TxApiRouter interface {
 // pass the data to a UserApiServicer to perform the required actions, then write the service results to the http response.
 type UserApiRouter interface { 
 	GetUser(http.ResponseWriter, *http.Request)
+	GetUsers(http.ResponseWriter, *http.Request)
 }
 
 
@@ -83,4 +84,5 @@ type TxApiServicer interface {
 // and updated with the logic required for the API.
 type UserApiServicer interface { 
 	GetUser(string) (interface{}, error)
+	GetUsers() (interface{}, error)
 }
