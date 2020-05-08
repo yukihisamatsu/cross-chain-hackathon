@@ -42,6 +42,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetEstateOutput"
+  /users:
+    get:
+      summary: get all users
+      operationId: getUsers
+      tags:
+        - user
+      responses:
+        "200":
+          description: success to get all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
   /user/{id}:
     get:
       summary: get user information
@@ -449,9 +465,8 @@ components:
           items:
             $ref: "#/components/schemas/Coin"
         gas:
-          type: integer
-          format: int64
-          minimum: 0
+          type: string
+          example: "200000"
 
     StdSignature:
       type: object
@@ -494,14 +509,11 @@ components:
           items:
             $ref: "#/components/schemas/ContractTransaction"
         TimeoutHeight:
-          type: integer
-          format: int64
-          example: 149
+          type: string
+          example: "149"
         Nonce:
-          type: integer
-          format: int64
-          minimum: 0
-          example: 0
+          type: string
+          example: "0"
 
     ContractTransaction:
       type: object

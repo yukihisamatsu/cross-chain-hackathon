@@ -22,6 +22,7 @@ CREATE TABLE trade(
     id INTEGER PRIMARY KEY,
     estateId TEXT NOT NULL,
     price INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
     buyer TEXT,
     seller TEXT NOT NULL,
     type TEXT NOT NULL,
