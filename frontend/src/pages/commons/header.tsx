@@ -12,6 +12,7 @@ const {Header} = Layout;
 interface Props extends RouteComponentProps {
   user: User;
   headerTitle: string;
+  setUser: (user: User) => void;
 }
 
 export class HeaderComponent extends React.PureComponent<Props> {
@@ -20,7 +21,7 @@ export class HeaderComponent extends React.PureComponent<Props> {
   }
 
   render() {
-    const {user, headerTitle, history} = this.props;
+    const {user, headerTitle, setUser, history} = this.props;
     return (
       <HeaderStyled className="header">
         <HeaderTextWrap>
@@ -39,6 +40,7 @@ export class HeaderComponent extends React.PureComponent<Props> {
             type={"default"}
             onClick={() => {
               localStorage.removeItem(LocalStorageUserKey);
+              setUser(User.default());
               history.push(PATHS.SIGN_UP);
             }}
           >

@@ -1,3 +1,5 @@
+import BN from "bn.js";
+
 import {
   IssuerDividend,
   IssuerDividendHistory,
@@ -14,6 +16,8 @@ export const ESTATE_STATUS = {
 } as const;
 export type EstateStatusType = Unbox<typeof ESTATE_STATUS>;
 
+export type EstateExtend = MarketEstate | OwnedEstate | IssuerEstate;
+
 export class Estate {
   tokenId: string;
   name: string;
@@ -21,14 +25,11 @@ export class Estate {
   description: string;
   expectedYield: number;
   dividendDate: string;
+  offerPrice: number;
   issuedBy: Address;
 
-  owner?: string;
   units?: number;
-  perUnit?: number;
   status?: EstateStatusType;
-  userDividend?: UserDividend[];
-  sellOrder?: SellOrder;
 
   constructor({
     tokenId,
@@ -37,6 +38,7 @@ export class Estate {
     description,
     expectedYield,
     dividendDate,
+    offerPrice,
     issuedBy
   }: {
     tokenId: string;
@@ -45,6 +47,7 @@ export class Estate {
     description: string;
     expectedYield: number;
     dividendDate: string;
+    offerPrice: number;
     issuedBy: Address;
   }) {
     this.tokenId = tokenId;
@@ -53,12 +56,12 @@ export class Estate {
     this.description = description;
     this.expectedYield = expectedYield;
     this.dividendDate = dividendDate;
+    this.offerPrice = offerPrice;
     this.issuedBy = issuedBy;
   }
 }
 
 export class OwnedEstate extends Estate {
-  owner: string;
   units: number;
   perUnit: number;
   status: EstateStatusType;
@@ -66,13 +69,13 @@ export class OwnedEstate extends Estate {
   buyOffers: BuyOrder[];
 
   constructor({
-    owner,
     tokenId,
     name,
     imagePath,
     description,
     expectedYield,
     dividendDate,
+    offerPrice,
     issuedBy,
     units,
     perUnit,
@@ -80,13 +83,13 @@ export class OwnedEstate extends Estate {
     dividend,
     buyOffers
   }: {
-    owner: string;
     tokenId: string;
     name: string;
     imagePath: string;
     description: string;
     expectedYield: number;
     dividendDate: string;
+    offerPrice: number;
     issuedBy: Address;
     units: number;
     perUnit: number;
@@ -101,10 +104,10 @@ export class OwnedEstate extends Estate {
       description,
       expectedYield,
       dividendDate,
+      offerPrice,
       issuedBy
     });
 
-    this.owner = owner;
     this.units = units;
     this.perUnit = perUnit;
     this.status = status;
@@ -120,8 +123,8 @@ export class OwnedEstate extends Estate {
       description: "",
       expectedYield: 0,
       dividendDate: "",
+      offerPrice: 0,
       issuedBy: "",
-      owner: "",
       units: 0,
       perUnit: 0,
       status: ESTATE_STATUS.OWNED,
@@ -129,6 +132,10 @@ export class OwnedEstate extends Estate {
       buyOffers: []
     });
   };
+
+  getTotal(): number {
+    return new BN(this.units).muln(this.perUnit).toNumber();
+  }
 }
 
 export class MarketEstate extends Estate {
@@ -141,6 +148,7 @@ export class MarketEstate extends Estate {
     description,
     expectedYield,
     dividendDate,
+    offerPrice,
     issuedBy,
     sellOrders
   }: {
@@ -150,6 +158,7 @@ export class MarketEstate extends Estate {
     description: string;
     expectedYield: number;
     dividendDate: string;
+    offerPrice: number;
     issuedBy: Address;
     sellOrders: SellOrder[];
   }) {
@@ -160,6 +169,7 @@ export class MarketEstate extends Estate {
       description,
       expectedYield,
       dividendDate,
+      offerPrice,
       issuedBy
     });
 
@@ -174,6 +184,7 @@ export class MarketEstate extends Estate {
       description: "",
       expectedYield: 0,
       dividendDate: "",
+      offerPrice: 0,
       issuedBy: "",
       sellOrders: []
     });
@@ -191,6 +202,7 @@ export class IssuerEstate extends Estate {
     description,
     expectedYield,
     dividendDate,
+    offerPrice,
     issuedBy,
     issuerDividend,
     histories
@@ -201,6 +213,7 @@ export class IssuerEstate extends Estate {
     description: string;
     expectedYield: number;
     dividendDate: string;
+    offerPrice: number;
     issuedBy: Address;
     issuerDividend: IssuerDividend[];
     histories: IssuerDividendHistory[];
@@ -212,6 +225,7 @@ export class IssuerEstate extends Estate {
       description,
       expectedYield,
       dividendDate,
+      offerPrice,
       issuedBy
     });
 
@@ -227,6 +241,7 @@ export class IssuerEstate extends Estate {
       description: "",
       expectedYield: 0,
       dividendDate: "",
+      offerPrice: 0,
       issuedBy: "",
       issuerDividend: [],
       histories: []

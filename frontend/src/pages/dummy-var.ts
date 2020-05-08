@@ -8,10 +8,9 @@ import {
   Estate,
   ESTATE_STATUS,
   IssuerEstate,
-  MarketEstate,
   OwnedEstate
 } from "~src/models/estate";
-import {BuyOrder, ORDER_STATUS, SellOrder} from "~src/models/order";
+import {BuyOrder, ORDER_STATUS} from "~src/models/order";
 
 const buyOffers: BuyOrder[] = [
   new BuyOrder({
@@ -66,7 +65,8 @@ const dummyEstateList: Estate[] = [0, 1, 2, 3, 4, 5].map(i => {
     dividendDate: "2020/05/05 00:00:00 UTC",
     expectedYield: 1,
     imagePath: `/assets/img/0${i + 1}.jpg`,
-    issuedBy: "issuerName"
+    issuedBy: "issuerName",
+    offerPrice: 100
   };
   return e;
 });
@@ -80,13 +80,12 @@ export const dummyOwnedEstateList: OwnedEstate[] = dummyEstateList.map(e => {
       ? ESTATE_STATUS.SELLING
       : ESTATE_STATUS.BUYING;
 
-  const oe: OwnedEstate = {
+  const oe: OwnedEstate = new OwnedEstate({
     ...e,
-    owner: `owner${id}`,
     status: status,
     units: id * 2,
     perUnit: id + 1,
-    userDividend: [
+    dividend: [
       {
         dividendDate: "2021/05/05 00:00:00",
         status: USER_DIVIDEND_STATUS.NOT_RECEIVED,
@@ -104,57 +103,9 @@ export const dummyOwnedEstateList: OwnedEstate[] = dummyEstateList.map(e => {
       }
     ],
     buyOffers: status !== ESTATE_STATUS.OWNED ? buyOffers : []
-  };
+  });
 
   return oe;
-});
-
-export const dummyMarketEstateList: MarketEstate[] = dummyEstateList.map(e => {
-  return {
-    ...e,
-    sellOrders: [
-      new SellOrder({
-        tradeId: 1,
-        tokenId: "offerer1tokenId",
-        owner: "owner1",
-        perUnitPrice: 10,
-        quantity: 50,
-        total: 500,
-        status: ORDER_STATUS.SUCCEEDED,
-        buyOffers: status === ESTATE_STATUS.SELLING ? buyOffers : []
-      }),
-      new SellOrder({
-        tradeId: 2,
-        tokenId: "offerer1tokenId",
-        owner: "owner2",
-        perUnitPrice: 11,
-        quantity: 51,
-        total: 551,
-        status: ORDER_STATUS.REQUESTING,
-        buyOffers: status === ESTATE_STATUS.SELLING ? buyOffers : []
-      }),
-      new SellOrder({
-        tradeId: 3,
-        tokenId: "offerer1tokenId",
-        owner: "owner3",
-        perUnitPrice: 100,
-        quantity: 500,
-        total: 50000,
-        status: ORDER_STATUS.ONGOING,
-        buyOffers: status === ESTATE_STATUS.SELLING ? buyOffers : []
-      }),
-      new SellOrder({
-        tradeId: 4,
-        tokenId: "offerer1tokenId",
-        owner: "owner3",
-        perUnitPrice: 200,
-        quantity: 500,
-        total: 100000,
-        status: ORDER_STATUS.FAILED,
-        buyOffers: status === ESTATE_STATUS.SELLING ? buyOffers : []
-      })
-    ]
-  };
 });
 
 export const dummyIssuerEstateList: IssuerEstate[] = dummyEstateList.map(e => {

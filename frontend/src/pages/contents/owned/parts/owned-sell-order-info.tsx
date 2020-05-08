@@ -11,7 +11,7 @@ export const renderOwnedSellOrderInfo = (
 ) => {
   return (
     <Table<OwnedEstate>
-      rowKey={(o: OwnedEstate) => o.owner}
+      rowKey={(o: OwnedEstate) => o.tokenId}
       dataSource={[estate]}
       pagination={false}
       bordered
@@ -24,7 +24,7 @@ export const renderOwnedSellOrderInfo = (
         title="Total"
         key="total"
         render={(estate: OwnedEstate) => {
-          return estate.units * estate.perUnit;
+          return estate.getTotal();
         }}
       />
       <Column

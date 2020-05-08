@@ -1,16 +1,37 @@
 import {User} from "~models/user";
 import {UserApi} from "~src/libs/api";
+import {RPCClient} from "~src/libs/cosmos/rpc-client";
 import {getAddress} from "~src/libs/cosmos/util";
 
 export class UserRepository {
   userApi: UserApi;
+  coinRPCClient: RPCClient;
+  securityRPCClient: RPCClient;
 
-  constructor({userApi}: {userApi: UserApi}) {
+  constructor({
+    userApi,
+    coinRPCClient,
+    securityRPCClient
+  }: {
+    userApi: UserApi;
+    coinRPCClient: RPCClient;
+    securityRPCClient: RPCClient;
+  }) {
     this.userApi = userApi;
+    this.coinRPCClient = coinRPCClient;
+    this.securityRPCClient = securityRPCClient;
   }
 
-  static create({userApi}: {userApi: UserApi}): UserRepository {
-    return new UserRepository({userApi});
+  static create({
+    userApi,
+    coinRPCClient,
+    securityRPCClient
+  }: {
+    userApi: UserApi;
+    coinRPCClient: RPCClient;
+    securityRPCClient: RPCClient;
+  }): UserRepository {
+    return new UserRepository({userApi, coinRPCClient, securityRPCClient});
   }
 
   getUsers = async (): Promise<User[]> => {

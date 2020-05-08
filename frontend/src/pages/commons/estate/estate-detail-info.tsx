@@ -3,17 +3,10 @@ import {Tag} from "antd";
 import React from "react";
 import styled from "styled-components";
 
-import {
-  ESTATE_LIST_TYPE,
-  EstateListType
-} from "~pages/commons/estate/estate-list";
 import {OwnedEstateStatusTagColorMap} from "~pages/consts";
-import {Estate} from "~src/models/estate";
+import {EstateExtend, OwnedEstate} from "~src/models/estate";
 
-export const renderEstateDetailInfo = (
-  type: EstateListType,
-  estate: Estate
-) => {
+export const renderEstateDetailInfo = (estate: EstateExtend) => {
   return (
     <EstateInfoWrap>
       <EstateInfoImageWrap>
@@ -25,15 +18,15 @@ export const renderEstateDetailInfo = (
             height: "auto",
             maxWidth: "500px"
           }}
-          src={estate.imagePath}
+          src={`/assets/img/${estate.imagePath}`}
           alt={estate.name}
         />
       </EstateInfoImageWrap>
       <EstateInfoDetailWrap>
-        {type == ESTATE_LIST_TYPE.OWNED && estate.status && (
+        {isOwnedEstate(estate) && (
           <EstateInfoDetailStatus>
             <EstateInfoDetailStatusTag
-              color={OwnedEstateStatusTagColorMap[estate.status] ?? "green"}
+              color={OwnedEstateStatusTagColorMap[estate.status]}
             >
               {estate.status}
             </EstateInfoDetailStatusTag>
@@ -45,9 +38,9 @@ export const renderEstateDetailInfo = (
           <UserOutlined /> Issued by{" "}
           <span style={{color: "cornflowerblue"}}>{estate.issuedBy}</span>
         </EstateInfoDetailIssuedBy>
-        {type !== ESTATE_LIST_TYPE.MARKET && (
+        {isOwnedEstate(estate) && (
           <EstateInfoDetailUnits>
-            Units: {estate.units ?? "0"}
+            Units: {estate.units.toString(10) ?? "0"}
           </EstateInfoDetailUnits>
         )}
         <EstateInfoDetailDescription>
@@ -57,6 +50,10 @@ export const renderEstateDetailInfo = (
     </EstateInfoWrap>
   );
 };
+
+function isOwnedEstate(e: EstateExtend): e is OwnedEstate {
+  return !!e.status && !!e.units;
+}
 
 const EstateInfoWrap = styled.div`
   width: 100%;

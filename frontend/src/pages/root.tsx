@@ -64,6 +64,7 @@ export class Root extends React.Component<Props, State> {
                 <HeaderComponent
                   user={user}
                   headerTitle={headerTitle}
+                  setUser={this.setUser}
                   {...props}
                 />
                 <Layout>

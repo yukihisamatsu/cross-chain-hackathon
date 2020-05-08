@@ -13,6 +13,7 @@ const {Column} = Table;
 interface Props extends RouteComponentProps {
   config: Config;
   repos: Repositories;
+  user: User;
   setUser: (user: User) => void;
   setHeaderText: (headerText: string) => void;
 }
@@ -27,6 +28,7 @@ export class SignUp extends React.Component<Props, State> {
     this.state = {
       users: []
     };
+    this.props.setHeaderText("SignUp");
   }
 
   async componentDidMount() {

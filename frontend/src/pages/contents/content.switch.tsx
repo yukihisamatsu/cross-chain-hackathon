@@ -31,44 +31,50 @@ export const ContentSwitch = (props: Props) => {
     <Switch>
       <Route
         path={PATHS.MARKET}
-        render={props => renderMarketList(config, repos, setHeaderTitle, props)}
+        render={props =>
+          renderMarketList(config, repos, user, setHeaderTitle, props)
+        }
         exact={true}
       />
       <Route
         path={`${PATHS.MARKET}/:id`}
         render={props =>
-          renderMarketDetail(config, repos, setHeaderTitle, props)
+          renderMarketDetail(config, repos, user, setHeaderTitle, props)
         }
         exact={true}
       />
       <Route
         path={PATHS.OWNED}
-        render={props => renderOwnedList(config, repos, setHeaderTitle, props)}
+        render={props =>
+          renderOwnedList(config, repos, user, setHeaderTitle, props)
+        }
         exact={true}
       />
       <Route
         path={`${PATHS.OWNED}/:id`}
         render={props =>
-          renderOwnedDetail(config, repos, setHeaderTitle, props)
+          renderOwnedDetail(config, repos, user, setHeaderTitle, props)
         }
         exact={true}
       />
       <Route
         path={PATHS.ISSUE}
-        render={props => renderIssueList(config, repos, setHeaderTitle, props)}
+        render={props =>
+          renderIssueList(config, repos, user, setHeaderTitle, props)
+        }
         exact={true}
       />
       <Route
         path={`${PATHS.ISSUE}/:id`}
         render={props =>
-          renderIssueDetail(config, repos, setHeaderTitle, props)
+          renderIssueDetail(config, repos, user, setHeaderTitle, props)
         }
         exact={true}
       />
       <Route
         path={PATHS.SIGN_UP}
         render={props =>
-          renderSignUp(config, repos, setUser, setHeaderTitle, props)
+          renderSignUp(config, repos, user, setUser, setHeaderTitle, props)
         }
         exact={true}
       />
@@ -84,6 +90,7 @@ export const ContentSwitch = (props: Props) => {
 const renderMarketList = (
   config: Config,
   repos: Repositories,
+  user: User,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps
 ) => {
@@ -92,6 +99,7 @@ const renderMarketList = (
       <MarketList
         config={config}
         repos={repos}
+        user={user}
         setHeaderText={setHeaderTitle}
         {...rProps}
       />
@@ -102,6 +110,7 @@ const renderMarketList = (
 const renderMarketDetail = (
   config: Config,
   repos: Repositories,
+  user: User,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps<{id: string}>
 ) => {
@@ -110,6 +119,7 @@ const renderMarketDetail = (
       <MarketDetail
         config={config}
         repos={repos}
+        user={user}
         setHeaderText={setHeaderTitle}
         {...rProps}
       />
@@ -120,6 +130,7 @@ const renderMarketDetail = (
 const renderOwnedList = (
   config: Config,
   repos: Repositories,
+  user: User,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps
 ) => {
@@ -128,6 +139,7 @@ const renderOwnedList = (
       <OwnedList
         config={config}
         repos={repos}
+        user={user}
         setHeaderText={setHeaderTitle}
         {...rProps}
       />
@@ -138,6 +150,7 @@ const renderOwnedList = (
 const renderOwnedDetail = (
   config: Config,
   repos: Repositories,
+  user: User,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps<{id: string}>
 ) => {
@@ -146,6 +159,7 @@ const renderOwnedDetail = (
       <OwnedDetail
         config={config}
         repos={repos}
+        user={user}
         setHeaderText={setHeaderTitle}
         {...rProps}
       />
@@ -156,6 +170,7 @@ const renderOwnedDetail = (
 const renderIssueList = (
   config: Config,
   repos: Repositories,
+  user: User,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps
 ) => {
@@ -164,6 +179,7 @@ const renderIssueList = (
       <IssueList
         config={config}
         repos={repos}
+        user={user}
         setHeaderText={setHeaderTitle}
         {...rProps}
       />
@@ -174,6 +190,7 @@ const renderIssueList = (
 const renderIssueDetail = (
   config: Config,
   repos: Repositories,
+  user: User,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps<{id: string}>
 ) => {
@@ -182,6 +199,7 @@ const renderIssueDetail = (
       <IssueDetail
         config={config}
         repos={repos}
+        user={user}
         setHeaderText={setHeaderTitle}
         {...rProps}
       />
@@ -212,6 +230,7 @@ const renderTop = (
 const renderSignUp = (
   config: Config,
   repos: Repositories,
+  user: User,
   setUser: (user: User) => void,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps
@@ -220,6 +239,7 @@ const renderSignUp = (
     <SignUp
       config={config}
       repos={repos}
+      user={user}
       setUser={setUser}
       setHeaderText={setHeaderTitle}
       {...rProps}

@@ -21,6 +21,7 @@ export class Top extends React.Component<Props> {
     this.state = {
       user: User.default()
     };
+    this.props.setHeaderText("Top");
   }
 
   render() {
