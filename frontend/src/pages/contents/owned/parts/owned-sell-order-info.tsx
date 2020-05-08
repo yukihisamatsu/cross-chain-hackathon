@@ -31,6 +31,7 @@ export const renderOwnedSellOrderInfo = (
         title=""
         dataIndex="offerer"
         key="offerer"
+        align="center"
         render={(_: string, estate: OwnedEstate) =>
           estate.status === ESTATE_STATUS.SELLING && (
             <Button type={"default"} danger onClick={onCancel}>

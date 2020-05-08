@@ -1,2 +1,3 @@
 apiserver/api/openapi.yaml
 demo.db
+out/typescript-axios
