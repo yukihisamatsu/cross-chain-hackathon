@@ -78,6 +78,8 @@ github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf/go.mod h1:E3G3o1h8I7cfc
 github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/cosmos/cosmos-sdk v0.34.4-0.20200422222342-f6e9ee762358 h1:ZsII2yECeLh2jWqFz3bK8JInzzlHPhgB0ob2c9XMyz4=
 github.com/cosmos/cosmos-sdk v0.34.4-0.20200422222342-f6e9ee762358/go.mod h1:Kcgs8c2WWtO2Q+KmDogvGRw+sdEqpvHYXFhj/QiAoOg=
+github.com/cosmos/cosmos-sdk v0.34.4-0.20200423152229-f1fdde5d1b18 h1:9OjontPURNCXMTCeyBx7uG3R3kAGYITXgjFaNj7qfr4=
+github.com/cosmos/cosmos-sdk v0.34.4-0.20200423152229-f1fdde5d1b18/go.mod h1:Kcgs8c2WWtO2Q+KmDogvGRw+sdEqpvHYXFhj/QiAoOg=
 github.com/cosmos/cosmos-sdk v0.38.3 h1:qIBTiw+2T9POaSUJ5rvbBbXeq8C8btBlJxnSegPBd3Y=
 github.com/cosmos/cosmos-sdk v0.38.3/go.mod h1:rzWOofbKfRt3wxiylmYWEFHnxxGj0coyqgWl2I9obAw=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d h1:49RLWk1j44Xu4fjHb6JFYmeUnDORVwHNkDxaQ0ctCVU=
@@ -93,6 +95,10 @@ github.com/danieljoos/wincred v1.0.2 h1:zf4bhty2iLuwgjgpraD2E9UbvO+fe54XXGJbOwe2
 github.com/danieljoos/wincred v1.0.2/go.mod h1:SnuYRW9lp1oJrZX/dXJqr0cPK5gYXqx3EJbmjhLdK9U=
 github.com/datachainlab/cross v0.0.0-20200424150132-40de97112d18 h1:1wVIXpqciv6OCplgKTT1lU12tOiJOxlpMmIWNLD2l8w=
 github.com/datachainlab/cross v0.0.0-20200424150132-40de97112d18/go.mod h1:Prbyy5Uq0ajRDL4/kMUpEQgm591p1QWG4EnXDNgQgw0=
+github.com/datachainlab/cross v0.0.0-20200507124616-00bca9f35e88 h1:MW8Km5lRfSfWTDEyzKRTkaM5byVLrYVJS26LyeKPGE4=
+github.com/datachainlab/cross v0.0.0-20200507124616-00bca9f35e88/go.mod h1:X53uhwOrXksHA34d1aZKb2Tx3veKbr+G014U6gqHpH0=
+github.com/datachainlab/cross v0.0.1 h1:O2HmKXIt0BFlEijT9KwIkYMn44wppa9wxLagGP5Hgcs=
+github.com/datachainlab/cross v0.0.1/go.mod h1:X53uhwOrXksHA34d1aZKb2Tx3veKbr+G014U6gqHpH0=
 github.com/davecgh/go-spew v0.0.0-20171005155431-ecdeabc65495/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

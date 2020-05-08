@@ -1,10 +1,10 @@
 module github.com/datachainlab/cross-chain-hackathon/contract
 
-go 1.13
+go 1.14
 
 require (
-	github.com/cosmos/cosmos-sdk v0.38.3
-	github.com/datachainlab/cross v0.0.0-20200424150132-40de97112d18
+	github.com/cosmos/cosmos-sdk v0.34.4-0.20200423152229-f1fdde5d1b18
+	github.com/datachainlab/cross v0.0.1
 	github.com/otiai10/copy v1.1.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.6.3
@@ -15,5 +15,3 @@ require (
 )
 
 replace github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
-
-replace github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.34.4-0.20200422222342-f6e9ee762358
