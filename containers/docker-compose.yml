@@ -82,4 +82,4 @@ services:
     build:
       context: ./api
     command: >
-      bash -c 'make migrate-up && DB_PATH=./demo.db apiserver'
+      bash -c 'make migrate-up && ./scripts/initdata.sh && DB_PATH=/root/api/demo.db apiserver'
