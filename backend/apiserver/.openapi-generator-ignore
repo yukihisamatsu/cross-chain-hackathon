@@ -27,3 +27,11 @@ go.mod
 README.md
 # if server-config.json is modified, then main.go will modified
 # main.go
+api/api_estate.go
+api/api_estate_service.go
+api/api_trade.go
+api/api_trade_service.go
+api/api_user.go
+api/api_user_service.go
+api/api_tx.go
+api/api_tx_service.go

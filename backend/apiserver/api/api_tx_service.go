@@ -11,10 +11,20 @@ package api
 
 import (
 	"errors"
+	"log"
+
+	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
+)
+
+const (
+	CO_CHAIN_ID       = "ibc0"
+	TYPE_CROSS_TX     = "cosmos-sdk/StdTx"
+	TYPE_MSG_INITIATE = "cross/MsgInitiate"
+	GAS               = "200000"
 )
 
 // TxApiService is a service that implents the logic for the TxApiServicer
-// This service should implement the business logic for every endpoint for the TxApi API. 
+// This service should implement the business logic for every endpoint for the TxApi API.
 // Include any external packages or services that will be required by this service.
 type TxApiService struct {
 }
@@ -24,11 +34,50 @@ func NewTxApiService() TxApiServicer {
 	return &TxApiService{}
 }
 
+// TODO impl or remove
 // TxDividendGet - get a CrossTx to be signed
 func (s *TxApiService) TxDividendGet(estateId string, perShare int64) (interface{}, error) {
-	// TODO - update TxDividendGet with the required logic for this service method.
-	// Add api_tx_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'TxDividendGet' not implemented")
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+
+	issuer := &User{}
+	q := `SELECT user.* FROM estate INNER JOIN user ON estate.issuedBy = user.id WHERE estate.tokenId = ?`
+	if err := db.Get(issuer, q, estateId); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+
+	ctxs := []ContractTransaction{}
+	// TODO
+	timeoutHeight := "100000"
+	// TODO
+	nonce := "0"
+	return &CrossTx{
+		Type: TYPE_CROSS_TX,
+		Value: StdTx{
+			Msg: []Msg{
+				{
+					Type: TYPE_MSG_INITIATE,
+					Value: MsgInitiate{
+						Sender:               issuer.Id,
+						ChainID:              CO_CHAIN_ID,
+						ContractTransactions: ctxs,
+						TimeoutHeight:        timeoutHeight,
+						Nonce:                nonce,
+					},
+				},
+			},
+			Fee: StdFee{
+				Amount: []Coin{},
+				Gas:    GAS,
+			},
+			Signatures: nil,
+			Memo:       "",
+		},
+	}, nil
 }
 
 // TxTradeRequestGet - get a CrossTx to be signed

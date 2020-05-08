@@ -6,9 +6,11 @@ SERVER_CONFIG=./server-config.json
 SERVER_OUTDIR=./apiserver
 
 GIT_USER_ID=datachainlab
-SERVER_REPO_ID=cross-chain-hackathon/backend/api-server
+SERVER_REPO_ID=cross-chain-hackathon/backend/apiserver
 SERVER_PACKAGE_NAME=api
 SERVER_GENERATED_SRC=api
+
+DB_PATH=${PWD}/demo.db
 
 # cf. https://openapi-generator.tech/docs/generators#client-generators
 TS_CLIENT_TYPE=typescript-fetch
@@ -36,4 +38,16 @@ run-doc:
 
 # TODO
 run-server:
-	${MAKE} -C apiserver run
+	DB_PATH=${DB_PATH} ${MAKE} -C apiserver run
+
+setup-db: migrate-reset migrate-up
+	${PWD}/scripts/initdata.sh
+
+migrate-reset:
+	goose -dir ${PWD}/db/migrations sqlite3 ${DB_PATH} reset
+
+migrate-up:
+	goose -dir ${PWD}/db/migrations sqlite3 ${DB_PATH} up
+
+migrate-down:
+	goose -dir ${PWD}/db/migrations sqlite3 ${DB_PATH} down

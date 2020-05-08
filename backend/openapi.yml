@@ -42,6 +42,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetEstateOutput"
+  /users:
+    get:
+      summary: get all users
+      operationId: getUsers
+      tags:
+        - user
+      responses:
+        "200":
+          description: success to get all users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
   /user/{id}:
     get:
       summary: get user information
@@ -148,7 +164,6 @@ paths:
       summary: get a CrossTx to be signed
       tags:
         - tx
-        - trade
       parameters:
         - name: tradeId
           in: query
@@ -173,7 +188,6 @@ paths:
       summary: get a CrossTx to be signed
       tags:
         - tx
-        - dividend
       parameters:
         - name: estateId
           in: query
@@ -237,24 +251,28 @@ components:
       required:
         - id
         - estateId
-        - price
-        - buyer
+        - unitPrice
+        - amount
         - seller
         - type
         - requests
-        - status
+        - canceled
         - updatedAt
       properties:
         id:
           $ref: "#/components/schemas/trade_id"
         estateId:
           $ref: "#/components/schemas/estate_id"
-        price:
-          # or double?
+        unitPrice:
           type: integer
           format: int64
           minimum: 0
           example: 500
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 5
         buyer:
           $ref: "#/components/schemas/AccAddress"
         seller:
@@ -268,15 +286,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TradeRequest"
-        status:
-          type: string
-          enum:
-            - open
-            - canceled
-            # TODO Should the API server trace its cross tx?
-            # - transferring
-            # - completed
-            # - failed
+        canceled:
+          type: boolean
         updatedAt:
           type: string
           format: date-time
@@ -329,6 +340,7 @@ components:
         - name
         - imagePath
         - description
+        - offerPrice
         - expectedYield
         - dividendDate
         - issuedBy
@@ -347,6 +359,12 @@ components:
             Aenean commodo ligula eget dolor. Aenean massa.
             Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
             Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.
+        offerPrice:
+          description: public offering price
+          type: integer
+          format: int64
+          example: 10000
+          minimum: 0
         expectedYield:
           description: expected yield amount per share
           type: integer
@@ -452,9 +470,8 @@ components:
           items:
             $ref: "#/components/schemas/Coin"
         gas:
-          type: integer
-          format: int64
-          minimum: 0
+          type: string
+          example: "200000"
 
     StdSignature:
       type: object
@@ -497,14 +514,11 @@ components:
           items:
             $ref: "#/components/schemas/ContractTransaction"
         TimeoutHeight:
-          type: integer
-          format: int64
-          example: 149
+          type: string
+          example: "149"
         Nonce:
-          type: integer
-          format: int64
-          minimum: 0
-          example: 0
+          type: string
+          example: "0"
 
     ContractTransaction:
       type: object

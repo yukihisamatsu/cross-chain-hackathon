@@ -18,7 +18,7 @@ type MsgInitiate struct {
 
 	ContractTransactions []ContractTransaction `json:"ContractTransactions"`
 
-	TimeoutHeight int64 `json:"TimeoutHeight"`
+	TimeoutHeight string `json:"TimeoutHeight"`
 
-	Nonce int64 `json:"Nonce"`
+	Nonce string `json:"Nonce"`
 }

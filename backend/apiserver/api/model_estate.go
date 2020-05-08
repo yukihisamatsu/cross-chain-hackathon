@@ -19,6 +19,9 @@ type Estate struct {
 
 	Description string `json:"description"`
 
+	// public offering price
+	OfferPrice int64 `json:"offerPrice"`
+
 	// expected yield amount per share
 	ExpectedYield int64 `json:"expectedYield"`
 

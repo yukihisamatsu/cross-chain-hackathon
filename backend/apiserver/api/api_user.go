@@ -35,6 +35,12 @@ func (c *UserApiController) Routes() Routes {
 			"/api/user/{id}",
 			c.GetUser,
 		},
+		{
+			"GetUsers",
+			strings.ToUpper("Get"),
+			"/api/users",
+			c.GetUsers,
+		},
 	}
 }
 
@@ -44,7 +50,18 @@ func (c *UserApiController) GetUser(w http.ResponseWriter, r *http.Request) {
 	id := params["id"]
 	result, err := c.service.GetUser(id)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(HttpStatus(err))
+		return
+	}
+
+	EncodeJSONResponse(result, nil, w)
+}
+
+// GetUsers - get all users
+func (c *UserApiController) GetUsers(w http.ResponseWriter, r *http.Request) {
+	result, err := c.service.GetUsers()
+	if err != nil {
+		w.WriteHeader(HttpStatus(err))
 		return
 	}
 

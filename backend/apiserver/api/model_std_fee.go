@@ -13,5 +13,5 @@ type StdFee struct {
 
 	Amount []Coin `json:"amount"`
 
-	Gas int64 `json:"gas"`
+	Gas string `json:"gas"`
 }

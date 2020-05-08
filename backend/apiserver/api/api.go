@@ -14,12 +14,6 @@ import (
 )
 
 
-// DividendApiRouter defines the required methods for binding the api requests to a responses for the DividendApi
-// The DividendApiRouter implementation should parse necessary information from the http request, 
-// pass the data to a DividendApiServicer to perform the required actions, then write the service results to the http response.
-type DividendApiRouter interface { 
-	TxDividendGet(http.ResponseWriter, *http.Request)
-}
 // EstateApiRouter defines the required methods for binding the api requests to a responses for the EstateApi
 // The EstateApiRouter implementation should parse necessary information from the http request, 
 // pass the data to a EstateApiServicer to perform the required actions, then write the service results to the http response.
@@ -35,7 +29,6 @@ type TradeApiRouter interface {
 	DeleteTradeRequest(http.ResponseWriter, *http.Request)
 	PostTrade(http.ResponseWriter, *http.Request)
 	PostTradeRequest(http.ResponseWriter, *http.Request)
-	TxTradeRequestGet(http.ResponseWriter, *http.Request)
 }
 // TxApiRouter defines the required methods for binding the api requests to a responses for the TxApi
 // The TxApiRouter implementation should parse necessary information from the http request, 
@@ -49,15 +42,7 @@ type TxApiRouter interface {
 // pass the data to a UserApiServicer to perform the required actions, then write the service results to the http response.
 type UserApiRouter interface { 
 	GetUser(http.ResponseWriter, *http.Request)
-}
-
-
-// DividendApiServicer defines the api actions for the DividendApi service
-// This interface intended to stay up to date with the openapi yaml used to generate it, 
-// while the service implementation can ignored with the .openapi-generator-ignore file 
-// and updated with the logic required for the API.
-type DividendApiServicer interface { 
-	TxDividendGet(string, int64) (interface{}, error)
+	GetUsers(http.ResponseWriter, *http.Request)
 }
 
 
@@ -80,7 +65,6 @@ type TradeApiServicer interface {
 	DeleteTradeRequest(int64) (interface{}, error)
 	PostTrade(Trade) (interface{}, error)
 	PostTradeRequest(PostTradeRequestInput) (interface{}, error)
-	TxTradeRequestGet(int64, string) (interface{}, error)
 }
 
 
@@ -100,4 +84,5 @@ type TxApiServicer interface {
 // and updated with the logic required for the API.
 type UserApiServicer interface { 
 	GetUser(string) (interface{}, error)
+	GetUsers() (interface{}, error)
 }
