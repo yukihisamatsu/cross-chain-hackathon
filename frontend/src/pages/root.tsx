@@ -4,9 +4,11 @@ import {HashRouter, Route} from "react-router-dom";
 import styled from "styled-components";
 import {Reset} from "styled-reset";
 
+import {User} from "~models/user";
 import {FooterComponent} from "~pages/commons/footer";
 import {HeaderComponent} from "~pages/commons/header";
 import {SiderComponent} from "~pages/commons/sider";
+import {LocalStorageUserKey} from "~pages/consts";
 import {ContentSwitch} from "~pages/contents/content.switch";
 import {Config} from "~src/heplers/config";
 import {Repositories} from "~src/repos/types";
@@ -19,6 +21,7 @@ interface Props {
 }
 
 interface State {
+  user: User;
   headerTitle: string;
 }
 
@@ -26,9 +29,23 @@ export class Root extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
+      user: User.default(),
       headerTitle: ""
     };
   }
+
+  async componentDidMount() {
+    const data = localStorage.getItem(LocalStorageUserKey);
+    if (!data) {
+      return;
+    }
+    const user = User.create(data);
+    this.setState({user});
+  }
+
+  setUser = (user: User) => {
+    this.setState({user});
+  };
 
   setHeaderTitle = (headerTitle: string) => {
     this.setState({headerTitle});
@@ -36,6 +53,7 @@ export class Root extends React.Component<Props, State> {
 
   render() {
     const {config, repos} = this.props;
+    const {user, headerTitle} = this.state;
     return (
       <HashRouter>
         <Reset />
@@ -43,14 +61,20 @@ export class Root extends React.Component<Props, State> {
           render={props => {
             return (
               <MainLayout>
-                <HeaderComponent headerTitle={this.state.headerTitle} />
+                <HeaderComponent
+                  user={user}
+                  headerTitle={headerTitle}
+                  {...props}
+                />
                 <Layout>
-                  <SiderComponent {...props} />
+                  <SiderComponent user={user} {...props} />
                   <ContentLayout>
                     <ContentWrap>
                       <ContentSwitch
                         config={config}
                         repos={repos}
+                        user={user}
+                        setUser={this.setUser}
                         setHeaderTitle={this.setHeaderTitle}
                       />
                     </ContentWrap>

@@ -1,11 +1,14 @@
 import React from "react";
 import {Route, RouteComponentProps, Switch} from "react-router-dom";
 
+import {User} from "~models/user";
 import {IssueDetail} from "~pages/contents/issue/issue-detail";
 import {IssueList} from "~pages/contents/issue/issue-list";
 import {MarketDetail} from "~pages/contents/market/market-detail";
 import {OwnedDetail} from "~pages/contents/owned/owned-detail";
 import {OwnedList} from "~pages/contents/owned/owned-list";
+import {Top} from "~pages/contents/top/top";
+import {Authenticated} from "~pages/high-order-components/authenticated";
 import {Config} from "~src/heplers/config";
 import {SignUp} from "~src/pages/contents/signup/sign-up";
 import {Repositories} from "~src/repos/types";
@@ -16,11 +19,13 @@ import {MarketList} from "./market/market-list";
 interface Props {
   config: Config;
   repos: Repositories;
+  user: User;
+  setUser: (user: User) => void;
   setHeaderTitle: (headerText: string) => void;
 }
 
 export const ContentSwitch = (props: Props) => {
-  const {config, repos, setHeaderTitle} = props;
+  const {config, repos, user, setUser, setHeaderTitle} = props;
 
   return (
     <Switch>
@@ -61,8 +66,15 @@ export const ContentSwitch = (props: Props) => {
         exact={true}
       />
       <Route
-        path={"/"}
-        render={props => renderSignUp(config, repos, setHeaderTitle, props)}
+        path={PATHS.SIGN_UP}
+        render={props =>
+          renderSignUp(config, repos, setUser, setHeaderTitle, props)
+        }
+        exact={true}
+      />
+      <Route
+        path={PATHS.TOP}
+        render={props => renderTop(config, repos, user, setHeaderTitle, props)}
         exact={false}
       />
     </Switch>
@@ -76,12 +88,14 @@ const renderMarketList = (
   rProps: RouteComponentProps
 ) => {
   return (
-    <MarketList
-      config={config}
-      repos={repos}
-      setHeaderText={setHeaderTitle}
-      {...rProps}
-    />
+    <Authenticated>
+      <MarketList
+        config={config}
+        repos={repos}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
   );
 };
 
@@ -92,12 +106,14 @@ const renderMarketDetail = (
   rProps: RouteComponentProps<{id: string}>
 ) => {
   return (
-    <MarketDetail
-      config={config}
-      repos={repos}
-      setHeaderText={setHeaderTitle}
-      {...rProps}
-    />
+    <Authenticated>
+      <MarketDetail
+        config={config}
+        repos={repos}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
   );
 };
 
@@ -108,12 +124,14 @@ const renderOwnedList = (
   rProps: RouteComponentProps
 ) => {
   return (
-    <OwnedList
-      config={config}
-      repos={repos}
-      setHeaderText={setHeaderTitle}
-      {...rProps}
-    />
+    <Authenticated>
+      <OwnedList
+        config={config}
+        repos={repos}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
   );
 };
 
@@ -124,12 +142,14 @@ const renderOwnedDetail = (
   rProps: RouteComponentProps<{id: string}>
 ) => {
   return (
-    <OwnedDetail
-      config={config}
-      repos={repos}
-      setHeaderText={setHeaderTitle}
-      {...rProps}
-    />
+    <Authenticated>
+      <OwnedDetail
+        config={config}
+        repos={repos}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
   );
 };
 
@@ -140,12 +160,14 @@ const renderIssueList = (
   rProps: RouteComponentProps
 ) => {
   return (
-    <IssueList
-      config={config}
-      repos={repos}
-      setHeaderText={setHeaderTitle}
-      {...rProps}
-    />
+    <Authenticated>
+      <IssueList
+        config={config}
+        repos={repos}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
   );
 };
 
@@ -156,18 +178,41 @@ const renderIssueDetail = (
   rProps: RouteComponentProps<{id: string}>
 ) => {
   return (
-    <IssueDetail
-      config={config}
-      repos={repos}
-      setHeaderText={setHeaderTitle}
-      {...rProps}
-    />
+    <Authenticated>
+      <IssueDetail
+        config={config}
+        repos={repos}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
+  );
+};
+
+const renderTop = (
+  config: Config,
+  repos: Repositories,
+  user: User,
+  setHeaderTitle: (headerText: string) => void,
+  rProps: RouteComponentProps
+) => {
+  return (
+    <Authenticated>
+      <Top
+        config={config}
+        repos={repos}
+        user={user}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
   );
 };
 
 const renderSignUp = (
   config: Config,
   repos: Repositories,
+  setUser: (user: User) => void,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps
 ) => {
@@ -175,6 +220,7 @@ const renderSignUp = (
     <SignUp
       config={config}
       repos={repos}
+      setUser={setUser}
       setHeaderText={setHeaderTitle}
       {...rProps}
     />

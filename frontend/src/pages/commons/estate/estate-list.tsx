@@ -48,9 +48,12 @@ export class EstateList extends React.Component<Props> {
                   <EstateTitle>{estate.name}</EstateTitle>
                   <EstateTokenId>ID: {estate.tokenId}</EstateTokenId>
                   <EstateIssuerName>
-                    <UserOutlined /> Owned by {estate.issuedBy}
+                    <UserOutlined /> Issued by {estate.issuedBy}
                   </EstateIssuerName>
-                  <EstateUnits>Units: {estate.units ?? "0"}</EstateUnits>
+                  {type !== ESTATE_LIST_TYPE.MARKET && (
+                    <EstateUnits>Units: {estate.units ?? "0"}</EstateUnits>
+                  )}
+
                   {type == ESTATE_LIST_TYPE.OWNED &&
                     estate.status &&
                     estate.status !== ESTATE_STATUS.OWNED && (

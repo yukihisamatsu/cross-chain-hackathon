@@ -1,18 +1,18 @@
-import {isHttpsUri, isHttpUri} from "valid-url";
-
 type Env = "development" | "production";
 
 export interface Config {
   apiEndPoint: string;
+  coordinatorEndPoint: string;
+  securityEndPoint: string;
+  coinEndPoint: string;
   env: Env;
 }
 
-export const parseEnv = (): Config => {
-  const apiEndPoint = guard(process.env.API_END_POINT, "API_END_POINT");
-  if (!(isHttpUri(apiEndPoint) || isHttpsUri(apiEndPoint))) {
-    throw new Error(`invalid API endpoint: ${apiEndPoint}`);
-  }
+const productionBaseURL =
+  "http://cch-alb-prod-295901909.us-east-1.elb.amazonaws.com";
+const localBaseURL = "http://localhost";
 
+export const parseEnv = (): Config => {
   let env: Env;
   if (process.env.NODE_ENV && process.env.NODE_ENV === "production") {
     env = "production";
@@ -20,15 +20,32 @@ export const parseEnv = (): Config => {
     env = "development";
   }
 
+  const apiEndPoint =
+    env === "production"
+      ? `${productionBaseURL}:8080/api`
+      : `${localBaseURL}:8080/api`;
+
+  const coordinatorEndPoint =
+    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:1317`;
+
+  const securityEndPoint =
+    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:1318`;
+
+  const coinEndPoint =
+    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:1319`;
+
   return {
+    env,
     apiEndPoint,
-    env
+    coordinatorEndPoint,
+    securityEndPoint,
+    coinEndPoint
   };
 };
 
-const guard = (env: string | undefined, key: string): string => {
-  if (!env) {
-    throw new Error(`not exits: ENV: ${key}`);
-  }
-  return env;
-};
+// const guard = (env: string | undefined, key: string): string => {
+//   if (!env) {
+//     throw new Error(`not exits: ENV: ${key}`);
+//   }
+//   return env;
+// };

@@ -42,12 +42,14 @@ export const renderEstateDetailInfo = (
         <EstateInfoDetailName>{estate.name}</EstateInfoDetailName>
         <EstateInfoDetailTokenId>id: {estate.tokenId}</EstateInfoDetailTokenId>
         <EstateInfoDetailIssuedBy>
-          <UserOutlined /> Owned by{" "}
+          <UserOutlined /> Issued by{" "}
           <span style={{color: "cornflowerblue"}}>{estate.issuedBy}</span>
         </EstateInfoDetailIssuedBy>
-        <EstateInfoDetailUnits>
-          Units: {estate.units ?? "0"}
-        </EstateInfoDetailUnits>
+        {type !== ESTATE_LIST_TYPE.MARKET && (
+          <EstateInfoDetailUnits>
+            Units: {estate.units ?? "0"}
+          </EstateInfoDetailUnits>
+        )}
         <EstateInfoDetailDescription>
           {estate.description}
         </EstateInfoDetailDescription>

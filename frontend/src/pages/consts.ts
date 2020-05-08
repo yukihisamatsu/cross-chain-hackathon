@@ -5,6 +5,8 @@ import {
 import {ESTATE_STATUS} from "~models/estate";
 import {ORDER_STATUS} from "~models/order";
 
+export const LocalStorageUserKey = "USER";
+
 export const OwnedEstateStatusTagColorMap: {
   [ESTATE_STATUS.OWNED]: string;
   [ESTATE_STATUS.SELLING]: string;
