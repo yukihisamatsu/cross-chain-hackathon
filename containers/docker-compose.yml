@@ -45,11 +45,7 @@ services:
 
   initializer:
     container_name: initializer
-    build:
-      context: ./initializer
-      args:
-        - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
-        - APP_DIR=cross-chain-hackathon/contract
+    image: 513838501479.dkr.ecr.us-east-1.amazonaws.com/cch-initializer:latest
     volumes:
       - coordinatorz_data:/root/cli/coordinatorz:ro
       - securityz_data:/root/cli/securityz:ro

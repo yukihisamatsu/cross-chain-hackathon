@@ -9,8 +9,8 @@ REPO_BASE?=$(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com
 APP_REPO_URL?="https://github.com/datachainlab/cross-chain-hackathon"
 APP_DIR="cross-chain-hackathon/contract"
 
-.PHONY: build-image build-image-coin build-image-coordinator build-image-security build-image-relayer build-image-api \
-		deploy-image deploy-image-api deploy-image-coin deploy-image-coordinator deploy-image-relayer deploy-image-security
+.PHONY: build-image build-image-coin build-image-coordinator build-image-security build-image-relayer build-image-api build-image-initializer\
+		deploy-image deploy-image-api deploy-image-coin deploy-image-coordinator deploy-image-relayer deploy-image-security deploy-image-initializer
 
 ecr-login:
 	$(AWS) --region $(AWS_REGION) ecr get-login-password | docker login --username AWS --password-stdin https://$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
@@ -20,6 +20,7 @@ build-image:
 	make build-image-security
 	make build-image-coin
 	make build-image-relayer
+	make build-image-initializer
 
 deploy-image: ecr-login build-image
 	make deploy-image-coordinator
@@ -27,6 +28,7 @@ deploy-image: ecr-login build-image
 	make deploy-image-coin
 	make deploy-image-relayer
 	make deploy-image-api
+	make deploy-image-initializer
 
 COORDINATOR_REPO?=cch-coordinator
 COORDINATOR_CHAIN_ID?=coordinatorz
@@ -83,3 +85,12 @@ build-image-api:
 
 deploy-image-api:
 	docker push $(REPO_BASE)/$(API_REPO):$(TAG)
+
+INITIALIZER_REPO?=cch-initializer
+build-image-initializer:
+	cd initializer && docker build . -t $(REPO_BASE)/$(INITIALIZER_REPO):$(TAG) \
+	--build-arg REPO_URL=$(APP_REPO_URL) \
+	--build-arg APP_DIR=$(APP_DIR)
+
+deploy-image-initializer:
+	docker push $(REPO_BASE)/$(INITIALIZER_REPO):$(TAG)
