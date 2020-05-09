@@ -1,6 +1,11 @@
 #!/bin/bash
 set -xe
 
+INITIALIZER_HOME=/root/.initializer
+if [ ! -d ${INITIALIZER_HOME} ]; then
+    mkdir -p ${INITIALIZER_HOME}
+fi
+
 NODE_CLI=${NODE_CLI:-simappcli}
 COORDINATOR_HOME=${COORDINATOR_HOME:-./cli/coordinatorz/simappcli}
 COIN_HOME=${COIN_HOME:-./cli/coinz/simappcli}
@@ -13,7 +18,7 @@ SECURITY_NODE=${SECURITY_NODE:-tcp://securityz:26657}
 COORDINATOR_CHAIN=coordinatorz
 COIN_CHAIN=coinz
 SECURITY_CHAIN=securityz
-WAIT_NEW_BLOCK=6s
+WAIT_NEW_BLOCK=3s
 
 ACC0=n0
 
@@ -35,8 +40,17 @@ hex32 () {
     printf "0x%08x" $1
 }
 
-# wait to get the latest height
-sleep 15s
+if [ -e ${INITIALIZER_HOME}/done ]; then
+   echo "already initialized"
+   exit 0
+fi
+
+# Wait for chains
+dockerize -wait http://coordinatorz:26657 \
+          -wait http://coinz:26657 \
+          -wait http://securityz:26657
+
+sleep 3s
 
 # mint DCC to everyone
 AMOUNT=$(hex64 1000000)
@@ -76,7 +90,10 @@ IDX=(1 2 2 2 3 4 5 6)
 # Transfer estates
 for i in "${!TO[@]}"; do 
     echo "transfer the estate ${IDX[$i]} to ${TO[$i]}"
-    TX_ID=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate transfer $(hex64 ${IDX[$i]}) ${TO[$i]} $(hex64 ${AM[$i]}) --from ${ACC0} --home ${SECUIRTY_HOME} --keyring-backend=test --yes | jq -r '.txhash')
+    TX_ID=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate transfer $(hex64 ${IDX[$i]}) ${TO[$i]} $(hex64 ${AM[$i]}) --from ${ACC0} --home ${SECURITY_HOME} --keyring-backend=test --yes | jq -r '.txhash')
     sleep ${WAIT_NEW_BLOCK} 
     ${NODE_CLI} query tx ${TX_ID} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
 done
+
+touch ${INITIALIZER_HOME}/done
+
