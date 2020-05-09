@@ -6,7 +6,8 @@ NODED_CLI=${NODED_NAME}
 
 echo "Generating gaia configurations..."
 mkdir -p $NODE_DATA && cd $NODE_DATA
-echo -e "\n" | ${NODED_CLI} testnet -o ${CHAIN_ID} --v 1 --chain-id ${CHAIN_ID} --node-dir-prefix n --keyring-backend test &> /dev/null
+
+echo -e "\n" | ${NODED_CLI} testnet -o ${CHAIN_ID} --v 1 --chain-id ${CHAIN_ID} --node-dir-prefix n --keyring-backend test --mnemonic "${MNEMONIC}" &> /dev/null
 
 cfgpth="n0/${NODED_NAME}/config/config.toml"
 

@@ -2,6 +2,8 @@ FROM golang:alpine AS build-env
 
 ARG CHAIN_ID
 ARG REPO_URL
+ARG APP_DIR
+ARG MNEMONIC
 
 # Set up dependencies
 ENV PACKAGES make git bash
