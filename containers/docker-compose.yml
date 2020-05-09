@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   coordinatorz:
@@ -7,7 +7,9 @@ services:
       context: ./chain
       args:
         - CHAIN_ID=coordinatorz
-        - REPO_URL=https://github.com/datachainlab/cross
+        - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
+        - APP_DIR=cross-chain-hackathon/contract
+        - MNEMONIC=uncle wink forum finish collect midnight capable park fabric quarter seed abuse curve market choice base execute initial bulb title enrich spread exit update
     ports:
       - "26656-26657:26656-26657"
       - "1317:1317"
@@ -17,7 +19,7 @@ services:
       - CHAIN_ID=coordinatorz
       - CONTRACT_MODE=
     volumes:
-      - ./data/cli/coordinatorz:/root/cli
+      - coordinatorz_data:/root/cli
 
   securityz:
     container_name: securityz
@@ -25,7 +27,9 @@ services:
       context: ./chain
       args:
         - CHAIN_ID=securityz
-        - REPO_URL=https://github.com/datachainlab/cross
+        - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
+        - APP_DIR=cross-chain-hackathon/contract
+        - MNEMONIC=uncle wink forum finish collect midnight capable park fabric quarter seed abuse curve market choice base execute initial bulb title enrich spread exit update
     ports:
       - "26659-26660:26656-26657"
       - "1318:1317"
@@ -33,9 +37,9 @@ services:
       sh -c 'cp -a /root/data/securityz/n0/simappcli /root/cli && goreman -f /root/Procfile --set-ports=false -exit-on-error=true start'
     environment:
       - CHAIN_ID=securityz
-      - CONTRACT_MODE=hotel
+      - CONTRACT_MODE=estate
     volumes:
-      - ./data/cli/securityz:/root/cli
+      - securityz_data:/root/cli
 
   coinz:
     container_name: coinz
@@ -43,7 +47,9 @@ services:
       context: ./chain
       args:
         - CHAIN_ID=coinz
-        - REPO_URL=https://github.com/datachainlab/cross
+        - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
+        - APP_DIR=cross-chain-hackathon/contract
+        - MNEMONIC=uncle wink forum finish collect midnight capable park fabric quarter seed abuse curve market choice base execute initial bulb title enrich spread exit update
     ports:
       - "26661-26662:26656-26657"
       - "1319:1317"
@@ -51,14 +57,30 @@ services:
       sh -c 'cp -a /root/data/coinz/n0/simappcli /root/cli && goreman -f /root/Procfile --set-ports=false -exit-on-error=true start'
     environment:
       - CHAIN_ID=coinz
-      - CONTRACT_MODE=train
+      - CONTRACT_MODE=dcc
     volumes:
-      - ./data/cli/coinz:/root/cli
+      - coinz_data:/root/cli
+
+  initializer:
+    container_name: initializer
+    build:
+      context: ./initializer
+      args:
+        - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
+        - APP_DIR=cross-chain-hackathon/contract
+    depends_on:
+      - coordinatorz
+      - securityz
+      - coinz
+    volumes:
+      - coordinatorz_data:/root/cli/coordinatorz:ro
+      - securityz_data:/root/cli/securityz:ro
+      - coinz_data:/root/cli/coinz:ro
 
   relayer0:
     container_name: relayer0
     build:
-        context: ./relayer
+      context: ./relayer
     command: >
       bash -c 'bash /root/data/init-relayer.sh coordinatorz-coinz && rly --home /root/.relayer -d start coordinatorz-coinz'
     volumes:
@@ -67,7 +89,7 @@ services:
   relayer1:
     container_name: relayer1
     build:
-        context: ./relayer
+      context: ./relayer
     command: >
       bash -c 'bash /root/data/init-relayer.sh coordinatorz-securityz && rly --home /root/.relayer -d start coordinatorz-securityz'
     volumes:
@@ -83,3 +105,20 @@ services:
       context: ./api
     command: >
       bash -c 'make migrate-up && ./scripts/initdata.sh && DB_PATH=/root/api/demo.db apiserver'
+
+volumes:
+  coordinatorz_data:
+    driver_opts:
+      type: none
+      device: $PWD/data/cli/coordinatorz
+      o: bind
+  securityz_data:
+    driver_opts:
+      type: none
+      device: $PWD/data/cli/securityz
+      o: bind
+  coinz_data:
+    driver_opts:
+      type: none
+      device: $PWD/data/cli/coinz
+      o: bind
