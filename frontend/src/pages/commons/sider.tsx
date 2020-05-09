@@ -5,13 +5,17 @@ import {Layout, Menu} from "antd";
 import React from "react";
 import {RouteComponentProps} from "react-router-dom";
 
+import {User} from "~models/user";
 import {PATHS} from "~pages/routes";
 
 const {Sider} = Layout;
 
-type Props = Pick<RouteComponentProps, "history">;
+interface Props extends RouteComponentProps {
+  user: User;
+}
 
 export const SiderComponent = (props: Props) => {
+  const {user} = props;
   return (
     <Sider width={170}>
       <Menu theme={"dark"} mode="inline" style={{height: "100%"}}>
@@ -33,15 +37,17 @@ export const SiderComponent = (props: Props) => {
         >
           Mypage
         </Menu.Item>
-        <Menu.Item
-          key="Issuer"
-          icon={<ToolOutlined />}
-          onClick={() => {
-            props.history.push(PATHS.ISSUE);
-          }}
-        >
-          Issuer
-        </Menu.Item>
+        {user.name === "issuer" && (
+          <Menu.Item
+            key="Issuer"
+            icon={<ToolOutlined />}
+            onClick={() => {
+              props.history.push(PATHS.ISSUE);
+            }}
+          >
+            Issuer
+          </Menu.Item>
+        )}
       </Menu>
     </Sider>
   );

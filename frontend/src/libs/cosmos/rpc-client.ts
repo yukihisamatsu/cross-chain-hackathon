@@ -1,7 +1,11 @@
 import fetch from "cross-fetch";
 import {stringify} from "query-string";
 
-type RPCParamTypes = BroadcastTxParams;
+type RPCParamTypes =
+  | ABCIQueryParams
+  | BroadcastTxParams
+  | TxSearchParams
+  | BlockParams;
 
 type RPCMethods =
   | "subscribe"
@@ -85,13 +89,18 @@ class RPCClient {
     return data;
   };
 
-  status = this.get<StatusResponse>("status");
+  abciQuery = this.get<ABCIQueryResponse, ABCIQueryParams>("abci_query");
+  block = this.get<BlockResponse, BlockParams>("block");
   broadcastTxCommit = this.get<BroadcastTxCommitResponse, BroadcastTxParams>(
     "broadcast_tx_commit"
   );
+  status = this.get<StatusResponse>("status");
+  txSearch = this.get<TxSearchResponse, TxSearchParams>("tx_search");
 }
 
 type Base64EncodedString = string;
+type DecimalString = string;
+type JSONString = string;
 
 interface APIResponse<T> {
   id: string;
@@ -104,8 +113,61 @@ interface APIResponse<T> {
   };
 }
 
-interface BroadcastTxParams {
-  tx: string;
+interface BlockParams {
+  height: number;
+}
+
+interface BlockResponse {
+  block_id: {
+    hash: string;
+  };
+}
+
+interface TxSearchParams {
+  query: string;
+  page?: number;
+  per_page?: number;
+  order_by?: "asc" | "desc";
+  prove?: true;
+}
+
+interface TxSearchResponse {
+  txs: TxResponse[];
+}
+
+interface TxResponse {
+  hash: string;
+  height: DecimalString;
+  index: number;
+  tx_result: {
+    code: number;
+    codespace: string;
+    data: unknown; // TODO
+    log: JSONString;
+    info: string;
+    gasWanted: DecimalString;
+    gasUsed: DecimalString;
+    tags: {key: Base64EncodedString; value: Base64EncodedString}[];
+    tx: Base64EncodedString;
+    events: TxResponseDataEvent[];
+    proof?: {
+      RootHash: string;
+      Data: Base64EncodedString;
+      Proof: {
+        total: string;
+        index: string;
+        leaf_hash: Base64EncodedString;
+        aunts: Base64EncodedString[];
+      };
+    };
+  };
+}
+
+interface ABCIQueryParams {
+  path: string;
+  data: string;
+  height?: number;
+  prove?: true;
 }
 
 interface ABCIQueryResponse {
@@ -118,9 +180,9 @@ interface ABCIQueryResponseData {
   Code: number;
   Codespace: string;
   Data: Base64EncodedString | null;
-  Log: string;
-  GasWanted: string;
-  GasUsed: string;
+  Log: JSONString;
+  GasWanted: DecimalString;
+  GasUsed: DecimalString;
   Events: TxResponseDataEvent[];
 }
 
@@ -132,10 +194,8 @@ interface TxResponseDataEvent {
   }[];
 }
 
-interface TxResponseDataLog {
-  code: number;
-  codespace: string;
-  message: string;
+interface BroadcastTxParams {
+  tx: string;
 }
 
 interface BroadcastTxCommitResponse {
@@ -214,7 +274,6 @@ export {
   ABCIQueryResponse,
   ABCIQueryResponseData,
   TxResponseDataEvent,
-  TxResponseDataLog,
   BroadcastTxParams,
   BroadcastTxCommitResponse,
   BroadcastTxResponseCheckTx,

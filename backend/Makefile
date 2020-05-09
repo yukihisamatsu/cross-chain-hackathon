@@ -11,7 +11,7 @@ SERVER_PACKAGE_NAME=api
 SERVER_GENERATED_SRC=api
 
 # cf. https://openapi-generator.tech/docs/generators#client-generators
-TS_CLIENT_TYPE=typescript-fetch
+TS_CLIENT_TYPE=typescript-axios
 
 gen-server-stub:
 	${DOCKER} run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \

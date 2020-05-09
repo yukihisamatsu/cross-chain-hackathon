@@ -29,11 +29,11 @@ export class OwnedSellOrderCancelModal extends React.PureComponent<Props> {
         okText={"CONFIRM"}
         cancelText={"CANCEL"}
       >
-        <div>owner: {estate.owner}</div>
+        <div>owner: {estate.name}</div>
         <div>tokenId: {estate.tokenId}</div>
         <div>units: {estate.units}</div>
         <div>perUnit: {estate.perUnit}</div>
-        <div>total: {estate.units * estate.perUnit}</div>
+        <div>total: {estate.getTotal()}</div>
       </Modal>
     );
   }

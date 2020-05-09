@@ -3,14 +3,20 @@ import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
 
 import {MarketEstate} from "~models/estate";
+import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
-import {ESTATE_LIST_TYPE} from "~pages/commons/estate/estate-list";
 import {MarketSellOrderModal} from "~pages/contents/market/parts/market-sell-order-modal-tsx";
 import {renderMarketSellOrderTable} from "~pages/contents/market/parts/market-sell-order-table";
-import {dummyMarketEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
+import {Config} from "~src/heplers/config";
+import {Repositories} from "~src/repos/types";
 
-type Props = RouteComponentProps<{id: string}>;
+interface Props extends RouteComponentProps<{id: string}> {
+  config: Config;
+  repos: Repositories;
+  user: User;
+  setHeaderText: (headerText: string) => void;
+}
 
 interface State {
   estate: MarketEstate;
@@ -30,19 +36,27 @@ export class MarketDetail extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount() {
-    // TODO get Estate Request & setState({estate)
+  async componentDidMount() {
     const {
+      repos,
+      user,
+      setHeaderText,
       match: {
         params: {id}
       },
       history
     } = this.props;
-    const estate = dummyMarketEstateList.find(e => e.tokenId === id);
-    if (!estate) {
+
+    let estate: MarketEstate;
+
+    try {
+      estate = await repos.estateRepo.getMarketEstate(id, user.address);
+    } catch (e) {
       history.push(PATHS.MARKET);
       return;
     }
+
+    setHeaderText(estate.name);
     this.setState({
       estate
     });
@@ -94,7 +108,7 @@ export class MarketDetail extends React.Component<Props, State> {
     const {estate} = this.state;
     return (
       <EstateDetailWrap>
-        {renderEstateDetailInfo(ESTATE_LIST_TYPE.MARKET, estate)}
+        {renderEstateDetailInfo(estate)}
         {renderMarketSellOrderTable(
           estate.sellOrders.filter(e => !e.isFinished()),
           this.handleSellOrderButtonClick

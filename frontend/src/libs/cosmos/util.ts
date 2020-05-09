@@ -23,18 +23,18 @@ export const getECPairPriv = (mnemonic: string): Buffer => {
   if (!child.privateKey) {
     throw new Error("could not derive private key");
   }
-  const ecpair = bitcoinjs.ECPair.fromPrivateKey(child.privateKey, {
+  const ecPair = bitcoinjs.ECPair.fromPrivateKey(child.privateKey, {
     compressed: false
   });
 
-  if (!ecpair.privateKey) {
+  if (!ecPair.privateKey) {
     throw new Error("could not create ec pair");
   }
-  return ecpair.privateKey;
+  return ecPair.privateKey;
 };
 
-export const getPubKeyBase64 = (ecpairPriv: Buffer): string => {
-  const pubKeyByte = secp256k1.publicKeyCreate(ecpairPriv);
+export const getPubKeyBase64 = (ecPairPriv: Buffer): string => {
+  const pubKeyByte = secp256k1.publicKeyCreate(ecPairPriv);
   return Buffer.from(pubKeyByte).toString("base64");
 };
 
@@ -51,10 +51,10 @@ export const newStdMsg = (
 
 export const sign = (
   stdSignMsg: {json: SignedMsgType; bytes: Buffer},
-  ecpairPriv: Buffer,
+  ecPairPriv: Buffer,
   modeType = "sync"
 ) => {
-  // The supported return types includes "block"(return after tx commit), "sync"(return afer CheckTx) and "async"(return right away).
+  // The supported return types includes "block"(return after tx commit), "sync"(return after CheckTx) and "async"(return right away).
   const signMessage = stdSignMsg.json;
   const hash = crypto
     .createHash("sha256")
@@ -62,7 +62,7 @@ export const sign = (
     .digest("hex");
 
   const buf = Buffer.from(hash, "hex");
-  const signObj = secp256k1.sign(buf, ecpairPriv);
+  const signObj = secp256k1.sign(buf, ecPairPriv);
   const signatureBase64 = signObj.signature.toString("base64");
   return {
     tx: {
@@ -73,7 +73,7 @@ export const sign = (
           signature: signatureBase64,
           pub_key: {
             type: "tendermint/PubKeySecp256k1",
-            value: getPubKeyBase64(ecpairPriv)
+            value: getPubKeyBase64(ecPairPriv)
           }
         }
       ],

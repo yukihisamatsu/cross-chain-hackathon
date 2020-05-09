@@ -3,35 +3,30 @@ import {Tag} from "antd";
 import React from "react";
 import styled from "styled-components";
 
-import {
-  ESTATE_LIST_TYPE,
-  EstateListType
-} from "~pages/commons/estate/estate-list";
 import {OwnedEstateStatusTagColorMap} from "~pages/consts";
-import {Estate} from "~src/models/estate";
+import {EstateExtend, OwnedEstate} from "~src/models/estate";
 
-export const renderEstateDetailInfo = (
-  type: EstateListType,
-  estate: Estate
-) => {
+export const renderEstateDetailInfo = (estate: EstateExtend) => {
   return (
     <EstateInfoWrap>
       <EstateInfoImageWrap>
         <img
           width={"auto"}
           style={{
+            display: "block",
             width: "100%",
-            display: "block"
+            height: "auto",
+            maxWidth: "500px"
           }}
-          src={estate.imagePath}
+          src={`/assets/img/${estate.imagePath}`}
           alt={estate.name}
         />
       </EstateInfoImageWrap>
       <EstateInfoDetailWrap>
-        {type == ESTATE_LIST_TYPE.OWNED && estate.status && (
+        {isOwnedEstate(estate) && (
           <EstateInfoDetailStatus>
             <EstateInfoDetailStatusTag
-              color={OwnedEstateStatusTagColorMap[estate.status] ?? "green"}
+              color={OwnedEstateStatusTagColorMap[estate.status]}
             >
               {estate.status}
             </EstateInfoDetailStatusTag>
@@ -40,12 +35,14 @@ export const renderEstateDetailInfo = (
         <EstateInfoDetailName>{estate.name}</EstateInfoDetailName>
         <EstateInfoDetailTokenId>id: {estate.tokenId}</EstateInfoDetailTokenId>
         <EstateInfoDetailIssuedBy>
-          <UserOutlined /> Owned by{" "}
+          <UserOutlined /> Issued by{" "}
           <span style={{color: "cornflowerblue"}}>{estate.issuedBy}</span>
         </EstateInfoDetailIssuedBy>
-        <EstateInfoDetailUnits>
-          Units: {estate.units ?? "0"}
-        </EstateInfoDetailUnits>
+        {isOwnedEstate(estate) && (
+          <EstateInfoDetailUnits>
+            Units: {estate.units.toString(10) ?? "0"}
+          </EstateInfoDetailUnits>
+        )}
         <EstateInfoDetailDescription>
           {estate.description}
         </EstateInfoDetailDescription>
@@ -53,6 +50,10 @@ export const renderEstateDetailInfo = (
     </EstateInfoWrap>
   );
 };
+
+function isOwnedEstate(e: EstateExtend): e is OwnedEstate {
+  return !!e.status && !!e.units;
+}
 
 const EstateInfoWrap = styled.div`
   width: 100%;

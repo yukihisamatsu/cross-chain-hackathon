@@ -108,9 +108,6 @@ const devServerConfig: DevServer.Configuration = {
   hot: true,
   clientLogLevel: "info",
   historyApiFallback: true
-  // {
-  //   rewrites: [{from: /^\/*/, to: "/index.html"}]
-  // }
 };
 
 const Config: Configuration = {

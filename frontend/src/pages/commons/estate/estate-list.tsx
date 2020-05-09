@@ -3,20 +3,11 @@ import {Card, Tag} from "antd";
 import React from "react";
 import styled from "styled-components";
 
-import {Estate, ESTATE_STATUS} from "~models/estate";
+import {ESTATE_STATUS, EstateExtend, OwnedEstate} from "~models/estate";
 import {OwnedEstateStatusTagColorMap} from "~pages/consts";
-import {Unbox} from "~src/heplers/util-types";
-
-export type EstateListType = Unbox<typeof ESTATE_LIST_TYPE>;
-export const ESTATE_LIST_TYPE = {
-  OWNED: "mypage",
-  MARKET: "market",
-  ISSUE: "issue"
-} as const;
 
 interface Props {
-  type: EstateListType;
-  estateList: Estate[];
+  estateList: EstateExtend[];
   onClick: (tokenId: string) => React.MouseEventHandler;
 }
 
@@ -26,7 +17,7 @@ export class EstateList extends React.Component<Props> {
   }
 
   render() {
-    const {estateList, type, onClick} = this.props;
+    const {estateList, onClick} = this.props;
     return (
       <div>
         <EstateListWrap>
@@ -40,7 +31,7 @@ export class EstateList extends React.Component<Props> {
                   <img
                     style={{height: "266px"}}
                     alt={estate.name}
-                    src={estate.imagePath}
+                    src={`/assets/img/${estate.imagePath}`}
                   />
                 }
               >
@@ -48,10 +39,15 @@ export class EstateList extends React.Component<Props> {
                   <EstateTitle>{estate.name}</EstateTitle>
                   <EstateTokenId>ID: {estate.tokenId}</EstateTokenId>
                   <EstateIssuerName>
-                    <UserOutlined /> Owned by {estate.issuedBy}
+                    <UserOutlined /> Issued by {estate.issuedBy}
                   </EstateIssuerName>
-                  <EstateUnits>Units: {estate.units ?? "0"}</EstateUnits>
-                  {type == ESTATE_LIST_TYPE.OWNED &&
+                  {isOwnedEstate(estate) && (
+                    <EstateUnits>
+                      Units: {estate.units.toString(10) ?? "0"}
+                    </EstateUnits>
+                  )}
+
+                  {isOwnedEstate(estate) &&
                     estate.status &&
                     estate.status !== ESTATE_STATUS.OWNED && (
                       <div>
@@ -70,6 +66,10 @@ export class EstateList extends React.Component<Props> {
       </div>
     );
   }
+}
+
+function isOwnedEstate(e: EstateExtend): e is OwnedEstate {
+  return !!e.status && !!e.units;
 }
 
 const EstateListWrap = styled.div`

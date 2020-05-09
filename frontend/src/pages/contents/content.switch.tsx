@@ -1,94 +1,248 @@
 import React from "react";
 import {Route, RouteComponentProps, Switch} from "react-router-dom";
 
+import {User} from "~models/user";
 import {IssueDetail} from "~pages/contents/issue/issue-detail";
 import {IssueList} from "~pages/contents/issue/issue-list";
 import {MarketDetail} from "~pages/contents/market/market-detail";
 import {OwnedDetail} from "~pages/contents/owned/owned-detail";
 import {OwnedList} from "~pages/contents/owned/owned-list";
+import {Top} from "~pages/contents/top/top";
+import {Authenticated} from "~pages/high-order-components/authenticated";
+import {Config} from "~src/heplers/config";
 import {SignUp} from "~src/pages/contents/signup/sign-up";
+import {Repositories} from "~src/repos/types";
 
 import {PATHS} from "../routes";
 import {MarketList} from "./market/market-list";
 
 interface Props {
+  config: Config;
+  repos: Repositories;
+  user: User;
+  setUser: (user: User) => void;
   setHeaderTitle: (headerText: string) => void;
 }
 
 export const ContentSwitch = (props: Props) => {
-  const {setHeaderTitle} = props;
+  const {config, repos, user, setUser, setHeaderTitle} = props;
 
   return (
     <Switch>
       <Route
         path={PATHS.MARKET}
-        render={props => renderMarketList(props, setHeaderTitle)}
+        render={props =>
+          renderMarketList(config, repos, user, setHeaderTitle, props)
+        }
         exact={true}
       />
       <Route
         path={`${PATHS.MARKET}/:id`}
-        render={props => renderMarketDetail(props)}
+        render={props =>
+          renderMarketDetail(config, repos, user, setHeaderTitle, props)
+        }
         exact={true}
       />
       <Route
         path={PATHS.OWNED}
-        render={props => renderOwnedList(props, setHeaderTitle)}
+        render={props =>
+          renderOwnedList(config, repos, user, setHeaderTitle, props)
+        }
         exact={true}
       />
       <Route
         path={`${PATHS.OWNED}/:id`}
-        render={props => renderOwnedDetail(props)}
+        render={props =>
+          renderOwnedDetail(config, repos, user, setHeaderTitle, props)
+        }
         exact={true}
       />
       <Route
         path={PATHS.ISSUE}
-        render={props => renderIssueList(props, setHeaderTitle)}
+        render={props =>
+          renderIssueList(config, repos, user, setHeaderTitle, props)
+        }
         exact={true}
       />
       <Route
         path={`${PATHS.ISSUE}/:id`}
-        render={props => renderIssueDetail(props)}
+        render={props =>
+          renderIssueDetail(config, repos, user, setHeaderTitle, props)
+        }
         exact={true}
       />
-      <Route path={PATHS.SIGN_UP} component={renderSignUp} exact={false} />
-      <Route path={"/"} component={renderSignUp} exact={false} />
+      <Route
+        path={PATHS.SIGN_UP}
+        render={props =>
+          renderSignUp(config, repos, user, setUser, setHeaderTitle, props)
+        }
+        exact={true}
+      />
+      <Route
+        path={PATHS.TOP}
+        render={props => renderTop(config, repos, user, setHeaderTitle, props)}
+        exact={false}
+      />
     </Switch>
   );
 };
 
 const renderMarketList = (
-  rProps: RouteComponentProps,
-  setHeaderTitle: (headerText: string) => void
+  config: Config,
+  repos: Repositories,
+  user: User,
+  setHeaderTitle: (headerText: string) => void,
+  rProps: RouteComponentProps
 ) => {
-  return <MarketList history={rProps.history} setHeaderText={setHeaderTitle} />;
+  return (
+    <Authenticated>
+      <MarketList
+        config={config}
+        repos={repos}
+        user={user}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
+  );
 };
 
-const renderMarketDetail = (rProps: RouteComponentProps<{id: string}>) => {
-  return <MarketDetail {...rProps} />;
+const renderMarketDetail = (
+  config: Config,
+  repos: Repositories,
+  user: User,
+  setHeaderTitle: (headerText: string) => void,
+  rProps: RouteComponentProps<{id: string}>
+) => {
+  return (
+    <Authenticated>
+      <MarketDetail
+        config={config}
+        repos={repos}
+        user={user}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
+  );
 };
 
 const renderOwnedList = (
-  rProps: RouteComponentProps,
-  setHeaderTitle: (headerText: string) => void
+  config: Config,
+  repos: Repositories,
+  user: User,
+  setHeaderTitle: (headerText: string) => void,
+  rProps: RouteComponentProps
 ) => {
-  return <OwnedList history={rProps.history} setHeaderText={setHeaderTitle} />;
+  return (
+    <Authenticated>
+      <OwnedList
+        config={config}
+        repos={repos}
+        user={user}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
+  );
 };
 
-const renderOwnedDetail = (rProps: RouteComponentProps<{id: string}>) => {
-  return <OwnedDetail {...rProps} />;
+const renderOwnedDetail = (
+  config: Config,
+  repos: Repositories,
+  user: User,
+  setHeaderTitle: (headerText: string) => void,
+  rProps: RouteComponentProps<{id: string}>
+) => {
+  return (
+    <Authenticated>
+      <OwnedDetail
+        config={config}
+        repos={repos}
+        user={user}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
+  );
 };
 
 const renderIssueList = (
-  rProps: RouteComponentProps,
-  setHeaderTitle: (headerText: string) => void
+  config: Config,
+  repos: Repositories,
+  user: User,
+  setHeaderTitle: (headerText: string) => void,
+  rProps: RouteComponentProps
 ) => {
-  return <IssueList history={rProps.history} setHeaderText={setHeaderTitle} />;
+  return (
+    <Authenticated>
+      <IssueList
+        config={config}
+        repos={repos}
+        user={user}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
+  );
 };
 
-const renderIssueDetail = (rProps: RouteComponentProps<{id: string}>) => {
-  return <IssueDetail {...rProps} />;
+const renderIssueDetail = (
+  config: Config,
+  repos: Repositories,
+  user: User,
+  setHeaderTitle: (headerText: string) => void,
+  rProps: RouteComponentProps<{id: string}>
+) => {
+  return (
+    <Authenticated>
+      <IssueDetail
+        config={config}
+        repos={repos}
+        user={user}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
+  );
 };
 
-const renderSignUp = () => {
-  return <SignUp />;
+const renderTop = (
+  config: Config,
+  repos: Repositories,
+  user: User,
+  setHeaderTitle: (headerText: string) => void,
+  rProps: RouteComponentProps
+) => {
+  return (
+    <Authenticated>
+      <Top
+        config={config}
+        repos={repos}
+        user={user}
+        setHeaderText={setHeaderTitle}
+        {...rProps}
+      />
+    </Authenticated>
+  );
+};
+
+const renderSignUp = (
+  config: Config,
+  repos: Repositories,
+  user: User,
+  setUser: (user: User) => void,
+  setHeaderTitle: (headerText: string) => void,
+  rProps: RouteComponentProps
+) => {
+  return (
+    <SignUp
+      config={config}
+      repos={repos}
+      user={user}
+      setUser={setUser}
+      setHeaderText={setHeaderTitle}
+      {...rProps}
+    />
+  );
 };

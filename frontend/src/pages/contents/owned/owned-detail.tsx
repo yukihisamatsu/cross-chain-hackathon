@@ -4,8 +4,8 @@ import styled from "styled-components";
 
 import {OwnedEstate} from "~models/estate";
 import {BuyOrder} from "~models/order";
+import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
-import {ESTATE_LIST_TYPE} from "~pages/commons/estate/estate-list";
 import {OwnedBuyOfferModal} from "~pages/contents/owned/parts/owned-buy-offer-modal";
 import {OwnedBuyOrderCancelModal} from "~pages/contents/owned/parts/owned-buy-order-cancel-modal";
 import {renderOwnedDividendTable} from "~pages/contents/owned/parts/owned-dividend-table";
@@ -14,8 +14,15 @@ import {OwnedSellOrderModal} from "~pages/contents/owned/parts/owned-sell-order-
 import {renderEstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
 import {dummyOwnedEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
+import {Config} from "~src/heplers/config";
+import {Repositories} from "~src/repos/types";
 
-type Props = RouteComponentProps<{id: string}>;
+interface Props extends RouteComponentProps<{id: string}> {
+  config: Config;
+  repos: Repositories;
+  user: User;
+  setHeaderText: (headerText: string) => void;
+}
 
 interface State {
   estate: OwnedEstate;
@@ -55,6 +62,7 @@ export class OwnedDetail extends React.Component<Props, State> {
   componentDidMount() {
     // TODO get Estate Request & setState({estate)
     const {
+      setHeaderText,
       match: {
         params: {id}
       },
@@ -65,6 +73,7 @@ export class OwnedDetail extends React.Component<Props, State> {
       history.push(PATHS.OWNED);
       return;
     }
+    setHeaderText(estate.name);
     this.setState({
       estate
     });
@@ -245,7 +254,7 @@ export class OwnedDetail extends React.Component<Props, State> {
     const {estate} = this.state;
     return (
       <EstateDetailWrap>
-        {renderEstateDetailInfo(ESTATE_LIST_TYPE.OWNED, estate)}
+        {renderEstateDetailInfo(estate)}
         {estate.userDividend.length > 0 &&
           renderOwnedDividendTable(estate.userDividend)}
         {renderEstateOrderTab(

@@ -4,8 +4,8 @@ import styled from "styled-components";
 
 import {IssuerDividendHistory} from "~models/dividend";
 import {IssuerEstate} from "~models/estate";
+import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
-import {ESTATE_LIST_TYPE} from "~pages/commons/estate/estate-list";
 import {IssueDividendDistributeModal} from "~pages/contents/issue/parts/issue-diviend-distributed-modal";
 import {renderIssueDividendHistoryTable} from "~pages/contents/issue/parts/issue-diviend-history-table";
 import {renderIssueDividendOwnerTable} from "~pages/contents/issue/parts/issue-diviend-owner-table";
@@ -13,8 +13,15 @@ import {renderDividendRegisterForm} from "~pages/contents/issue/parts/issue-divi
 import {IssueDividendRegisterModal} from "~pages/contents/issue/parts/issue-diviend-register-modal";
 import {dummyIssuerEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
+import {Config} from "~src/heplers/config";
+import {Repositories} from "~src/repos/types";
 
-type Props = RouteComponentProps<{id: string}>;
+interface Props extends RouteComponentProps<{id: string}> {
+  config: Config;
+  repos: Repositories;
+  user: User;
+  setHeaderText: (headerText: string) => void;
+}
 
 interface State {
   estate: IssuerEstate;
@@ -46,6 +53,7 @@ export class IssueDetail extends React.Component<Props, State> {
 
   componentDidMount() {
     const {
+      setHeaderText,
       match: {
         params: {id}
       },
@@ -57,6 +65,7 @@ export class IssueDetail extends React.Component<Props, State> {
       history.push(PATHS.MARKET);
       return;
     }
+    setHeaderText(estate.name);
     this.setState({
       estate,
       registeredQuantity: 10000
@@ -170,7 +179,7 @@ export class IssueDetail extends React.Component<Props, State> {
     } = this.state;
     return (
       <EstateDetailWrap>
-        {renderEstateDetailInfo(ESTATE_LIST_TYPE.ISSUE, estate)}
+        {renderEstateDetailInfo(estate)}
         {renderIssueDividendOwnerTable(estate.issuerDividend)}
         {renderDividendRegisterForm(
           registeredPerUnit,

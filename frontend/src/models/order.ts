@@ -1,5 +1,5 @@
-import {Address} from "~pages/types";
 import {Unbox} from "~src/heplers/util-types";
+import {Address} from "~src/types";
 
 export const ORDER_STATUS = {
   REQUESTING: "requesting",
@@ -51,6 +51,7 @@ export class Order {
 export class SellOrder extends Order {
   owner: Address;
   buyOffers: BuyOrder[];
+  updatedAt: string;
 
   constructor({
     tradeId,
@@ -60,7 +61,8 @@ export class SellOrder extends Order {
     total,
     status,
     owner,
-    buyOffers
+    buyOffers,
+    updatedAt
   }: {
     tradeId: number;
     tokenId: string;
@@ -70,6 +72,7 @@ export class SellOrder extends Order {
     status: OrderStatusType;
     owner: Address;
     buyOffers: BuyOrder[];
+    updatedAt: string;
   }) {
     super({
       tradeId,
@@ -81,6 +84,7 @@ export class SellOrder extends Order {
     });
     this.owner = owner;
     this.buyOffers = buyOffers;
+    this.updatedAt = updatedAt;
   }
 }
 

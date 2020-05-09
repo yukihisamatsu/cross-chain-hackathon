@@ -1,29 +1,88 @@
-import {Layout} from "antd";
+import {Button, Layout} from "antd";
 import React from "react";
+import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
+
+import {User} from "~models/user";
+import {LocalStorageUserKey} from "~pages/consts";
+import {PATHS} from "~pages/routes";
 
 const {Header} = Layout;
 
-interface Props {
+interface Props extends RouteComponentProps {
+  user: User;
   headerTitle: string;
+  setUser: (user: User) => void;
 }
 
-export const HeaderComponent = (props: Props) => {
-  return (
-    <Header className="header">
-      <HeaderTextWrap>
-        <HeaderText>{props.headerTitle}</HeaderText>
-      </HeaderTextWrap>
-    </Header>
-  );
-};
+export class HeaderComponent extends React.PureComponent<Props> {
+  constructor(props: Props) {
+    super(props);
+  }
 
-const HeaderTextWrap = styled.div`
+  render() {
+    const {user, headerTitle, setUser, history} = this.props;
+    return (
+      <HeaderStyled className="header">
+        <HeaderTextWrap>
+          <HeaderText>{headerTitle}</HeaderText>
+        </HeaderTextWrap>
+        <RightBlock>
+          <UserTextWrap>
+            <UserText>
+              <span>{user.name}</span>
+            </UserText>
+            <UserText>
+              <span>{user.address}</span>
+            </UserText>
+          </UserTextWrap>
+          <LogoutButton
+            type={"default"}
+            onClick={() => {
+              localStorage.removeItem(LocalStorageUserKey);
+              setUser(User.default());
+              history.push(PATHS.SIGN_UP);
+            }}
+          >
+            LOGOUT
+          </LogoutButton>
+        </RightBlock>
+      </HeaderStyled>
+    );
+  }
+}
+
+const HeaderStyled = styled(Header)`
   display: flex;
   justify-content: space-between;
+  padding-right: 30px;
 `;
+
+const HeaderTextWrap = styled.div``;
 
 const HeaderText = styled.div`
   color: white;
   font-size: 1.6rem;
+`;
+
+const RightBlock = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const UserTextWrap = styled.div`
+  height: 100%;
+  padding-right: 20px;
+`;
+
+const UserText = styled.div`
+  font-size: 0.8rem;
+  color: darkgray;
+  text-align: right;
+  height: 20%;
+`;
+
+const LogoutButton = styled(Button)`
+  margin-top: 10px;
 `;

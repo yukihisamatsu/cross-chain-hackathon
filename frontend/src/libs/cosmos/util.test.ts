@@ -1,4 +1,8 @@
-import {getAddress, getECPairPriv, getPubKeyBase64} from "~src/libs/cosmos";
+import {
+  getAddress,
+  getECPairPriv,
+  getPubKeyBase64
+} from "~src/libs/cosmos/util";
 
 describe("cosmos lib", () => {
   const mnemonic =
