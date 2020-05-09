@@ -40,7 +40,7 @@ build-server:
 run-server:
 	make -C apiserver run
 
-setup-db: migrate-reset migrate-up
+setup-db: 
 	make -C apiserver setup-db
 
 migrate-reset:
