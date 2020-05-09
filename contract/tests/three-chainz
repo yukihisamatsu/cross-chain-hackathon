@@ -13,11 +13,16 @@ chainid0=ibc0
 chainid1=ibc1
 chainid2=ibc2
 
+# n0
+#MNEMONIC="beyond civil critic now camp balcony install put absorb upon mansion carbon night gentle anger ecology check cute spirit hold soda roast praise state"
+# issuer
+MNEMONIC="uncle wink forum finish collect midnight capable park fabric quarter seed abuse curve market choice base execute initial bulb title enrich spread exit update"
+
 echo "Generating gaia configurations..."
 mkdir -p $NODE_DATA && cd $NODE_DATA
-echo -e "\n" | ${NODED_CLI} testnet -o $chainid0 --v 1 --chain-id $chainid0 --node-dir-prefix n --keyring-backend test &> /dev/null
-echo -e "\n" | ${NODED_CLI} testnet -o $chainid1 --v 1 --chain-id $chainid1 --node-dir-prefix n --keyring-backend test &> /dev/null
-echo -e "\n" | ${NODED_CLI} testnet -o $chainid2 --v 1 --chain-id $chainid2 --node-dir-prefix n --keyring-backend test &> /dev/null
+echo -e "\n" | ${NODED_CLI} testnet -o $chainid0 --v 1 --chain-id $chainid0 --node-dir-prefix n --keyring-backend test --mnemonic "$MNEMONIC" &> /dev/null
+echo -e "\n" | ${NODED_CLI} testnet -o $chainid1 --v 1 --chain-id $chainid1 --node-dir-prefix n --keyring-backend test --mnemonic "$MNEMONIC" &> /dev/null
+echo -e "\n" | ${NODED_CLI} testnet -o $chainid2 --v 1 --chain-id $chainid2 --node-dir-prefix n --keyring-backend test --mnemonic "$MNEMONIC" &> /dev/null
 
 cfgpth="n0/${NODED_NAME}/config/config.toml"
 if [ "$(uname)" = "Linux" ]; then
