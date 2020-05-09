@@ -2,11 +2,10 @@ FROM golang:alpine AS build-dev
 WORKDIR /root/src
 
 ENV PACKAGES make gcc g++ git bash
+RUN apk add --no-cache $PACKAGES
 
 ADD ./build.sh .
-
-RUN apk add --no-cache $PACKAGES && \
-    bash ./build.sh
+RUN bash ./build.sh
 
 RUN CGO_ENABLED=1 go get -u github.com/pressly/goose/cmd/goose
 

@@ -1,6 +1,6 @@
 GO?=go
 
-DB_PATH=$(CURDIR)/demo.db
+DB_PATH?=$(CURDIR)/demo.db
 
 .PHONY: build run
 
@@ -11,7 +11,6 @@ run:
 	DB_PATH=${DB_PATH} go run ${shell pwd}/main.go
 
 setup-db: migrate-reset migrate-up
-	$(CURDIR)/scripts/initdata.sh
 
 migrate-reset:
 	goose -dir $(CURDIR)/db/migrations sqlite3 ${DB_PATH} reset
