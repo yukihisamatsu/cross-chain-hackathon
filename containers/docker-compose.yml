@@ -68,10 +68,6 @@ services:
       args:
         - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
         - APP_DIR=cross-chain-hackathon/contract
-    depends_on:
-      - coordinatorz
-      - securityz
-      - coinz
     volumes:
       - coordinatorz_data:/root/cli/coordinatorz:ro
       - securityz_data:/root/cli/securityz:ro
