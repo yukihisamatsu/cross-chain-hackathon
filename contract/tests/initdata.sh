@@ -65,13 +65,11 @@ for a in "${WHITELIST_ADDR[@]}"; do
     ${NODE_CLI} query tx ${TX_ID} --node ${SEC_NODE} --chain-id ${SEC_CHAIN} -o json --trust-node
 done
 
-
+# Transfer estates
 # need same length
 TO=(${ALICE_ADDR} ${ALICE_ADDR} ${CAROL_ADDR} ${DAVE_ADDR} ${ALICE_ADDR} ${DAVE_ADDR} ${ALICE_ADDR} ${ALICE_ADDR})
 AM=(999 1000 500 500 500 800 500 1000)
 IDX=(1 2 2 2 3 4 5 6)
- 
-# Transfer estates
 for i in "${!TO[@]}"; do 
     echo "transfer the estate ${IDX[$i]} to ${TO[$i]}"
     TX_ID=$(${NODE_CLI} tx contract call --node ${SEC_NODE} estate transfer $(hex64 ${IDX[$i]}) ${TO[$i]} $(hex64 ${AM[$i]}) --from ${ACC0} --home ${SEC_HOME} --keyring-backend=test --yes | jq -r '.txhash')
@@ -80,39 +78,3 @@ for i in "${!TO[@]}"; do
 done
 
 exit 0
-
-echo "transfer the estate 2 to ${ALICE_ADDR}"
-TX_ID=$(${NODE_CLI} tx contract call --node ${SEC_NODE} estate transfer $(hex64 2) ${ALICE_ADDR} $(hex64 1000) --from ${ACC0} --home ${SEC_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-sleep ${WAIT_NEW_BLOCK} 
-${NODE_CLI} query tx ${TX_ID} --node ${SEC_NODE} --chain-id ${SEC_CHAIN} -o json --trust-node
-
-echo "transfer the estate 2 to ${CAROL_ADDR}"
-TX_ID=$(${NODE_CLI} tx contract call --node ${SEC_NODE} estate transfer $(hex64 2) ${CAROL_ADDR} $(hex64 500) --from ${ACC0} --home ${SEC_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-sleep ${WAIT_NEW_BLOCK} 
-${NODE_CLI} query tx ${TX_ID} --node ${SEC_NODE} --chain-id ${SEC_CHAIN} -o json --trust-node
-
-echo "transfer the estate 2 to ${DAVE_ADDR}"
-TX_ID=$(${NODE_CLI} tx contract call --node ${SEC_NODE} estate transfer $(hex64 2) ${DAVE_ADDR} $(hex64 500) --from ${ACC0} --home ${SEC_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-sleep ${WAIT_NEW_BLOCK} 
-${NODE_CLI} query tx ${TX_ID} --node ${SEC_NODE} --chain-id ${SEC_CHAIN} -o json --trust-node
-
-echo "transfer the estate 3 to ${ALICE_ADDR}"
-TX_ID=$(${NODE_CLI} tx contract call --node ${SEC_NODE} estate transfer $(hex64 3) ${ALICE_ADDR} $(hex64 500) --from ${ACC0} --home ${SEC_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-sleep ${WAIT_NEW_BLOCK} 
-${NODE_CLI} query tx ${TX_ID} --node ${SEC_NODE} --chain-id ${SEC_CHAIN} -o json --trust-node
-
-echo "transfer the estate 4 to ${DAVE_ADDR}"
-TX_ID=$(${NODE_CLI} tx contract call --node ${SEC_NODE} estate transfer $(hex64 4) ${DAVE_ADDR} $(hex64 800) --from ${ACC0} --home ${SEC_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-sleep ${WAIT_NEW_BLOCK} 
-${NODE_CLI} query tx ${TX_ID} --node ${SEC_NODE} --chain-id ${SEC_CHAIN} -o json --trust-node
-
-echo "transfer the estate 5 to ${ALICE_ADDR}"
-TX_ID=$(${NODE_CLI} tx contract call --node ${SEC_NODE} estate transfer $(hex64 5) ${ALICE_ADDR} $(hex64 500) --from ${ACC0} --home ${SEC_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-sleep ${WAIT_NEW_BLOCK} 
-${NODE_CLI} query tx ${TX_ID} --node ${SEC_NODE} --chain-id ${SEC_CHAIN} -o json --trust-node
-
-echo "transfer the estate 6 to ${ALICE_ADDR}"
-TX_ID=$(${NODE_CLI} tx contract call --node ${SEC_NODE} estate transfer $(hex64 6) ${ALICE_ADDR} $(hex64 1000) --from ${ACC0} --home ${SEC_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-sleep ${WAIT_NEW_BLOCK} 
-${NODE_CLI} query tx ${TX_ID} --node ${SEC_NODE} --chain-id ${SEC_CHAIN} -o json --trust-node
-
