@@ -3,7 +3,13 @@ version: "3"
 services:
   coordinatorz:
     container_name: coordinatorz
-    image: 513838501479.dkr.ecr.us-east-1.amazonaws.com/cch-coordinator:latest
+    build:
+      context: ./chain
+      args:
+        - CHAIN_ID=coordinatorz
+        - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
+        - APP_DIR=cross-chain-hackathon/contract
+        - MNEMONIC=uncle wink forum finish collect midnight capable park fabric quarter seed abuse curve market choice base execute initial bulb title enrich spread exit update
     ports:
       - "26656-26657:26656-26657"
       - "1317:1317"
@@ -17,7 +23,13 @@ services:
 
   securityz:
     container_name: securityz
-    image: 513838501479.dkr.ecr.us-east-1.amazonaws.com/cch-security:latest
+    build:
+      context: ./chain
+      args:
+        - CHAIN_ID=securityz
+        - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
+        - APP_DIR=cross-chain-hackathon/contract
+        - MNEMONIC=uncle wink forum finish collect midnight capable park fabric quarter seed abuse curve market choice base execute initial bulb title enrich spread exit update
     ports:
       - "26659-26660:26656-26657"
       - "1318:1317"
@@ -31,7 +43,13 @@ services:
 
   coinz:
     container_name: coinz
-    image: 513838501479.dkr.ecr.us-east-1.amazonaws.com/cch-coin:latest
+    build:
+      context: ./chain
+      args:
+        - CHAIN_ID=coinz
+        - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
+        - APP_DIR=cross-chain-hackathon/contract
+        - MNEMONIC=uncle wink forum finish collect midnight capable park fabric quarter seed abuse curve market choice base execute initial bulb title enrich spread exit update
     ports:
       - "26661-26662:26656-26657"
       - "1319:1317"
@@ -50,6 +68,10 @@ services:
       args:
         - REPO_URL=https://github.com/datachainlab/cross-chain-hackathon
         - APP_DIR=cross-chain-hackathon/contract
+    depends_on:
+      - coordinatorz
+      - securityz
+      - coinz
     volumes:
       - coordinatorz_data:/root/cli/coordinatorz:ro
       - securityz_data:/root/cli/securityz:ro
@@ -57,7 +79,8 @@ services:
 
   relayer0:
     container_name: relayer0
-    image: 513838501479.dkr.ecr.us-east-1.amazonaws.com/cch-relayer:latest
+    build:
+      context: ./relayer
     command: >
       bash -c 'bash /root/data/init-relayer.sh coordinatorz-coinz && rly --home /root/.relayer -d start coordinatorz-coinz'
     volumes:
@@ -65,7 +88,8 @@ services:
 
   relayer1:
     container_name: relayer1
-    image: 513838501479.dkr.ecr.us-east-1.amazonaws.com/cch-relayer:latest
+    build:
+      context: ./relayer
     command: >
       bash -c 'bash /root/data/init-relayer.sh coordinatorz-securityz && rly --home /root/.relayer -d start coordinatorz-securityz'
     volumes:
@@ -74,7 +98,8 @@ services:
   api:
     container_name: api
     hostname: api
-    image: 513838501479.dkr.ecr.us-east-1.amazonaws.com/cch-api:latest
+    build:
+      context: ./api
     working_dir: /root/api
     ports:
       - 8080:8080
