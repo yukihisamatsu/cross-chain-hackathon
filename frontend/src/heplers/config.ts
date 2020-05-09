@@ -26,13 +26,13 @@ export const parseEnv = (): Config => {
       : `${localBaseURL}:8080/api`;
 
   const coordinatorEndPoint =
-    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:1317`;
+    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:26657`;
 
   const securityEndPoint =
-    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:1318`;
+    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:26660`;
 
   const coinEndPoint =
-    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:1319`;
+    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:26662`;
 
   return {
     env,
