@@ -13,7 +13,7 @@ SECURITY_NODE=${SECURITY_NODE:-tcp://securityz:26657}
 COORDINATOR_CHAIN=coordinatorz
 COIN_CHAIN=coinz
 SECURITY_CHAIN=securityz
-WAIT_NEW_BLOCK=5s
+WAIT_NEW_BLOCK=6s
 
 ACC0=n0
 
@@ -62,6 +62,7 @@ for es in "${ESTATE_AMOUNT[@]}"; do
     ${NODE_CLI} query tx ${TX_ID} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
 done
 
+# setup whitelist
 for a in "${WHITELIST_ADDR[@]}"; do
     echo "add $a to the issuer's whitelist"
     TX_ID=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate addToWhitelist $a --from ${ACC0} --home ${SECURITY_HOME} --keyring-backend=test --yes | jq -r '.txhash')
@@ -72,10 +73,10 @@ done
 TO=(${ALICE_ADDR} ${ALICE_ADDR} ${CAROL_ADDR} ${DAVE_ADDR} ${ALICE_ADDR} ${DAVE_ADDR} ${ALICE_ADDR} ${ALICE_ADDR})
 AM=(999 1000 500 500 500 800 500 1000)
 IDX=(1 2 2 2 3 4 5 6)
- 
-${NODE_CLI} query tx ${TX_ID} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
-sleep ${WAIT_NEW_BLOCK} 
-${NODE_CLI} query tx ${TX_ID} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
-sleep ${WAIT_NEW_BLOCK} 
-${NODE_CLI} query tx ${TX_ID} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
-
+# Transfer estates
+for i in "${!TO[@]}"; do 
+    echo "transfer the estate ${IDX[$i]} to ${TO[$i]}"
+    TX_ID=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate transfer $(hex64 ${IDX[$i]}) ${TO[$i]} $(hex64 ${AM[$i]}) --from ${ACC0} --home ${SECUIRTY_HOME} --keyring-backend=test --yes | jq -r '.txhash')
+    sleep ${WAIT_NEW_BLOCK} 
+    ${NODE_CLI} query tx ${TX_ID} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
+done
