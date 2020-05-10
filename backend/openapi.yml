@@ -9,7 +9,7 @@ servers:
 paths:
   /estates:
     get:
-      summary: get all estates
+      summary: get all estates and their associated trades, but trade requests are not included
       operationId: getEstates
       tags:
         - estate
