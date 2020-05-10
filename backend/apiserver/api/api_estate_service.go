@@ -77,10 +77,8 @@ func (s *EstateApiService) GetEstateById(estateId string) (interface{}, error) {
 		}
 		trades[i].Requests = reqs
 	}
-	return &GetEstateOutput{
-		Estate: *estate,
-		Trades: trades,
-	}, nil
+	estate.Trades = trades
+	return estate, nil
 }
 
 // GetEstates - get all estates
@@ -90,10 +88,20 @@ func (s *EstateApiService) GetEstates() (interface{}, error) {
 		log.Println(err)
 		return nil, ErrorFailedDBConnect
 	}
-	estates := &[]Estate{}
-	if err := db.Select(estates, "SELECT * FROM estate ORDER BY tokenId"); err != nil {
+	estates := []Estate{}
+	if err := db.Select(&estates, "SELECT * FROM estate ORDER BY tokenId"); err != nil {
 		log.Println(err)
 		return nil, ErrorFailedDBGet
 	}
-	return estates, nil
+
+	for i, es := range estates {
+		trades := []Trade{}
+		q := `SELECT id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt FROM trade WHERE estateId = ?`
+		if err := db.Select(&trades, q, es.TokenId); err != nil {
+			return nil, err
+		}
+		estates[i].Trades = trades
+	}
+
+	return &estates, nil
 }

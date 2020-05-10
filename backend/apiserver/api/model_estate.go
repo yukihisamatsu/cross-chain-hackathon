@@ -29,4 +29,6 @@ type Estate struct {
 	DividendDate string `json:"dividendDate"`
 
 	IssuedBy string `json:"issuedBy"`
+
+	Trades []Trade `json:"trades"`
 }
