@@ -29,6 +29,8 @@ type TradeApiRouter interface {
 	DeleteTradeRequest(http.ResponseWriter, *http.Request)
 	PostTrade(http.ResponseWriter, *http.Request)
 	PostTradeRequest(http.ResponseWriter, *http.Request)
+	PutTrade(http.ResponseWriter, *http.Request)
+	PutTradeRequest(http.ResponseWriter, *http.Request)
 }
 // TxApiRouter defines the required methods for binding the api requests to a responses for the TxApi
 // The TxApiRouter implementation should parse necessary information from the http request, 
@@ -65,6 +67,8 @@ type TradeApiServicer interface {
 	DeleteTradeRequest(int64) (interface{}, error)
 	PostTrade(Trade) (interface{}, error)
 	PostTradeRequest(PostTradeRequestInput) (interface{}, error)
+	PutTrade(Trade) (interface{}, error)
+	PutTradeRequest(TradeRequest) (interface{}, error)
 }
 
 

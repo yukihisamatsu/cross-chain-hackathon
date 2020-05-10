@@ -28,11 +28,11 @@ type Trade struct {
 
 	Seller string `json:"seller"`
 
-	Type string `json:"type"`
+	Type TradeType `json:"type"`
 
 	Requests []TradeRequest `json:"requests"`
 
-	Canceled bool `json:"canceled"`
+	Status TradeStatus `json:"status"`
 
 	UpdatedAt time.Time `json:"updatedAt"`
 }

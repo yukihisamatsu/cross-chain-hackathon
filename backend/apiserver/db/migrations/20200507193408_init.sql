@@ -26,7 +26,7 @@ CREATE TABLE trade(
     buyer TEXT,
     seller TEXT NOT NULL,
     type TEXT NOT NULL,
-    canceled INTEGER NOT NULL DEFAULT 0,
+    status INTEGER NOT NULL DEFAULT 0,
     updatedAt DATETIME NOT NULL DEFAULT (DATETIME(CURRENT_TIMESTAMP)),
     FOREIGN KEY(estateId) references estate(tokenId),
     FOREIGN KEY(buyer) references user(id),
@@ -43,7 +43,7 @@ CREATE TABLE trade_request(
     tradeId INTEGER NOT NULL,
     "from" TEXT NOT NULL,
     crossTx BLOB NOT NULL,
-    canceled INTEGER NOT NULL DEFAULT 0,
+    status INTEGER NOT NULL DEFAULT 0,
     updatedAt DATETIME NOT NULL DEFAULT (DATETIME(CURRENT_TIMESTAMP)),
     FOREIGN KEY(tradeId) references trade(id),
     FOREIGN KEY("from") references user(id)
