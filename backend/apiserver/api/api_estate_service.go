@@ -43,21 +43,21 @@ func (s *EstateApiService) GetEstateById(estateId string) (interface{}, error) {
 		return nil, ErrorFailedDBGet
 	}
 	trades := []Trade{}
-	rows, err := db.Query("SELECT id, estateId, unitPrice, amount, buyer, seller, type, canceled, updatedAt FROM trade WHERE estateId = ?", estateId)
+	rows, err := db.Query("SELECT id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt FROM trade WHERE estateId = ?", estateId)
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
 		t := Trade{}
 		var buyer sql.NullString
-		if err := rows.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &buyer, &t.Seller, &t.Type, &t.Canceled, &t.UpdatedAt); err != nil {
+		if err := rows.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &buyer, &t.Seller, &t.Type, &t.Status, &t.UpdatedAt); err != nil {
 			log.Println(err)
 			return nil, ErrorFailedDBGet
 		}
 		trades = append(trades, t)
 	}
 
-	q := `SELECT id, tradeId, "from", crossTx, canceled, updatedAt FROM trade_request WHERE tradeId = ?`
+	q := `SELECT id, tradeId, "from", crossTx, status, updatedAt FROM trade_request WHERE tradeId = ?`
 	for i := 0; i < len(trades); i++ {
 		reqs := []TradeRequest{}
 		rs, err := db.Query(q, trades[i].Id)
@@ -67,7 +67,7 @@ func (s *EstateApiService) GetEstateById(estateId string) (interface{}, error) {
 		for rs.Next() {
 			tr := TradeRequest{}
 			j := []byte{}
-			if err := rs.Scan(&tr.Id, &tr.TradeId, &tr.From, &j, &tr.Canceled, &tr.UpdatedAt); err != nil {
+			if err := rs.Scan(&tr.Id, &tr.TradeId, &tr.From, &j, &tr.Status, &tr.UpdatedAt); err != nil {
 				return nil, err
 			}
 			if err := json.Unmarshal(j, &tr.CrossTx); err != nil {

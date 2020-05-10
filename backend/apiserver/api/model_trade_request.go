@@ -25,7 +25,7 @@ type TradeRequest struct {
 
 	CrossTx CrossTx `json:"crossTx"`
 
-	Canceled bool `json:"canceled"`
+	Status TradeRequestStatus `json:"status"`
 
 	UpdatedAt time.Time `json:"updatedAt"`
 }
