@@ -133,6 +133,7 @@ interface TxSearchParams {
 
 interface TxSearchResponse {
   txs: TxResponse[];
+  total_count: DecimalString;
 }
 
 interface TxResponse {

@@ -1,120 +1,90 @@
-import {MarketEstate} from "~models/estate";
+import {ESTATE_STATUS, MarketEstate, OwnedEstate} from "~models/estate";
 import {ORDER_STATUS, SellOrder} from "~models/order";
-import {EstateApi, TradeApi, TradeTypeEnum} from "~src/libs/api";
-import {RPCClient} from "~src/libs/cosmos/rpc-client";
+import {
+  Estate as EstateDAO,
+  EstateApi,
+  TradeApi,
+  TradeType
+} from "~src/libs/api";
+import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {Address} from "~src/types";
 
 export class EstateRepository {
   estateApi: EstateApi;
   tradeApi: TradeApi;
-  coinRPCClient: RPCClient;
-  securityRPCClient: RPCClient;
-  coordinatorRPCClient: RPCClient;
+  estateContract: EstateContract;
 
   constructor({
     estateApi,
     tradeApi,
-    coinRPCClient,
-    securityRPCClient,
-    coordinatorRPCClient
+    estateContract
   }: {
     estateApi: EstateApi;
     tradeApi: TradeApi;
-    coinRPCClient: RPCClient;
-    securityRPCClient: RPCClient;
-    coordinatorRPCClient: RPCClient;
+    estateContract: EstateContract;
   }) {
     this.estateApi = estateApi;
     this.tradeApi = tradeApi;
-    this.coinRPCClient = coinRPCClient;
-    this.securityRPCClient = securityRPCClient;
-    this.coordinatorRPCClient = coordinatorRPCClient;
+    this.estateContract = estateContract;
   }
 
   static create({
     estateApi,
     tradeApi,
-    coinRPCClient,
-    securityRPCClient,
-    coordinatorRPCClient
+    estateContract
   }: {
     estateApi: EstateApi;
     tradeApi: TradeApi;
-    coinRPCClient: RPCClient;
-    securityRPCClient: RPCClient;
-    coordinatorRPCClient: RPCClient;
+    estateContract: EstateContract;
   }): EstateRepository {
     return new EstateRepository({
       estateApi,
       tradeApi,
-      coinRPCClient,
-      securityRPCClient,
-      coordinatorRPCClient
+      estateContract
     });
   }
 
-  getMarketEstates = async (): Promise<MarketEstate[]> => {
-    const {data: estates} = await this.estateApi.getEstates();
-
-    return estates.map(estate => {
-      const {
-        tokenId,
-        name,
-        imagePath,
-        description,
-        issuedBy,
-        dividendDate,
-        expectedYield,
-        offerPrice
-      } = estate;
-
-      return {
-        tokenId,
-        name,
-        imagePath,
-        description,
-        issuedBy,
-        dividendDate,
-        expectedYield,
-        offerPrice,
-        sellOrders: []
-      };
-    });
+  getMarketEstates = async (owner: Address): Promise<MarketEstate[]> => {
+    const {data: daos} = await this.estateApi.getEstates();
+    return await Promise.all(
+      daos.map(async (dao: EstateDAO) => await this.toMarketEstate(dao, owner))
+    );
   };
 
   getMarketEstate = async (
     estateId: string,
     owner: Address
   ): Promise<MarketEstate> => {
+    const {data: dao} = await this.estateApi.getEstateById(estateId);
+    return this.toMarketEstate(dao, owner);
+  };
+
+  private toMarketEstate(dao: EstateDAO, owner: Address): MarketEstate {
     const {
-      data: {
-        estate: {
-          tokenId,
-          name,
-          imagePath,
-          description,
-          issuedBy,
-          dividendDate,
-          expectedYield,
-          offerPrice
-        },
-        trades
-      }
-    } = await this.estateApi.getEstateById(estateId);
+      tokenId,
+      name,
+      imagePath,
+      description,
+      issuedBy,
+      dividendDate,
+      expectedYield,
+      offerPrice,
+      trades
+    } = dao;
 
     const sellOrders: SellOrder[] = trades
       .filter(trade => {
         return (
-          trade.type === TradeTypeEnum.Sell &&
+          trade.type === TradeType.SELL &&
           trade.seller !== owner &&
-          !trade.canceled &&
-          trade.estateId === estateId
+          !trade.status &&
+          trade.estateId === tokenId
         );
       })
       .map(({id, amount, seller, unitPrice, updatedAt}) => {
         return new SellOrder({
           tradeId: id,
-          tokenId: estateId,
+          tokenId,
           owner: seller,
           total: amount,
           perUnitPrice: unitPrice,
@@ -125,7 +95,7 @@ export class EstateRepository {
         });
       });
 
-    return {
+    return new MarketEstate({
       tokenId,
       name,
       imagePath,
@@ -135,40 +105,61 @@ export class EstateRepository {
       offerPrice,
       expectedYield,
       sellOrders
-    };
+    });
+  }
+
+  getOwnedEstates = async (owner: Address): Promise<OwnedEstate[]> => {
+    const {data: daos} = await this.estateApi.getEstates();
+    const ret = (
+      await Promise.all(
+        daos.map(async (dao: EstateDAO) => await this.toOwnedEstate(dao, owner))
+      )
+    ).filter(e => e !== null);
+
+    return ret as OwnedEstate[];
   };
 
-  // getOwnedEstates = async (owner: string): Promise<OwnedEstate[]> => {
-  //   const {data: estates} = await this.estateApi.getEstates();
-  //
-  //   return estates.map(estate => {
-  //     const {
-  //       tokenId,
-  //       name,
-  //       imagePath,
-  //       description,
-  //       issuedBy,
-  //       dividendDate,
-  //       expectedYield,
-  //       offerPrice
-  //     } = estate;
-  //
-  //     return {
-  //       tokenId,
-  //       name,
-  //       imagePath,
-  //       description,
-  //       issuedBy,
-  //       dividendDate,
-  //       expectedYield,
-  //       offerPrice,
-  //       owner,
-  //       userDividend: [] // TODO
-  //       status: ESTATE_STATUS.OWNED, // tradeの中を見て判定
-  //       buyOffers
-  //
-  //     };
-  //   });
-  //   //  balanceOfで残高を持っているか確認
-  // };
+  getOwnedEstate = async (
+    estateId: string,
+    owner: Address
+  ): Promise<OwnedEstate | null> => {
+    const {data: dao} = await this.estateApi.getEstateById(estateId);
+    return this.toOwnedEstate(dao, owner);
+  };
+
+  private toOwnedEstate = async (
+    dao: EstateDAO,
+    owner: Address
+  ): Promise<OwnedEstate | null> => {
+    const {
+      tokenId,
+      name,
+      imagePath,
+      description,
+      issuedBy,
+      dividendDate,
+      expectedYield,
+      offerPrice
+    } = dao;
+
+    const units = await this.estateContract.balanceOf(owner, tokenId);
+    if (units.isZero()) {
+      return null;
+    }
+
+    return new OwnedEstate({
+      tokenId,
+      name,
+      imagePath,
+      description,
+      issuedBy,
+      dividendDate,
+      expectedYield,
+      offerPrice,
+      units: units.toNumber(),
+      buyOffers: [], // TODO
+      dividend: [], // TODO
+      status: ESTATE_STATUS.OWNED // TODO
+    });
+  };
 }

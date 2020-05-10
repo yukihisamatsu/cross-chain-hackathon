@@ -1,3 +1,4 @@
+import {message} from "antd";
 import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
@@ -38,7 +39,7 @@ export class MarketDetail extends React.Component<Props, State> {
 
   async componentDidMount() {
     const {
-      repos,
+      repos: {estateRepo},
       user,
       setHeaderText,
       match: {
@@ -50,16 +51,16 @@ export class MarketDetail extends React.Component<Props, State> {
     let estate: MarketEstate;
 
     try {
-      estate = await repos.estateRepo.getMarketEstate(id, user.address);
+      estate = await estateRepo.getMarketEstate(id, user.address);
+      setHeaderText(estate.name);
+      this.setState({
+        estate
+      });
     } catch (e) {
+      message.error(e);
       history.push(PATHS.MARKET);
       return;
     }
-
-    setHeaderText(estate.name);
-    this.setState({
-      estate
-    });
   }
 
   handleSellOrderButtonClick = (selectedOwner: string) => () => {

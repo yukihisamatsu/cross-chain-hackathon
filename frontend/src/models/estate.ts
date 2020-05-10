@@ -1,10 +1,6 @@
 import BN from "bn.js";
 
-import {
-  IssuerDividend,
-  IssuerDividendHistory,
-  UserDividend
-} from "~models/dividend";
+import {DividendHistory, IssuerDividend} from "~models/dividend";
 import {Unbox} from "~src/heplers/util-types";
 import {BuyOrder, SellOrder} from "~src/models/order";
 import {Address} from "~src/types";
@@ -63,9 +59,8 @@ export class Estate {
 
 export class OwnedEstate extends Estate {
   units: number;
-  perUnit: number;
   status: EstateStatusType;
-  userDividend: UserDividend[];
+  userDividend: DividendHistory[];
   buyOffers: BuyOrder[];
 
   constructor({
@@ -78,7 +73,6 @@ export class OwnedEstate extends Estate {
     offerPrice,
     issuedBy,
     units,
-    perUnit,
     status,
     dividend,
     buyOffers
@@ -92,9 +86,8 @@ export class OwnedEstate extends Estate {
     offerPrice: number;
     issuedBy: Address;
     units: number;
-    perUnit: number;
     status: EstateStatusType;
-    dividend: UserDividend[];
+    dividend: DividendHistory[];
     buyOffers: BuyOrder[];
   }) {
     super({
@@ -109,7 +102,6 @@ export class OwnedEstate extends Estate {
     });
 
     this.units = units;
-    this.perUnit = perUnit;
     this.status = status;
     this.userDividend = dividend;
     this.buyOffers = buyOffers;
@@ -126,15 +118,14 @@ export class OwnedEstate extends Estate {
       offerPrice: 0,
       issuedBy: "",
       units: 0,
-      perUnit: 0,
       status: ESTATE_STATUS.OWNED,
       dividend: [],
       buyOffers: []
     });
   };
 
-  getTotal(): number {
-    return new BN(this.units).muln(this.perUnit).toNumber();
+  getTotal(perUnit: number): number {
+    return new BN(this.units).muln(perUnit).toNumber();
   }
 }
 
@@ -193,7 +184,7 @@ export class MarketEstate extends Estate {
 
 export class IssuerEstate extends Estate {
   issuerDividend: IssuerDividend[];
-  histories: IssuerDividendHistory[];
+  histories: DividendHistory[];
 
   constructor({
     tokenId,
@@ -216,7 +207,7 @@ export class IssuerEstate extends Estate {
     offerPrice: number;
     issuedBy: Address;
     issuerDividend: IssuerDividend[];
-    histories: IssuerDividendHistory[];
+    histories: DividendHistory[];
   }) {
     super({
       tokenId,

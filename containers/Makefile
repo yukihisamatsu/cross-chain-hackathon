@@ -20,6 +20,7 @@ build-image:
 	make build-image-security
 	make build-image-coin
 	make build-image-relayer
+	make build-image-api
 	make build-image-initializer
 
 deploy-image: ecr-login build-image

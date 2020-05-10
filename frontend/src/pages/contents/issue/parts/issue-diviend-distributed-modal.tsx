@@ -1,10 +1,10 @@
 import {Modal} from "antd";
 import React from "react";
 
-import {IssuerDividendHistory} from "~models/dividend";
+import {DividendHistory} from "~models/dividend";
 
 interface Props {
-  history: IssuerDividendHistory;
+  history: DividendHistory;
   onOK: () => void;
   onCancel: () => void;
   visible: boolean;

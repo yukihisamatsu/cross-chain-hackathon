@@ -2,7 +2,7 @@ import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
 
-import {IssuerDividendHistory} from "~models/dividend";
+import {DividendHistory} from "~models/dividend";
 import {IssuerEstate} from "~models/estate";
 import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
@@ -30,7 +30,7 @@ interface State {
   registeredTotal: number;
   registerModalVisible: boolean;
   registerModalConfirmLoading: boolean;
-  selectedHistory: IssuerDividendHistory;
+  selectedHistory: DividendHistory;
   distributedModalVisible: boolean;
   distributedModalConfirmLoading: boolean;
 }
@@ -45,7 +45,7 @@ export class IssueDetail extends React.Component<Props, State> {
       registeredTotal: 0,
       registerModalVisible: false,
       registerModalConfirmLoading: false,
-      selectedHistory: IssuerDividendHistory.default(),
+      selectedHistory: DividendHistory.default(),
       distributedModalVisible: false,
       distributedModalConfirmLoading: false
     };
@@ -72,9 +72,7 @@ export class IssueDetail extends React.Component<Props, State> {
     });
   }
 
-  handleDistributeDividendButtonClick = (
-    history: IssuerDividendHistory
-  ) => () => {
+  handleDistributeDividendButtonClick = (history: DividendHistory) => () => {
     this.setState({
       selectedHistory: history,
       distributedModalVisible: true
@@ -90,7 +88,7 @@ export class IssueDetail extends React.Component<Props, State> {
 
     const resetState = () =>
       this.setState({
-        selectedHistory: IssuerDividendHistory.default(),
+        selectedHistory: DividendHistory.default(),
         distributedModalVisible: false,
         distributedModalConfirmLoading: false
       });

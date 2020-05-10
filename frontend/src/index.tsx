@@ -6,6 +6,8 @@ import ReactDOM from "react-dom";
 import {Root} from "~pages/root";
 import {createApiClient} from "~src/heplers/api-client";
 import {parseEnv} from "~src/heplers/config";
+import {EstateContract} from "~src/libs/cosmos/contract/estate";
+import {RestClient} from "~src/libs/cosmos/rest-client";
 import {RPCClient} from "~src/libs/cosmos/rpc-client";
 import {EstateRepository} from "~src/repos/estate";
 import {Repositories} from "~src/repos/types";
@@ -17,9 +19,15 @@ import {UserRepository} from "~src/repos/user";
     basePath: config.apiEndPoint
   });
 
-  const coinRPCClient = new RPCClient(config.coinEndPoint);
-  const securityRPCClient = new RPCClient(config.securityEndPoint);
-  const coordinatorRPCClient = new RPCClient(config.coordinatorEndPoint);
+  const coinRPCClient = new RPCClient(config.coinRPCEndPoint);
+  const securityRPCClient = new RPCClient(config.securityRPCEndPoint);
+  // const coordinatorRPCClient = new RPCClient(config.coordinatorRPCEndPoint);
+
+  // const coinRestClient = new RestClient(config.coinRESTEndPoint);
+  const securityRestClient = new RestClient(config.securityRESTEndPoint);
+  // const coordinatorRestClient = new RestClient(config.coordinatorRESTEndPoint);
+
+  const estateContract = new EstateContract({securityRestClient});
 
   const repos: Repositories = {
     userRepo: UserRepository.create({
@@ -27,12 +35,11 @@ import {UserRepository} from "~src/repos/user";
       coinRPCClient,
       securityRPCClient
     }),
+
     estateRepo: EstateRepository.create({
       estateApi,
       tradeApi,
-      coinRPCClient,
-      securityRPCClient,
-      coordinatorRPCClient
+      estateContract
     })
   };
 

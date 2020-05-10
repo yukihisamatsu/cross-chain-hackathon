@@ -1,6 +1,6 @@
 import {RPCClient} from "~src/libs/cosmos/rpc-client";
 
-describe("cosmos lib", () => {
+describe("cosmos rpc client test suites", () => {
   const coordinatorClient = new RPCClient("http://localhost:26657");
   const securityClient = new RPCClient("http://localhost:26660");
   const coinClient = new RPCClient("http://localhost:26662");
@@ -29,5 +29,13 @@ describe("cosmos lib", () => {
       query: `"tx.height=${blockHeight}"`
     });
     expect(result).not.toBeUndefined();
+  });
+
+  test("event type Test", async () => {
+    // const address = "cosmos1yk0x4pqcwyuxtrsd8nqz2x0xd3ucafed96wd02";
+    const result = await securityClient.txSearch({
+      query: `"TRANSFER.tokenID='1'"`
+    });
+    expect(result.result.total_count).not.toEqual("0");
   });
 });

@@ -1,9 +1,8 @@
-import {Collapse, Table, Tag} from "antd";
+import {Collapse, Table} from "antd";
 import React from "react";
 import styled from "styled-components";
 
-import {UserDividend, UserDividendStatusType} from "~models/dividend";
-import {UserDividendStatusTagColorMap} from "~pages/consts";
+import {DividendHistory} from "~models/dividend";
 
 const {Panel} = Collapse;
 
@@ -18,21 +17,10 @@ const columns = [
     title: "Quantity",
     dataIndex: "totalAmount",
     key: "totalAmount"
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    width: 150,
-    render: (status: UserDividendStatusType) => (
-      <Tag color={UserDividendStatusTagColorMap[status] ?? "green"}>
-        {status}
-      </Tag>
-    )
   }
 ];
 
-export const renderOwnedDividendTable = (dividends: UserDividend[]) => {
+export const renderOwnedDividendTable = (dividends: DividendHistory[]) => {
   return (
     <Collapse
       bordered={true}
@@ -50,8 +38,8 @@ export const renderOwnedDividendTable = (dividends: UserDividend[]) => {
         }
         key="1"
       >
-        <Table<UserDividend>
-          rowKey={(d: UserDividend) => d.dividendDate}
+        <Table<DividendHistory>
+          rowKey={(d: DividendHistory) => d.dividendDate}
           dataSource={dividends}
           columns={columns}
           pagination={false}

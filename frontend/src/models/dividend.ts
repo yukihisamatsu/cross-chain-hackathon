@@ -1,31 +1,6 @@
 import {Unbox} from "~src/heplers/util-types";
 import {Address} from "~src/types";
 
-export const USER_DIVIDEND_STATUS = {
-  RECEIVED: "received",
-  NOT_RECEIVED: "not_received"
-} as const;
-export type UserDividendStatusType = Unbox<typeof USER_DIVIDEND_STATUS>;
-export class UserDividend {
-  dividendDate: string;
-  totalAmount: number;
-  status: UserDividendStatusType;
-
-  constructor({
-    dividendDate,
-    totalAmount,
-    status
-  }: {
-    dividendDate: string;
-    totalAmount: number;
-    status: UserDividendStatusType;
-  }) {
-    this.dividendDate = dividendDate;
-    this.totalAmount = totalAmount;
-    this.status = status;
-  }
-}
-
 export class IssuerDividend {
   userName: string;
   userAddress: Address;
@@ -54,7 +29,7 @@ export const ISSUER_DIVIDEND_HISTORY_STATUS = {
 export type IssuerDividendHistoryStatusType = Unbox<
   typeof ISSUER_DIVIDEND_HISTORY_STATUS
 >;
-export class IssuerDividendHistory {
+export class DividendHistory {
   id: string;
   dividendDate: Address;
   total: number;
@@ -77,8 +52,8 @@ export class IssuerDividendHistory {
     this.status = status;
   }
 
-  static default = (): IssuerDividendHistory => {
-    return new IssuerDividendHistory({
+  static default = (): DividendHistory => {
+    return new DividendHistory({
       id: "",
       dividendDate: "",
       total: 0,

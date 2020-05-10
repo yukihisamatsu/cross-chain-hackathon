@@ -64,15 +64,9 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*lcd.RestServer)) *cob
 
 			return rpcserver.StartHTTPServer(
 				listener,
-				handlers.CORS(
-					handlers.AllowedMethods([]string{
-						"GET",
-						"POST",
-						"PUT",
-						"DELETE",
-						"HEAD",
-						"OPTIONS",
-					}))(rs.Mux), logger, cfg,
+				handlers.CORS(handlers.AllowCredentials())(rs.Mux),
+				logger,
+				cfg,
 			)
 		},
 	}

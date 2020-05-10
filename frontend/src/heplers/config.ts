@@ -2,9 +2,12 @@ type Env = "development" | "production";
 
 export interface Config {
   apiEndPoint: string;
-  coordinatorEndPoint: string;
-  securityEndPoint: string;
-  coinEndPoint: string;
+  coordinatorRPCEndPoint: string;
+  coordinatorRESTEndPoint: string;
+  securityRPCEndPoint: string;
+  securityRESTEndPoint: string;
+  coinRPCEndPoint: string;
+  coinRESTEndPoint: string;
   env: Env;
 }
 
@@ -14,32 +17,36 @@ const localBaseURL = "http://localhost";
 
 export const parseEnv = (): Config => {
   let env: Env;
-  if (process.env.NODE_ENV && process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production") {
     env = "production";
   } else {
     env = "development";
   }
 
-  const apiEndPoint =
-    env === "production"
-      ? `${productionBaseURL}:8080/api`
-      : `${localBaseURL}:8080/api`;
+  const baseURL = env === "production" ? productionBaseURL : localBaseURL;
 
-  const coordinatorEndPoint =
-    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:26657`;
+  // API server Endpoints
+  const apiEndPoint = `${baseURL}:8080/api`;
 
-  const securityEndPoint =
-    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:26660`;
+  // RPC Endpoints
+  const coordinatorRPCEndPoint = `${baseURL}:26657`;
+  const securityRPCEndPoint = `${baseURL}:26660`;
+  const coinRPCEndPoint = `${baseURL}:26662`;
 
-  const coinEndPoint =
-    env === "production" ? `${productionBaseURL}:` : `${localBaseURL}:26662`;
+  // REST Endpoints
+  const coordinatorRESTEndPoint = `${baseURL}:1317`;
+  const securityRESTEndPoint = `${baseURL}:1318`;
+  const coinRESTEndPoint = `${baseURL}:1319`;
 
   return {
     env,
     apiEndPoint,
-    coordinatorEndPoint,
-    securityEndPoint,
-    coinEndPoint
+    coordinatorRPCEndPoint,
+    coordinatorRESTEndPoint,
+    securityRPCEndPoint,
+    securityRESTEndPoint,
+    coinRPCEndPoint,
+    coinRESTEndPoint
   };
 };
 

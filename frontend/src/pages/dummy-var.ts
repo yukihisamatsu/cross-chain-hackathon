@@ -1,59 +1,53 @@
 import {
+  DividendHistory,
   ISSUER_DIVIDEND_HISTORY_STATUS,
-  IssuerDividend,
-  IssuerDividendHistory,
-  USER_DIVIDEND_STATUS
+  IssuerDividend
 } from "~models/dividend";
-import {
-  Estate,
-  ESTATE_STATUS,
-  IssuerEstate,
-  OwnedEstate
-} from "~src/models/estate";
-import {BuyOrder, ORDER_STATUS} from "~src/models/order";
+import {Estate, IssuerEstate} from "~src/models/estate";
+// import {BuyOrder, ORDER_STATUS} from "~src/models/order";
 
-const buyOffers: BuyOrder[] = [
-  new BuyOrder({
-    tradeId: 10,
-    tokenId: "offerer103tokenId",
-    offerer: "offerer101",
-    perUnitPrice: 10,
-    quantity: 50,
-    total: 500,
-    status: ORDER_STATUS.REQUESTING,
-    sellOffers: []
-  }),
-  new BuyOrder({
-    tradeId: 11,
-    tokenId: "offerer103tokenId",
-    offerer: "offerer102",
-    perUnitPrice: 1,
-    quantity: 10,
-    total: 10,
-    status: ORDER_STATUS.ONGOING,
-    sellOffers: []
-  }),
-  new BuyOrder({
-    tradeId: 12,
-    tokenId: "offerer103tokenId",
-    offerer: "offerer103",
-    perUnitPrice: 100,
-    quantity: 500,
-    total: 50000,
-    status: ORDER_STATUS.SUCCEEDED,
-    sellOffers: []
-  }),
-  new BuyOrder({
-    tradeId: 13,
-    tokenId: "offerer104tokenId",
-    offerer: "offerer104",
-    perUnitPrice: 100,
-    quantity: 500,
-    total: 50000,
-    status: ORDER_STATUS.FAILED,
-    sellOffers: []
-  })
-];
+// const buyOffers: BuyOrder[] = [
+//   new BuyOrder({
+//     tradeId: 10,
+//     tokenId: "offerer103tokenId",
+//     offerer: "offerer101",
+//     perUnitPrice: 10,
+//     quantity: 50,
+//     total: 500,
+//     status: ORDER_STATUS.REQUESTING,
+//     sellOffers: []
+//   }),
+//   new BuyOrder({
+//     tradeId: 11,
+//     tokenId: "offerer103tokenId",
+//     offerer: "offerer102",
+//     perUnitPrice: 1,
+//     quantity: 10,
+//     total: 10,
+//     status: ORDER_STATUS.ONGOING,
+//     sellOffers: []
+//   }),
+//   new BuyOrder({
+//     tradeId: 12,
+//     tokenId: "offerer103tokenId",
+//     offerer: "offerer103",
+//     perUnitPrice: 100,
+//     quantity: 500,
+//     total: 50000,
+//     status: ORDER_STATUS.SUCCEEDED,
+//     sellOffers: []
+//   }),
+//   new BuyOrder({
+//     tradeId: 13,
+//     tokenId: "offerer104tokenId",
+//     offerer: "offerer104",
+//     perUnitPrice: 100,
+//     quantity: 500,
+//     total: 50000,
+//     status: ORDER_STATUS.FAILED,
+//     sellOffers: []
+//   })
+// ];
 
 const dummyEstateList: Estate[] = [0, 1, 2, 3, 4, 5].map(i => {
   const id = i + 100;
@@ -69,43 +63,6 @@ const dummyEstateList: Estate[] = [0, 1, 2, 3, 4, 5].map(i => {
     offerPrice: 100
   };
   return e;
-});
-
-export const dummyOwnedEstateList: OwnedEstate[] = dummyEstateList.map(e => {
-  const id = Number(e.tokenId);
-  const status =
-    id % 3 === 0
-      ? ESTATE_STATUS.OWNED
-      : id % 3 === 1
-      ? ESTATE_STATUS.SELLING
-      : ESTATE_STATUS.BUYING;
-
-  const oe: OwnedEstate = new OwnedEstate({
-    ...e,
-    status: status,
-    units: id * 2,
-    perUnit: id + 1,
-    dividend: [
-      {
-        dividendDate: "2021/05/05 00:00:00",
-        status: USER_DIVIDEND_STATUS.NOT_RECEIVED,
-        totalAmount: id
-      },
-      {
-        dividendDate: "2020/05/05 00:00:00",
-        status: USER_DIVIDEND_STATUS.RECEIVED,
-        totalAmount: id
-      },
-      {
-        dividendDate: "2019/05/05 00:00:00",
-        status: USER_DIVIDEND_STATUS.RECEIVED,
-        totalAmount: id
-      }
-    ],
-    buyOffers: status !== ESTATE_STATUS.OWNED ? buyOffers : []
-  });
-
-  return oe;
 });
 
 export const dummyIssuerEstateList: IssuerEstate[] = dummyEstateList.map(e => {
@@ -129,19 +86,19 @@ export const dummyIssuerEstateList: IssuerEstate[] = dummyEstateList.map(e => {
       })
     ],
     histories: [
-      new IssuerDividendHistory({
+      new DividendHistory({
         id: "history1",
         dividendDate: "2021/05/05 00:00:00",
         total: 100000,
         status: ISSUER_DIVIDEND_HISTORY_STATUS.NOT_DISTRIBUTED
       }),
-      new IssuerDividendHistory({
+      new DividendHistory({
         id: "history2",
         dividendDate: "2019/05/05 00:00:00",
         total: 100000,
         status: ISSUER_DIVIDEND_HISTORY_STATUS.ONGOING
       }),
-      new IssuerDividendHistory({
+      new DividendHistory({
         id: "history3",
         dividendDate: "2018/05/05 00:00:00",
         total: 100000,

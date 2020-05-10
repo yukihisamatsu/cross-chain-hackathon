@@ -32,7 +32,7 @@ run-mock-server:
 	${DOCKER} run --rm -v ${PWD}:/local -p 8000:8000 danielgtaylor/apisprout /local/${OPENAPI_SRC}
 
 run-doc:
-	${DOCKER} run --rm -v ${PWD}:/local -p 8080:8080 -e SWAGGER_JSON=/local/${OPENAPI_SRC} swaggerapi/swagger-ui
+	${DOCKER} run --rm -v ${PWD}:/local -p 8081:8080 -e SWAGGER_JSON=/local/${OPENAPI_SRC} swaggerapi/swagger-ui
 
 build-server:
 	make -C apiserver build
@@ -40,7 +40,7 @@ build-server:
 run-server:
 	make -C apiserver run
 
-setup-db: 
+setup-db:
 	make -C apiserver setup-db
 
 migrate-reset:

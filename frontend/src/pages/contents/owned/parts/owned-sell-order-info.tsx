@@ -19,12 +19,13 @@ export const renderOwnedSellOrderInfo = (
       size={"small"}
     >
       <Column title="Quantity" dataIndex="units" key="quantity" />
-      <Column title="PerUnitPrice" dataIndex="perUnit" key="perUnitPrice" />
+      {/*<Column title="PerUnitPrice" dataIndex="perUnit" key="perUnitPrice" />*/}
       <Column
         title="Total"
         key="total"
-        render={(estate: OwnedEstate) => {
-          return estate.getTotal();
+        render={(_: OwnedEstate) => {
+          return 0; //TODO
+          // return estate.getTotal();
         }}
       />
       <Column

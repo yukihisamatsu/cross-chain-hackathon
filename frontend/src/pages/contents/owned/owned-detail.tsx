@@ -1,3 +1,4 @@
+import {message} from "antd";
 import React from "react";
 import {RouteComponentProps} from "react-router-dom";
 import styled from "styled-components";
@@ -12,7 +13,6 @@ import {renderOwnedDividendTable} from "~pages/contents/owned/parts/owned-divide
 import {OwnedSellOrderCancelModal} from "~pages/contents/owned/parts/owned-sell-order-cancel-modal";
 import {OwnedSellOrderModal} from "~pages/contents/owned/parts/owned-sell-order-modal";
 import {renderEstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
-import {dummyOwnedEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
 import {Repositories} from "~src/repos/types";
@@ -59,24 +59,31 @@ export class OwnedDetail extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount() {
-    // TODO get Estate Request & setState({estate)
+  async componentDidMount() {
     const {
+      repos: {estateRepo},
+      user: {address},
       setHeaderText,
       match: {
         params: {id}
       },
       history
     } = this.props;
-    const estate = dummyOwnedEstateList.find(e => e.tokenId === id);
-    if (!estate) {
+
+    try {
+      const estate = await estateRepo.getOwnedEstate(id, address);
+      if (!estate) {
+        history.push(PATHS.OWNED);
+        return;
+      }
+      setHeaderText(estate.name);
+      this.setState({
+        estate
+      });
+    } catch (e) {
+      message.error(e);
       history.push(PATHS.OWNED);
-      return;
     }
-    setHeaderText(estate.name);
-    this.setState({
-      estate
-    });
   }
 
   handleSellOrderButtonClick = (values: {[key: string]: string | number}) => {

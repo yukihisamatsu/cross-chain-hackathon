@@ -34,13 +34,13 @@ export class Root extends React.Component<Props, State> {
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     const data = localStorage.getItem(LocalStorageUserKey);
     if (!data) {
       return;
     }
     const user = User.create(data);
-    this.setState({user});
+    this.setUser(user);
   }
 
   setUser = (user: User) => {
