@@ -9,7 +9,7 @@ servers:
 paths:
   /estates:
     get:
-      summary: get all estates
+      summary: get all estates and their associated trades, but trade requests are not included
       operationId: getEstates
       tags:
         - estate
@@ -41,7 +41,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetEstateOutput"
+                $ref: "#/components/schemas/Estate"
   /users:
     get:
       summary: get all users
@@ -413,6 +413,7 @@ components:
         - expectedYield
         - dividendDate
         - issuedBy
+        - trades
       properties:
         tokenId:
           $ref: "#/components/schemas/estate_id"
@@ -447,16 +448,6 @@ components:
           example: "2020-11-01"
         issuedBy:
           $ref: "#/components/schemas/AccAddress"
-
-    GetEstateOutput:
-      description: for frontend's convenience
-      type: object
-      required:
-        - estate
-        - trades
-      properties:
-        estate:
-          $ref: "#/components/schemas/Estate"
         trades:
           type: array
           items:

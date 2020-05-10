@@ -54,6 +54,9 @@ func (s *EstateApiService) GetEstateById(estateId string) (interface{}, error) {
 			log.Println(err)
 			return nil, ErrorFailedDBGet
 		}
+		if buyer.Valid {
+			t.Buyer = buyer.String
+		}
 		trades = append(trades, t)
 	}
 
@@ -77,10 +80,8 @@ func (s *EstateApiService) GetEstateById(estateId string) (interface{}, error) {
 		}
 		trades[i].Requests = reqs
 	}
-	return &GetEstateOutput{
-		Estate: *estate,
-		Trades: trades,
-	}, nil
+	estate.Trades = trades
+	return estate, nil
 }
 
 // GetEstates - get all estates
@@ -95,5 +96,30 @@ func (s *EstateApiService) GetEstates() (interface{}, error) {
 		log.Println(err)
 		return nil, ErrorFailedDBGet
 	}
+
+	for i := 0; i < len(*estates); i++ {
+		trades := []Trade{}
+		q := `SELECT id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt FROM trade WHERE estateId = ?`
+		rows, err := db.Query(q, (*estates)[i].TokenId)
+		if err != nil {
+			return nil, err
+		}
+		for rows.Next() {
+			t := Trade{}
+			var buyer sql.NullString
+			if err := rows.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &buyer, &t.Seller, &t.Type, &t.Status, &t.UpdatedAt); err != nil {
+				log.Println(err)
+				return nil, ErrorFailedDBGet
+			}
+			if buyer.Valid {
+				t.Buyer = buyer.String
+			}
+			trades = append(trades, t)
+		}
+		log.Printf("id: %s\ttrades: %+v\n", (*estates)[i].TokenId, trades)
+		(*estates)[i].Trades = trades
+	}
+	log.Printf("estates: %+v\n", estates)
+
 	return estates, nil
 }

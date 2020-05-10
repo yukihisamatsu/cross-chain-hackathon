@@ -10,6 +10,7 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 
@@ -125,18 +126,33 @@ func (s *TradeApiService) PutTrade(trade Trade) (interface{}, error) {
 		return nil, ErrorFailedDBConnect
 	}
 
+	var status TradeStatus
+	q := `SELECT status from trade WHERE id = ?`
+	if err := db.Get(&status, q, trade.Id); err != nil {
+		return nil, err
+	}
+	if status != TRADE_OPENED {
+		return nil, ErrorWrongStatus
+	}
+
 	// only status is updated
-	q := `UPDATE trade SET status = ? WHERE id = ?`
+	q = `UPDATE trade SET status = ? WHERE id = ?`
 	if _, err := db.Exec(q, trade.Status, trade.Id); err != nil {
 		log.Println(err)
 		return nil, ErrorFailedDBSet
 	}
 
-	res := &Trade{}
-	if err := db.Get(res, "select id, estateId, unitPrice, amount, seller, type, status, updatedAt from trade where rowid = last_insert_rowid()"); err != nil {
+	t := Trade{}
+	var buyer sql.NullString
+	q = `select id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt from trade where id = ?`
+	row := db.QueryRow(q, trade.Id)
+	if err := row.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &buyer, &t.Seller, &t.Type, &t.Status, &t.UpdatedAt); err != nil {
 		return nil, err
 	}
-	return res, nil
+	if buyer.Valid {
+		t.Buyer = buyer.String
+	}
+	return &t, nil
 }
 
 // PutTradeRequest - update a trade request (mainly for updating status)
@@ -154,7 +170,7 @@ func (s *TradeApiService) PutTradeRequest(tradeRequest TradeRequest) (interface{
 		return nil, err
 	}
 
-	if tr.Status != REQUEST_OPENED || tr.Status != REQUEST_ONGOING {
+	if tr.Status != REQUEST_OPENED && tr.Status != REQUEST_ONGOING {
 		return nil, ErrorWrongStatus
 	}
 
@@ -164,8 +180,9 @@ func (s *TradeApiService) PutTradeRequest(tradeRequest TradeRequest) (interface{
 		return nil, err
 	}
 
+	log.Printf("request status: %d\n", tradeRequest.Status)
 	q = `UPDATE trade_request SET status = ? WHERE id = ?`
-	if _, err := tx.Exec(q, tradeRequest.Id, tradeRequest.Status); err != nil {
+	if _, err := tx.Exec(q, tradeRequest.Status, tradeRequest.Id); err != nil {
 		log.Println(err)
 		if err = tx.Rollback(); err != nil {
 			// HACK
@@ -191,6 +208,5 @@ func (s *TradeApiService) PutTradeRequest(tradeRequest TradeRequest) (interface{
 		// HACK
 		return nil, err
 	}
-
 	return &tradeRequest, nil
 }
