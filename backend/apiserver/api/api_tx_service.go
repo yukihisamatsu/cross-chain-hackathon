@@ -10,79 +10,131 @@
 package api
 
 import (
-	"errors"
+	"encoding/binary"
+	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
+	"github.com/datachainlab/cross/x/ibc/contract/types"
 )
 
 const (
 	CO_CHAIN_ID       = "ibc0"
 	TYPE_CROSS_TX     = "cosmos-sdk/StdTx"
 	TYPE_MSG_INITIATE = "cross/MsgInitiate"
-	GAS               = "200000"
+
+	KEY_COIN        = "coin"
+	KEY_COORDINATOR = "coordinator"
+	KEY_SECURITY    = "security"
+	KEY_CO_COIN     = "coordinator-coin"
+	KEY_CO_SECURITY = "coordinator-security"
 )
 
 // TxApiService is a service that implents the logic for the TxApiServicer
 // This service should implement the business logic for every endpoint for the TxApi API.
 // Include any external packages or services that will be required by this service.
 type TxApiService struct {
+	config Config
 }
 
 // NewTxApiService creates a default api service
-func NewTxApiService() TxApiServicer {
-	return &TxApiService{}
+func NewTxApiService(config Config) TxApiServicer {
+	return &TxApiService{config}
 }
 
 // TODO impl or remove
 // TxDividendGet - get a CrossTx to be signed
 func (s *TxApiService) TxDividendGet(estateId string, perShare int64) (interface{}, error) {
+	return nil, fmt.Errorf("TODO not implemented")
+}
+
+// TxTradeRequestGet - get a CrossTx to be signed
+func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{}, error) {
+	// first, get TradeRequest info from db.
 	db, err := rdb.InitDB()
 	if err != nil {
 		log.Println(err)
 		return nil, ErrorFailedDBConnect
 	}
-
-	issuer := &User{}
-	q := `SELECT user.* FROM estate INNER JOIN user ON estate.issuedBy = user.id WHERE estate.tokenId = ?`
-	if err := db.Get(issuer, q, estateId); err != nil {
+	t := Trade{}
+	q := `SELECT id, estateId, unitPrice, amount, seller, status FROM trade WHERE id = ?`
+	row := db.QueryRow(q, tradeId)
+	if err := row.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &t.Seller, &t.Status); err != nil {
 		log.Println(err)
 		return nil, ErrorFailedDBGet
 	}
+	if t.Status != TRADE_OPENED {
+		return nil, ErrorWrongStatus
+	}
 
-	ctxs := []ContractTransaction{}
-	// TODO
-	timeoutHeight := "100000"
-	// TODO
-	nonce := "0"
-	return &CrossTx{
-		Type: TYPE_CROSS_TX,
-		Value: StdTx{
-			Msg: []Msg{
-				{
-					Type: TYPE_MSG_INITIATE,
-					Value: MsgInitiate{
-						Sender:               issuer.Id,
-						ChainID:              CO_CHAIN_ID,
-						ContractTransactions: ctxs,
-						TimeoutHeight:        timeoutHeight,
-						Nonce:                nonce,
-					},
-				},
-			},
-			Fee: StdFee{
-				Amount: []Coin{},
-				Gas:    GAS,
-			},
-			Signatures: nil,
-			Memo:       "",
-		},
-	}, nil
+	cross := NewCross()
+	simCoin, err := cross.SimulateContractCall(
+		from,
+		genCoinTransferCallInfo(s.config, t.Seller, uint64(t.UnitPrice*t.Amount)),
+		s.config.Node[KEY_COIN],
+	)
+	if err != nil {
+		return nil, err
+	}
+	tokenId, err := stringToUint64(t.EstateId)
+	if err != nil {
+		return nil, err
+	}
+	simSecurity, err := cross.SimulateContractCall(
+		t.Seller,
+		genEstateTransferCallInfo(s.config, tokenId, from, uint64(t.Amount)),
+		s.config.Node[KEY_SECURITY],
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// sender is the seller
+	crossTx, err := cross.GenerateMsgInitiate(
+		t.Seller,
+		[]ChannelInfo{s.config.Path[KEY_CO_COIN], s.config.Path[KEY_CO_SECURITY]},
+		[]ContractCallResult{*simCoin, *simSecurity},
+		s.config.Node[KEY_COORDINATOR],
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &crossTx, nil
 }
 
-// TxTradeRequestGet - get a CrossTx to be signed
-func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{}, error) {
-	// TODO - update TxTradeRequestGet with the required logic for this service method.
-	// Add api_tx_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-	return nil, errors.New("service method 'TxTradeRequestGet' not implemented")
+func genCoinTransferCallInfo(c Config, to string, amount uint64) types.ContractCallInfo {
+	return types.ContractCallInfo{
+		c.Contract[KEY_COIN].Id,
+		"transfer",
+		[][]byte{
+			[]byte(to),
+			uint64ToByte(amount),
+		},
+	}
+}
+
+func genEstateTransferCallInfo(c Config, tokenId uint64, to string, amount uint64) types.ContractCallInfo {
+	return types.ContractCallInfo{
+		c.Contract[KEY_SECURITY].Id,
+		"transfer",
+		[][]byte{
+			uint64ToByte(tokenId),
+			[]byte(to),
+			uint64ToByte(amount),
+		},
+	}
+}
+
+// HACK
+// this needs for the type mismatch between contract tokenId(uint64) and model schema(string)
+func stringToUint64(str string) (uint64, error) {
+	return strconv.ParseUint(str, 10, 64)
+}
+
+func uint64ToByte(v uint64) []byte {
+	var bz [8]byte
+	binary.BigEndian.PutUint64(bz[:], v)
+	//str := base64.StdEncoding.EncodeToString(bz[:])
+	return bz[:]
 }

@@ -5,6 +5,7 @@ COPY rdb ./rdb
 COPY main.go .
 COPY go.mod .
 COPY go.sum .
+COPY config.yaml .
 
 ENV CGO_ENABLED=0
 RUN go get -d -v ./...

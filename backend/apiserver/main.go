@@ -12,11 +12,42 @@ package main
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	api "github.com/datachainlab/cross-chain-hackathon/backend/apiserver/api"
+	"github.com/spf13/viper"
 )
 
+func initConfig() *viper.Viper {
+	v := viper.New()
+	v.SetConfigName("config") // name of config file (without extension)
+	v.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
+	//viper.AddConfigPath("/etc/appname/")  // path to look for the config file in
+	//viper.AddConfigPath("$HOME/.appname") // call multiple times to add many search paths
+	v.AddConfigPath(".")
+
+	v.AutomaticEnv()
+	v.SetEnvPrefix("API")
+	replacer := strings.NewReplacer("-", "_")
+	v.SetEnvKeyReplacer(replacer)
+
+	if err := v.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Fatal("config not found")
+		} else {
+			log.Fatalln("viper config error")
+		}
+	}
+	return v
+}
+
 func main() {
+	v := initConfig()
+	config, err := api.NewConfigFromViper(v)
+	if err != nil {
+		log.Fatal("can't parse config")
+	}
+	log.Printf("loaded config: %+v\n", config)
 	log.Printf("Server started")
 
 	EstateApiService := api.NewEstateApiService()
@@ -25,7 +56,7 @@ func main() {
 	TradeApiService := api.NewTradeApiService()
 	TradeApiController := api.NewTradeApiController(TradeApiService)
 
-	TxApiService := api.NewTxApiService()
+	TxApiService := api.NewTxApiService(*config)
 	TxApiController := api.NewTxApiController(TxApiService)
 
 	UserApiService := api.NewUserApiService()

@@ -1,0 +1,23 @@
+# for local docker-compose
+node:
+  coordinator:
+    addr: "http://localhost:1317"
+    chainId: "coordinatorz"
+  security:
+    addr: "http://localhost:1318"
+    chainId: "securityz"
+  coin:
+    addr: "http://localhost:1319"
+    chainId: "coinz"
+path:
+  coordinator-coin:
+    port: "cross"
+    channel: "ibconexfer"
+  coordinator-security:
+    port: "cross"
+    channel: "ibctwoxfer"
+contract:
+  coin:
+    id: "dcc"
+  security:
+    id: "estate"

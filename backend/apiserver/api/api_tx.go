@@ -10,6 +10,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 	"strings"
 )
@@ -73,6 +74,7 @@ func (c *TxApiController) TxTradeRequestGet(w http.ResponseWriter, r *http.Reque
 	from := query.Get("from")
 	result, err := c.service.TxTradeRequestGet(tradeId, from)
 	if err != nil {
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
