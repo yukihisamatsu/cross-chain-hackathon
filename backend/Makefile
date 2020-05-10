@@ -51,3 +51,7 @@ migrate-up:
 
 migrate-down:
 	make -C apiserver migrate-down
+
+e2e-test: setup-db
+	bats ./e2e-test
+
