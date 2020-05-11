@@ -3,6 +3,7 @@ package securitychain
 import (
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/datachainlab/cross-chain-hackathon/contract/simapp/common"
 	"github.com/datachainlab/cross/x/ibc/contract"
 	"github.com/datachainlab/cross/x/ibc/cross"
@@ -15,8 +16,8 @@ func addToWhitelist(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if len(args) != 1 {
 		return nil, fmt.Errorf("invalid argument length")
 	}
-	to := args[0]
-	if err := common.VerifyAddress(to); err != nil {
+	to, err := common.GetAccAddress(args[0])
+	if err != nil {
 		return nil, fmt.Errorf("invalid address: %v", to)
 	}
 	key := makeWhitelistKey(to, from)
@@ -34,18 +35,18 @@ func isWhitelisted(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if len(args) != 2 {
 		return nil, fmt.Errorf("invalid argument length")
 	}
-	to := args[0]
-	if err := common.VerifyAddress(to); err != nil {
+	to, err := common.GetAccAddress(args[0])
+	if err != nil {
 		return nil, fmt.Errorf("invalid address: %v", to)
 	}
-	by := args[1]
-	if err := common.VerifyAddress(by); err != nil {
+	by, err := common.GetAccAddress(args[1])
+	if err != nil {
 		return nil, fmt.Errorf("invalid address: %v", by)
 	}
 	return contract.ToBytes(getWhitelisted(to, by, store)), nil
 }
 
-func getWhitelisted(addr, by []byte, store cross.Store) bool {
+func getWhitelisted(addr, by sdk.AccAddress, store cross.Store) bool {
 	key := makeWhitelistKey(addr, by)
 	if store.Has(key) {
 		return contract.Bool(store.Get(key))
@@ -53,6 +54,6 @@ func getWhitelisted(addr, by []byte, store cross.Store) bool {
 	return false
 }
 
-func makeWhitelistKey(addr, by []byte) []byte {
-	return []byte(fmt.Sprintf("whitelist/%v/by/%v", addr, by))
+func makeWhitelistKey(addr, by sdk.AccAddress) []byte {
+	return []byte(fmt.Sprintf("whitelist/%s/by/%s", addr.String(), by.String()))
 }
