@@ -22,6 +22,7 @@ func initConfig() *viper.Viper {
 	v.SetConfigName("config") // name of config file (without extension)
 	v.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
 	v.AddConfigPath(".")
+	v.AddConfigPath("/root/api")
 
 	// v.Unmarshal(&C) doesn't work well with env.
 	// cf. https://github.com/spf13/viper/issues/188#issuecomment-255519149
