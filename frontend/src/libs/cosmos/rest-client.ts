@@ -11,11 +11,7 @@ const initGet = (): RequestInit => {
     method: "GET",
     headers: {
       Accept: "application/json",
-      "Content-Type": "application/json; charset=utf-8",
-      mode: "cors",
-      cache: "no-cache",
-      redirect: "follow",
-      referrer: "no-referrer"
+      "Content-Type": "application/json; charset=utf-8"
     }
   };
 };

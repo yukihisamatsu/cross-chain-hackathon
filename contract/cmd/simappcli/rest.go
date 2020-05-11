@@ -9,9 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/gorilla/handlers"
 	"github.com/rakyll/statik/fs"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
@@ -36,6 +36,8 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*lcd.RestServer)) *cob
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).
 				With("module", "rest-server")
 
+			registerRoutesFn(rs)
+
 			statikFS, err := fs.New()
 			if err != nil {
 				panic(err)
@@ -43,14 +45,16 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*lcd.RestServer)) *cob
 			staticServer := http.FileServer(statikFS)
 			rs.Mux.PathPrefix("/").Handler(staticServer)
 
-			registerRoutesFn(rs)
-
 			cfg := rpcserver.DefaultConfig()
 			cfg.MaxOpenConnections = maxOpen
 			cfg.ReadTimeout = time.Duration(readTimeout) * time.Second
 			cfg.WriteTimeout = time.Duration(writeTimeout) * time.Second
 
 			listener, err := rpcserver.Listen(listenAddr, cfg)
+			server.TrapSignal(func() {
+				err := listener.Close()
+				logger.Error("error closing listener", "err", err)
+			})
 			if err != nil {
 				return
 			}
@@ -64,7 +68,10 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*lcd.RestServer)) *cob
 
 			return rpcserver.StartHTTPServer(
 				listener,
-				handlers.CORS(handlers.AllowCredentials())(rs.Mux),
+				handlers.CORS(
+					handlers.AllowedHeaders([]string{"Content-Type"}),
+					handlers.AllowCredentials(),
+				)(rs.Mux),
 				logger,
 				cfg,
 			)

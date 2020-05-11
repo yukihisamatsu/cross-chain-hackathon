@@ -30,11 +30,21 @@ export class MarketList extends React.Component<Props, State> {
   }
 
   async componentDidMount() {
+    await this.getEstatesList();
+  }
+
+  async componentDidUpdate(prevProps: Readonly<Props>, _: Readonly<State>) {
+    if (prevProps.user.address !== this.props.user.address) {
+      await this.getEstatesList();
+    }
+  }
+
+  async getEstatesList() {
     const {
-      repos,
+      repos: {estateRepo},
       user: {address}
     } = this.props;
-    const estates = await repos.estateRepo.getMarketEstates(address);
+    const estates = await estateRepo.getMarketEstates(address);
     this.setState({estates});
   }
 

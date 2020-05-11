@@ -22,16 +22,28 @@ interface State {
 export class OwnedList extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    props.setHeaderText("Mypage");
-
     this.state = {
       estates: []
     };
+    props.setHeaderText("Mypage");
   }
 
   async componentDidMount() {
-    const {repos, user} = this.props;
-    const estates = await repos.estateRepo.getOwnedEstates(user.address);
+    await this.getEstatesList();
+  }
+
+  async componentDidUpdate(prevProps: Readonly<Props>, _: Readonly<State>) {
+    if (prevProps.user.address !== this.props.user.address) {
+      await this.getEstatesList();
+    }
+  }
+
+  async getEstatesList() {
+    const {
+      repos: {estateRepo},
+      user: {address}
+    } = this.props;
+    const estates = await estateRepo.getOwnedEstates(address);
     this.setState({estates});
   }
 
