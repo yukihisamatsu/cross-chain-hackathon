@@ -23,5 +23,6 @@ COPY --from=build-dev $BUILD_DIR/apiserver /usr/local/bin/apiserver
 COPY --from=build-dev $BUILD_DIR/db /root/api/db/
 COPY --from=build-dev $BUILD_DIR/scripts /root/api/scripts/
 COPY --from=build-dev $BUILD_DIR/Makefile /root/api/Makefile
+COPY --from=build-dev $BUILD_DIR/config.demo.yaml /root/api/config.yaml
 
 EXPOSE 8080/tcp
