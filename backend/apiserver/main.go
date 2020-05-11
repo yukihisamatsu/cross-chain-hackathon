@@ -12,7 +12,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"strings"
 
 	api "github.com/datachainlab/cross-chain-hackathon/backend/apiserver/api"
 	"github.com/spf13/viper"
@@ -22,14 +21,15 @@ func initConfig() *viper.Viper {
 	v := viper.New()
 	v.SetConfigName("config") // name of config file (without extension)
 	v.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
-	//viper.AddConfigPath("/etc/appname/")  // path to look for the config file in
-	//viper.AddConfigPath("$HOME/.appname") // call multiple times to add many search paths
 	v.AddConfigPath(".")
 
-	v.AutomaticEnv()
-	v.SetEnvPrefix("API")
-	replacer := strings.NewReplacer("-", "_")
-	v.SetEnvKeyReplacer(replacer)
+	// v.Unmarshal(&C) doesn't work well with env.
+	// cf. https://github.com/spf13/viper/issues/188#issuecomment-255519149
+	//v.AutomaticEnv()
+	//v.SetEnvPrefix("API")
+	//replacer := strings.NewReplacer("-", "_")
+	//v.SetEnvKeyReplacer(replacer)
+	//v.Bind("BLABLABLA")
 
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
