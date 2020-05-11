@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/cosmos/cosmos-sdk v0.34.4-0.20200423152229-f1fdde5d1b18
-	github.com/datachainlab/cross v0.0.1
+	github.com/datachainlab/cross v0.0.2
 	github.com/gorilla/handlers v1.4.2
 	github.com/otiai10/copy v1.1.1
 	github.com/rakyll/statik v0.1.7
