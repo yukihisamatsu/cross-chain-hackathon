@@ -92,8 +92,8 @@ func balanceOf(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if err := common.VerifyArgsLength(args, 2); err != nil {
 		return nil, err
 	}
-	addr := args[0]
-	if err := common.VerifyAddress(addr); err != nil {
+	addr, err := common.GetAccAddress(args[0])
+	if err != nil {
 		return nil, err
 	}
 	tokenID := contract.UInt64(args[1])
@@ -154,8 +154,8 @@ func mint(ctx contract.Context, store cross.Store) ([]byte, error) {
 		return nil, ErrorInvalidSender
 	}
 
-	to := args[1]
-	if err := common.VerifyAddress(to); err != nil {
+	to, err := common.GetAccAddress(args[1])
+	if err != nil {
 		return nil, err
 	}
 	value := contract.UInt64(args[2])
@@ -205,8 +205,8 @@ func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 		return nil, err
 	}
 	tokenID := contract.UInt64(args[0])
-	to := args[1]
-	if err := common.VerifyAddress(to); err != nil {
+	to, err := common.GetAccAddress(args[1])
+	if err != nil {
 		return nil, err
 	}
 	from := ctx.Signers()[0]
@@ -257,17 +257,17 @@ func check(from, to []byte, tokenID uint64, store cross.Store) error {
 	return nil
 }
 
-func emitTransfer(ctx contract.Context, from, to []byte, tokenID, value uint64) {
+func emitTransfer(ctx contract.Context, from, to sdk.AccAddress, tokenID, value uint64) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(EventNameTransfer,
-			sdk.NewAttribute("from", fmt.Sprint(from)),
-			sdk.NewAttribute("to", fmt.Sprint(to)),
-			sdk.NewAttribute("tokenID", fmt.Sprint(tokenID)),
-			sdk.NewAttribute("value", fmt.Sprint(value)),
+			sdk.NewAttribute("from", from.String()),
+			sdk.NewAttribute("to", to.String()),
+			sdk.NewAttribute("tokenID", common.GetUInt64String(tokenID)),
+			sdk.NewAttribute("value", common.GetUInt64String(value)),
 		))
 }
 
-func getAmount(addr []byte, token uint64, store cross.Store) uint64 {
+func getAmount(addr sdk.AccAddress, token uint64, store cross.Store) uint64 {
 	key := makeAccountKey(addr, token)
 	if store.Has(key) {
 		return contract.UInt64(store.Get(key))
@@ -307,7 +307,7 @@ func getOwnerCount(tokenID uint64, store cross.Store) uint64 {
 	return 0
 }
 
-func setAmount(addr []byte, tokenID, amount uint64, store cross.Store) uint64 {
+func setAmount(addr sdk.AccAddress, tokenID, amount uint64, store cross.Store) uint64 {
 	key := makeAccountKey(addr, tokenID)
 	store.Set(key, contract.ToBytes(amount))
 	return 0
@@ -331,8 +331,8 @@ func setOwnerCount(count, tokenID uint64, store cross.Store) uint64 {
 	return 0
 }
 
-func makeAccountKey(addr []byte, tokenID uint64) []byte {
-	return []byte(fmt.Sprintf("account/%v/token/%v", addr, contract.ToBytes(tokenID)))
+func makeAccountKey(addr sdk.AccAddress, tokenID uint64) []byte {
+	return []byte(fmt.Sprintf("account/%s/token/%v", addr.String(), contract.ToBytes(tokenID)))
 }
 
 func makeCreatorKey(tokenID uint64) []byte {

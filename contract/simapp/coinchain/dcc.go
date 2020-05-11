@@ -1,6 +1,7 @@
 package coinchain
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/datachainlab/cross-chain-hackathon/contract/simapp/common"
@@ -44,7 +45,33 @@ func GetDatachainCoinContract() contract.Contract {
 		{
 			Name: FnNameTransfer, F: transfer,
 		},
+		{
+			Name: "getSigner", F: getSigner,
+		},
+		{
+			Name: "isSame", F: isSame,
+		},
 	})
+}
+
+func isSame(ctx contract.Context, store cross.Store) ([]byte, error) {
+	args := ctx.Args()
+	if err := common.VerifyArgsLength(args, 1); err != nil {
+		return nil, err
+	}
+	from := ctx.Signers()[0]
+	addr, err := common.GetAccAddress(args[0])
+	if err != nil {
+		return nil, err
+	}
+	if bytes.Equal(from, addr) {
+		return contract.ToBytes(true), nil
+	}
+	return nil, fmt.Errorf("from, arg are different:\t%v\t%v\n", from, addr)
+}
+
+func getSigner(ctx contract.Context, store cross.Store) ([]byte, error) {
+	return ctx.Signers()[0], nil
 }
 
 // function balanceOf(address _owner) public view returns (uint256 balance)
@@ -53,8 +80,8 @@ func balanceOf(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if err := common.VerifyArgsLength(args, 1); err != nil {
 		return nil, err
 	}
-	addr := args[0]
-	if err := common.VerifyAddress(addr); err != nil {
+	addr, err := common.GetAccAddress(args[0])
+	if err != nil {
 		return nil, err
 	}
 	return contract.ToBytes(getAmount(addr, store)), nil
@@ -67,8 +94,8 @@ func mint(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if err := common.VerifyArgsLength(args, 2); err != nil {
 		return nil, err
 	}
-	to := args[0]
-	if err := common.VerifyAddress(to); err != nil {
+	to, err := common.GetAccAddress(args[0])
+	if err != nil {
 		return nil, err
 	}
 	value := contract.UInt64(args[1])
@@ -99,8 +126,8 @@ func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 		return nil, err
 	}
 	from := ctx.Signers()[0]
-	to := args[0]
-	if err := common.VerifyAddress(to); err != nil {
+	to, err := common.GetAccAddress(args[0])
+	if err != nil {
 		return nil, err
 	}
 	value := contract.UInt64(args[1])
@@ -108,7 +135,7 @@ func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if fromAmount, ok := safemath.Sub64(getAmount(from, store), value); ok {
 		setAmount(from, fromAmount, store)
 	} else {
-		return nil, fmt.Errorf("unsufficient amount: %d", getAmount(from, store))
+		return nil, fmt.Errorf("unsufficient amount of %s: %d", from.String(), getAmount(from, store))
 	}
 	if toAmount, ok := safemath.Add64(getAmount(to, store), value); ok {
 		setAmount(to, toAmount, store)
@@ -119,12 +146,12 @@ func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 	return contract.ToBytes(true), nil
 }
 
-func emitTransfer(ctx contract.Context, from, to []byte, value uint64) {
+func emitTransfer(ctx contract.Context, from, to sdk.AccAddress, value uint64) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(EventNameTransfer,
-			sdk.NewAttribute("from", fmt.Sprint(from)),
-			sdk.NewAttribute("to", fmt.Sprint(to)),
-			sdk.NewAttribute("value", fmt.Sprint(value)),
+			sdk.NewAttribute("from", from.String()),
+			sdk.NewAttribute("to", to.String()),
+			sdk.NewAttribute("value", common.GetUInt64String(value)),
 		))
 }
 
@@ -144,7 +171,7 @@ func getTotalSupply(store cross.Store) uint64 {
 	return 0
 }
 
-func setAmount(addr []byte, amount uint64, store cross.Store) uint64 {
+func setAmount(addr sdk.AccAddress, amount uint64, store cross.Store) uint64 {
 	key := makeAccountKey(addr)
 	store.Set(key, contract.ToBytes(amount))
 	return 0
@@ -156,8 +183,8 @@ func setTotalSupply(amount uint64, store cross.Store) uint64 {
 	return 0
 }
 
-func makeAccountKey(addr []byte) []byte {
-	return []byte(fmt.Sprintf("account/%v", addr))
+func makeAccountKey(addr sdk.AccAddress) []byte {
+	return []byte(fmt.Sprintf("account/%s", addr.String()))
 }
 
 func makeTotalSupplyKey() []byte {
