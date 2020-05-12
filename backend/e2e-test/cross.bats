@@ -4,7 +4,7 @@ load helper
 
 # after migration
 @test "create a new trade for prepare" {
-    run ${CURL} -X POST ${URL}/trades -d '{"estateId":"2","unitPrice":100,"amount":5,"seller":"'${ALICE_ADDR}'","type":1}'
+    run ${CURL} -X POST ${URL}/trades -d '{"estateId":"1","unitPrice":100,"amount":5,"seller":"'${ALICE_ADDR}'","type":1}'
     [ "$status" -eq 0 ]
     [ "$(echo ${output} | jq -r '.id')" -eq 3 ]
     [ "$(echo ${output} | jq -r '.seller')" == "${ALICE_ADDR}" ]
