@@ -5,11 +5,27 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/datachainlab/cross/x/ibc/contract"
+	"github.com/datachainlab/cross/x/ibc/cross"
 )
 
 var (
 	ErrorInvalidArgsLength = errors.New("invalid args length")
 )
+
+func GetUInt64(key []byte, store cross.Store) uint64 {
+	if store.Has(key) {
+		return contract.UInt64(store.Get(key))
+	}
+	return 0
+}
+
+func GetBool(key []byte, store cross.Store) bool {
+	if store.Has(key) {
+		return contract.Bool(store.Get(key))
+	}
+	return false
+}
 
 func VerifyArgsLength(args [][]byte, expected int) error {
 	if len(args) != expected {
