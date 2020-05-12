@@ -1,12 +1,9 @@
-import {DateTime} from "luxon";
-
-import {ESTATE_STATUS, MarketEstate, OwnedEstate} from "~models/estate";
-import {ORDER_STATUS, SellOrder} from "~models/order";
+import {MarketEstate, OwnedEstate} from "~models/estate";
+import {SellOrder} from "~models/order";
 import {
   Estate as EstateDAO,
   EstateApi,
   TradeApi,
-  TradeStatus,
   TradeType
 } from "~src/libs/api";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
@@ -82,19 +79,17 @@ export class EstateRepository extends BaseRepo {
         return (
           trade.type === TradeType.SELL &&
           trade.seller !== owner &&
-          !trade.status &&
           trade.estateId === tokenId
         );
       })
-      .map(({id, amount, seller, unitPrice, updatedAt}) => {
+      .map(({id, amount, seller, unitPrice, status, updatedAt}) => {
         return new SellOrder({
           tradeId: id,
           tokenId,
           owner: seller,
-          total: amount,
           perUnitPrice: unitPrice,
           quantity: amount / unitPrice,
-          status: ORDER_STATUS.REQUESTING, // TODO get from contract
+          status: SellOrder.getStatus(status),
           buyOffers: [],
           updatedAt
         });
@@ -144,10 +139,40 @@ export class EstateRepository extends BaseRepo {
       issuedBy,
       dividendDate,
       expectedYield,
-      offerPrice
+      offerPrice,
+      trades
     } = dao;
 
     const units = await this.estateContract.balanceOf(owner, tokenId);
+
+    const sellOrders: SellOrder[] = trades
+      .filter(trade => {
+        return trade.seller === owner && trade.estateId === tokenId;
+      })
+      .map(trade => {
+        const {
+          id: tradeId,
+          estateId: tokenId,
+          seller: owner,
+          amount: quantity,
+          unitPrice: perUnitPrice,
+          // buyer,
+          // requests,
+          status,
+          updatedAt
+        } = trade;
+
+        return new SellOrder({
+          tradeId,
+          tokenId,
+          owner,
+          quantity,
+          perUnitPrice,
+          status: SellOrder.getStatus(status),
+          buyOffers: [], // TODO
+          updatedAt
+        });
+      });
 
     return new OwnedEstate({
       tokenId,
@@ -159,30 +184,9 @@ export class EstateRepository extends BaseRepo {
       expectedYield,
       offerPrice,
       units: units.toNumber(),
-      buyOffers: [], // TODO
-      dividend: [], // TODO
-      status: ESTATE_STATUS.OWNED // TODO
+      status: OwnedEstate.getStatus(sellOrders),
+      sellOrders,
+      dividend: [] // TODO
     });
-  };
-
-  postSellOrder = async (
-    estate: OwnedEstate,
-    amount: number,
-    perUnit: number,
-    seller: Address
-  ) => {
-    await this.apiRequest(() =>
-      this.tradeApi.postTrade({
-        estateId: estate.tokenId,
-        unitPrice: perUnit,
-        amount,
-        seller,
-        type: TradeType.SELL,
-        id: 0,
-        status: TradeStatus.TRADE_OPENED,
-        updatedAt: DateTime.utc().toISO(),
-        requests: []
-      })
-    );
   };
 }

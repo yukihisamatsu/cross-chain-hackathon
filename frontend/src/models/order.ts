@@ -1,10 +1,13 @@
+import BN from "bn.js";
+
 import {Unbox} from "~src/heplers/util-types";
+import {Trade, TradeStatus, TradeType} from "~src/libs/api";
 import {Address} from "~src/types";
 
 export const ORDER_STATUS = {
-  REQUESTING: "requesting",
-  ONGOING: "ongoing",
-  SUCCEEDED: "succeeded",
+  OPENED: "opened",
+  CANCELED: "canceled",
+  COMPLETED: "completed",
   FAILED: "failed"
 } as const;
 export type OrderStatusType = Unbox<typeof ORDER_STATUS>;
@@ -14,43 +17,7 @@ export class Order {
   tokenId: string;
   quantity: number;
   perUnitPrice: number;
-  total: number;
   status: OrderStatusType;
-
-  constructor({
-    tradeId,
-    tokenId,
-    quantity,
-    perUnitPrice,
-    total,
-    status
-  }: {
-    tradeId: number;
-    tokenId: string;
-    quantity: number;
-    perUnitPrice: number;
-    total: number;
-    status: OrderStatusType;
-  }) {
-    this.tradeId = tradeId;
-    this.tokenId = tokenId;
-    this.quantity = quantity;
-    this.perUnitPrice = perUnitPrice;
-    this.total = total;
-    this.status = status;
-  }
-
-  isFinished = () => {
-    return (
-      this.status === ORDER_STATUS.SUCCEEDED ||
-      this.status === ORDER_STATUS.FAILED
-    );
-  };
-}
-
-export class SellOrder extends Order {
-  owner: Address;
-  buyOffers: BuyOrder[];
   updatedAt: string;
 
   constructor({
@@ -58,7 +25,46 @@ export class SellOrder extends Order {
     tokenId,
     quantity,
     perUnitPrice,
-    total,
+    status
+  }: {
+    tradeId: number;
+    tokenId: string;
+    quantity: number;
+    perUnitPrice: number;
+    status: OrderStatusType;
+  }) {
+    this.tradeId = tradeId;
+    this.tokenId = tokenId;
+    this.quantity = quantity;
+    this.perUnitPrice = perUnitPrice;
+    this.status = status;
+  }
+
+  getTotal(): number {
+    return new BN(this.quantity).muln(this.perUnitPrice).toNumber();
+  }
+
+  static getStatus(tradeStatus: TradeStatus) {
+    switch (tradeStatus) {
+      case TradeStatus.TRADE_OPENED:
+        return ORDER_STATUS.OPENED;
+      case TradeStatus.TRADE_CANCELED:
+        return ORDER_STATUS.CANCELED;
+      case TradeStatus.TRADE_COMPLETED:
+        return ORDER_STATUS.COMPLETED;
+    }
+  }
+}
+
+export class SellOrder extends Order {
+  owner: Address;
+  buyOffers: BuyOrder[];
+
+  constructor({
+    tradeId,
+    tokenId,
+    quantity,
+    perUnitPrice,
     status,
     owner,
     buyOffers,
@@ -68,7 +74,6 @@ export class SellOrder extends Order {
     tokenId: string;
     quantity: number;
     perUnitPrice: number;
-    total: number;
     status: OrderStatusType;
     owner: Address;
     buyOffers: BuyOrder[];
@@ -79,12 +84,26 @@ export class SellOrder extends Order {
       tokenId,
       quantity,
       perUnitPrice,
-      total,
       status
     });
     this.owner = owner;
     this.buyOffers = buyOffers;
     this.updatedAt = updatedAt;
+  }
+
+  toTrade(status: TradeStatus): Trade {
+    return {
+      id: this.tradeId,
+      estateId: this.tokenId,
+      seller: this.owner,
+      buyer: undefined,
+      amount: this.quantity,
+      unitPrice: this.perUnitPrice,
+      requests: [],
+      status: status,
+      updatedAt: this.updatedAt,
+      type: TradeType.SELL
+    };
   }
 }
 
@@ -97,7 +116,6 @@ export class BuyOrder extends Order {
     tokenId,
     quantity,
     perUnitPrice,
-    total,
     status,
     offerer,
     sellOffers
@@ -106,7 +124,6 @@ export class BuyOrder extends Order {
     tokenId: string;
     quantity: number;
     perUnitPrice: number;
-    total: number;
     status: OrderStatusType;
     offerer: Address;
     sellOffers: SellOrder[];
@@ -116,7 +133,6 @@ export class BuyOrder extends Order {
       tokenId,
       quantity,
       perUnitPrice,
-      total,
       status
     });
     this.offerer = offerer;

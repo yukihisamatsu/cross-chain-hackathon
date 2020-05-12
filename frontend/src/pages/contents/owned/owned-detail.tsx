@@ -5,7 +5,7 @@ import {RouteComponentProps} from "react-router-dom";
 import styled from "styled-components";
 
 import {OwnedEstate} from "~models/estate";
-import {BuyOrder} from "~models/order";
+import {BuyOrder, SellOrder} from "~models/order";
 import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
 import {OwnedBuyOfferModal} from "~pages/contents/owned/parts/owned-buy-offer-modal";
@@ -13,7 +13,7 @@ import {OwnedBuyOrderCancelModal} from "~pages/contents/owned/parts/owned-buy-or
 import {renderOwnedDividendTable} from "~pages/contents/owned/parts/owned-dividend-table";
 import {OwnedSellOrderCancelModal} from "~pages/contents/owned/parts/owned-sell-order-cancel-modal";
 import {OwnedSellOrderModal} from "~pages/contents/owned/parts/owned-sell-order-modal";
-import {renderEstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
+import {EstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
 import {Repositories} from "~src/repos/types";
@@ -32,6 +32,7 @@ interface State {
   unit: number;
   perUnit: number;
   selectedTradeId: number;
+  canceledSellOrder?: SellOrder;
   cancelSellOrderModalVisible: boolean;
   cancelSellOrderModalConfirmLoading: boolean;
   canceledBuyOrder?: BuyOrder;
@@ -74,10 +75,9 @@ export class OwnedDetail extends React.Component<Props, State> {
 
     if (
       prevStates.estate.tokenId !== this.state.estate.tokenId ||
-      prevStates.estate.userDividend.length !==
-        this.state.estate.userDividend.length ||
-      prevStates.estate.buyOffers.length !==
-        this.state.estate.buyOffers.length ||
+      prevStates.estate.dividend.length !== this.state.estate.dividend.length ||
+      prevStates.estate.sellOrders.length !==
+        this.state.estate.sellOrders.length ||
       prevStates.estate.status !== this.state.estate.status
     ) {
       await this.getEstate();
@@ -143,17 +143,28 @@ export class OwnedDetail extends React.Component<Props, State> {
         confirmLoading={sellOrderModalConfirmLoading}
         onOK={() => {
           const {
-            repos: {estateRepo},
+            repos: {estateRepo, orderRepo},
             user: {address}
           } = this.props;
           const {unit, perUnit} = this.state;
           this.setState({sellOrderModalConfirmLoading: true}, async () => {
             try {
-              await estateRepo.postSellOrder(estate, unit, perUnit, address);
-              resetState();
+              await orderRepo.postSellOrder(
+                estate.tokenId,
+                unit,
+                perUnit,
+                address
+              );
+              const newEstate = await estateRepo.getOwnedEstate(
+                estate.tokenId,
+                address
+              );
+              this.setState({estate: newEstate});
             } catch (e) {
               log.error(e);
               message.error("API Request Failed");
+            } finally {
+              resetState();
             }
           });
         }}
@@ -164,14 +175,16 @@ export class OwnedDetail extends React.Component<Props, State> {
     );
   };
 
-  handleCancelSellOrderButtonClick = () => {
+  handleCancelSellOrderButtonClick = (sellOrder: SellOrder) => () => {
     this.setState({
+      canceledSellOrder: sellOrder,
       cancelSellOrderModalVisible: true
     });
   };
 
   renderCancelSellOrderModal = (estate: OwnedEstate) => {
     const {
+      canceledSellOrder,
       cancelSellOrderModalVisible,
       cancelSellOrderModalConfirmLoading
     } = this.state;
@@ -183,22 +196,42 @@ export class OwnedDetail extends React.Component<Props, State> {
       });
 
     return (
-      <OwnedSellOrderCancelModal
-        estate={estate}
-        visible={cancelSellOrderModalVisible}
-        confirmLoading={cancelSellOrderModalConfirmLoading}
-        onOK={() => {
-          this.setState({cancelSellOrderModalConfirmLoading: true}, () => {
-            // TODO api
-            setTimeout(() => {
-              resetState();
-            }, 2000);
-          });
-        }}
-        onCancel={() => {
-          resetState();
-        }}
-      />
+      canceledSellOrder && (
+        <OwnedSellOrderCancelModal
+          estate={estate}
+          sellOrder={canceledSellOrder}
+          visible={cancelSellOrderModalVisible}
+          confirmLoading={cancelSellOrderModalConfirmLoading}
+          onOK={() => {
+            this.setState(
+              {cancelSellOrderModalConfirmLoading: true},
+              async () => {
+                const {
+                  user: {address},
+                  repos: {estateRepo, orderRepo}
+                } = this.props;
+
+                try {
+                  await orderRepo.cancelSellOrder(canceledSellOrder);
+                  const newEstate = await estateRepo.getOwnedEstate(
+                    estate.tokenId,
+                    address
+                  );
+                  this.setState({estate: newEstate});
+                } catch (e) {
+                  log.error(e);
+                  message.error("API Request Failed");
+                } finally {
+                  resetState();
+                }
+              }
+            );
+          }}
+          onCancel={() => {
+            resetState();
+          }}
+        />
+      )
     );
   };
 
@@ -291,19 +324,21 @@ export class OwnedDetail extends React.Component<Props, State> {
   };
 
   render() {
+    const {user} = this.props;
     const {estate} = this.state;
     return (
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
-        {estate.userDividend.length > 0 &&
-          renderOwnedDividendTable(estate.userDividend)}
-        {renderEstateOrderTab(
-          estate,
-          this.handleSellOrderButtonClick,
-          this.handleCancelSellOrderButtonClick,
-          this.handleCancelBuyOrderButtonClick,
-          this.handleBuyOfferButtonClick
-        )}
+        {estate.dividend.length > 0 &&
+          renderOwnedDividendTable(estate.dividend)}
+        <EstateOrderTab
+          user={user}
+          estate={estate}
+          handleBuyOfferClick={this.handleBuyOfferButtonClick}
+          handleSellOrderFormSubmit={this.handleSellOrderButtonClick}
+          handleChancelSellOrder={this.handleCancelSellOrderButtonClick}
+          handleChancelBuyOrder={this.handleCancelBuyOrderButtonClick}
+        />
         {this.renderSellOrderModal(estate)}
         {this.renderCancelSellOrderModal(estate)}
         {this.renderCancelBuyOrderModal(estate)}

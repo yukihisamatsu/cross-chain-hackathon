@@ -48,7 +48,7 @@ export const renderOwnedBuyOfferTable = (
           key="offerer"
           align="center"
           render={(_: string, order: BuyOrder) =>
-            order.status === ORDER_STATUS.REQUESTING && (
+            order.status === ORDER_STATUS.OPENED && (
               <Button type={"default"} onClick={onClick(order)}>
                 ACCEPT
               </Button>

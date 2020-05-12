@@ -42,6 +42,7 @@ export class OwnedSellOrderModal extends React.PureComponent<Props> {
         <div>tokenId: {estate.tokenId}</div>
         <div>unit: {unit}</div>
         <div>perUnit: {perUnit}</div>
+        <div>total: {unit * perUnit}</div>
       </Modal>
     );
   }

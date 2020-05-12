@@ -7,14 +7,14 @@ import {BuyOrder, ORDER_STATUS, OrderStatusType} from "~src/models/order";
 const {Column} = Table;
 
 export const renderOwnedBuyOrderTable = (
-  order: BuyOrder,
+  order: BuyOrder | null,
   onCancel: (order: BuyOrder) => () => void
 ) => {
   return (
     <React.Fragment>
       <Table<BuyOrder>
         rowKey={(o: BuyOrder) => o.offerer}
-        dataSource={[order]}
+        dataSource={order ? [order] : []}
         pagination={false}
         bordered
         scroll={{y: 245}}
@@ -44,7 +44,7 @@ export const renderOwnedBuyOrderTable = (
           key="offerer"
           align="center"
           render={(_: string, order: BuyOrder) =>
-            order.status === ORDER_STATUS.REQUESTING && (
+            order.status === ORDER_STATUS.OPENED && (
               <Button type={"default"} danger onClick={onCancel(order)}>
                 CANCEL
               </Button>
