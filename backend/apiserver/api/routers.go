@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -32,7 +31,7 @@ type Route struct {
 type Routes []Route
 
 // Router defines the required methods for retrieving api routes
-type Router interface {
+type Router interface { 
 	Routes() Routes
 }
 
@@ -59,17 +58,6 @@ func NewRouter(routers ...Router) *mux.Router {
 
 // EncodeJSONResponse uses the json encoder to write an interface to the http response with an optional status code
 func EncodeJSONResponse(i interface{}, status *int, w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	if status != nil {
-		w.WriteHeader(*status)
-	} else {
-		w.WriteHeader(http.StatusOK)
-	}
-
-	return json.NewEncoder(w).Encode(i)
-}
-
-func EncodeCDCJSONResponse(i interface{}, status *int, w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	if status != nil {
 		w.WriteHeader(*status)
