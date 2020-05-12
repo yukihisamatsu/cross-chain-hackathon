@@ -48,10 +48,7 @@ func isWhitelisted(ctx contract.Context, store cross.Store) ([]byte, error) {
 
 func getWhitelisted(addr, by sdk.AccAddress, store cross.Store) bool {
 	key := makeWhitelistKey(addr, by)
-	if store.Has(key) {
-		return contract.Bool(store.Get(key))
-	}
-	return false
+	return common.GetBool(key, store)
 }
 
 func makeWhitelistKey(addr, by sdk.AccAddress) []byte {

@@ -15,8 +15,8 @@ import (
 
 const (
 	EstateTokenContractID = "estate"
-	// TODO fix
-	MaxTokenOwner = 5
+
+	MaxTokenOwner = 3
 
 	FnNameBalanceOf   = "balanceOf"
 	FnNameCreate      = "create"
@@ -86,6 +86,7 @@ func GetEstateTokenContract() contract.Contract {
 	})
 }
 
+// XXX args order is same as ERC-1155
 // function balanceOf(address _owner, uint256 _id) external view returns (uint256) {
 func balanceOf(ctx contract.Context, store cross.Store) ([]byte, error) {
 	args := ctx.Args()
@@ -116,12 +117,11 @@ func create(ctx contract.Context, store cross.Store) ([]byte, error) {
 		return nil, ErrorAdditionOverflow
 	}
 	tokenIDB := contract.ToBytes(tokenID)
-	store.Set(makeCreatorKey(tokenID), creator)
+	setCreator(creator, tokenID, store)
 	supply := contract.UInt64(args[0])
-	supplyB := contract.ToBytes(supply)
-	store.Set(makeTotalSupplyKey(tokenID), supplyB)
-	store.Set(makeAccountKey(creator, tokenID), supplyB)
-	store.Set(makeTokenOwnerCountKey(tokenID), contract.ToBytes(uint64(1)))
+	setTotalSupply(supply, tokenID, store)
+	setAmount(creator, tokenID, supply, store)
+	setOwnerCount(1, tokenID, store)
 	emitTransfer(ctx, []byte{}, creator, tokenID, supply)
 	return tokenIDB, nil
 }
@@ -150,7 +150,7 @@ func mint(ctx contract.Context, store cross.Store) ([]byte, error) {
 	tokenID := contract.UInt64(args[0])
 	sender := ctx.Signers()[0]
 	creator := getCreator(tokenID, store)
-	if creator == nil || bytes.Equal(creator, sender) {
+	if creator == nil || !bytes.Equal(creator, sender.Bytes()) {
 		return nil, ErrorInvalidSender
 	}
 
@@ -241,7 +241,7 @@ func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 }
 
 // check logics for restricted transfer.
-func check(from, to []byte, tokenID uint64, store cross.Store) error {
+func check(from, to sdk.AccAddress, tokenID uint64, store cross.Store) error {
 	creator := getCreator(tokenID, store)
 	if creator == nil {
 		return ErrorInvalidArg
@@ -251,7 +251,7 @@ func check(from, to []byte, tokenID uint64, store cross.Store) error {
 		return ErrorNotWhitelisted
 	}
 	ownerCount := getOwnerCount(tokenID, store)
-	if ownerCount >= MaxTokenOwner {
+	if ownerCount > MaxTokenOwner {
 		return ErrorRestrictedTransfer
 	}
 	return nil
@@ -269,13 +269,10 @@ func emitTransfer(ctx contract.Context, from, to sdk.AccAddress, tokenID, value 
 
 func getAmount(addr sdk.AccAddress, token uint64, store cross.Store) uint64 {
 	key := makeAccountKey(addr, token)
-	if store.Has(key) {
-		return contract.UInt64(store.Get(key))
-	}
-	return 0
+	return common.GetUInt64(key, store)
 }
 
-func getCreator(token uint64, store cross.Store) []byte {
+func getCreator(token uint64, store cross.Store) sdk.AccAddress {
 	key := makeCreatorKey(token)
 	if store.Has(key) {
 		return store.Get(key)
@@ -283,33 +280,36 @@ func getCreator(token uint64, store cross.Store) []byte {
 	return nil
 }
 
+func getOwnerCount(tokenID uint64, store cross.Store) uint64 {
+	key := makeTokenOwnerCountKey(tokenID)
+	return common.GetUInt64(key, store)
+}
+
 func getTokenID(store cross.Store) uint64 {
 	key := makeLastTokenIDKey()
-	if store.Has(key) {
-		return contract.UInt64(store.Get(key))
-	}
-	return 0
+	return common.GetUInt64(key, store)
 }
 
 func getTotalSupply(tokenID uint64, store cross.Store) uint64 {
 	key := makeTotalSupplyKey(tokenID)
-	if store.Has(key) {
-		return contract.UInt64(store.Get(key))
-	}
-	return 0
-}
-
-func getOwnerCount(tokenID uint64, store cross.Store) uint64 {
-	key := makeTokenOwnerCountKey(tokenID)
-	if store.Has(key) {
-		return contract.UInt64(store.Get(key))
-	}
-	return 0
+	return common.GetUInt64(key, store)
 }
 
 func setAmount(addr sdk.AccAddress, tokenID, amount uint64, store cross.Store) uint64 {
 	key := makeAccountKey(addr, tokenID)
 	store.Set(key, contract.ToBytes(amount))
+	return 0
+}
+
+func setCreator(creator sdk.AccAddress, tokenID uint64, store cross.Store) uint64 {
+	key := makeCreatorKey(tokenID)
+	store.Set(key, creator)
+	return 0
+}
+
+func setOwnerCount(count, tokenID uint64, store cross.Store) uint64 {
+	key := makeTokenOwnerCountKey(tokenID)
+	store.Set(key, contract.ToBytes(count))
 	return 0
 }
 
@@ -325,18 +325,12 @@ func setTotalSupply(total, tokenID uint64, store cross.Store) uint64 {
 	return 0
 }
 
-func setOwnerCount(count, tokenID uint64, store cross.Store) uint64 {
-	key := makeTokenOwnerCountKey(tokenID)
-	store.Set(key, contract.ToBytes(count))
-	return 0
-}
-
 func makeAccountKey(addr sdk.AccAddress, tokenID uint64) []byte {
-	return []byte(fmt.Sprintf("account/%s/token/%v", addr.String(), contract.ToBytes(tokenID)))
+	return []byte(fmt.Sprintf("account/%s/token/%d", addr.String(), tokenID))
 }
 
 func makeCreatorKey(tokenID uint64) []byte {
-	return []byte(fmt.Sprintf("creator/%v", contract.ToBytes(tokenID)))
+	return []byte(fmt.Sprintf("creator/%d", tokenID))
 }
 
 func makeLastTokenIDKey() []byte {
@@ -344,9 +338,9 @@ func makeLastTokenIDKey() []byte {
 }
 
 func makeTotalSupplyKey(tokenID uint64) []byte {
-	return []byte(fmt.Sprintf("totalSupply/%v", contract.ToBytes(tokenID)))
+	return []byte(fmt.Sprintf("totalSupply/%d", tokenID))
 }
 
 func makeTokenOwnerCountKey(tokenID uint64) []byte {
-	return []byte(fmt.Sprintf("ownerCount/%v", contract.ToBytes(tokenID)))
+	return []byte(fmt.Sprintf("ownerCount/%d", tokenID))
 }

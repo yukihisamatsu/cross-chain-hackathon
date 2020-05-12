@@ -157,18 +157,12 @@ func emitTransfer(ctx contract.Context, from, to sdk.AccAddress, value uint64) {
 
 func getAmount(addr []byte, store cross.Store) uint64 {
 	key := makeAccountKey(addr)
-	if store.Has(key) {
-		return contract.UInt64(store.Get(key))
-	}
-	return 0
+	return common.GetUInt64(key, store)
 }
 
 func getTotalSupply(store cross.Store) uint64 {
 	key := makeTotalSupplyKey()
-	if store.Has(key) {
-		return contract.UInt64(store.Get(key))
-	}
-	return 0
+	return common.GetUInt64(key, store)
 }
 
 func setAmount(addr sdk.AccAddress, amount uint64, store cross.Store) uint64 {
