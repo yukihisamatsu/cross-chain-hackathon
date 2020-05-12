@@ -23,7 +23,7 @@ export const renderEstateOrderTab = (
       <Tabs type="card">
         <TabPane tab="SELL" key="sell">
           {estate.status === ESTATE_STATUS.OWNED &&
-            renderOwnedSellOrderForm(handleSellOrderFormSubmit)}
+            renderOwnedSellOrderForm(estate, handleSellOrderFormSubmit)}
           {estate.status === ESTATE_STATUS.SELLING &&
             renderOwnedSellOrderInfo(estate, handleChancelSellOrder)}
           {renderOwnedBuyOfferTable(estate.buyOffers, handleBuyOfferClick)}

@@ -1,4 +1,5 @@
 import {message} from "antd";
+import log from "loglevel";
 import React from "react";
 import {RouteComponentProps} from "react-router-dom";
 import styled from "styled-components";
@@ -60,6 +61,30 @@ export class OwnedDetail extends React.Component<Props, State> {
   }
 
   async componentDidMount() {
+    await this.getEstate();
+  }
+
+  async componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevStates: Readonly<State>
+  ) {
+    if (prevProps.user.address !== this.props.user.address) {
+      await this.getEstate();
+    }
+
+    if (
+      prevStates.estate.tokenId !== this.state.estate.tokenId ||
+      prevStates.estate.userDividend.length !==
+        this.state.estate.userDividend.length ||
+      prevStates.estate.buyOffers.length !==
+        this.state.estate.buyOffers.length ||
+      prevStates.estate.status !== this.state.estate.status
+    ) {
+      await this.getEstate();
+    }
+  }
+
+  async getEstate() {
     const {
       repos: {estateRepo},
       user: {address},
@@ -72,10 +97,6 @@ export class OwnedDetail extends React.Component<Props, State> {
 
     try {
       const estate = await estateRepo.getOwnedEstate(id, address);
-      if (!estate) {
-        history.push(PATHS.OWNED);
-        return;
-      }
       setHeaderText(estate.name);
       this.setState({
         estate
@@ -87,9 +108,12 @@ export class OwnedDetail extends React.Component<Props, State> {
   }
 
   handleSellOrderButtonClick = (values: {[key: string]: string | number}) => {
+    const unit = values["unit"] as number;
+    const perUnit = values["perUnit"] as number;
+
     this.setState({
-      unit: values["unit"] as number,
-      perUnit: values["perUnit"] as number,
+      unit,
+      perUnit,
       sellOrderModalVisible: true
     });
   };
@@ -109,6 +133,7 @@ export class OwnedDetail extends React.Component<Props, State> {
         sellOrderModalVisible: false,
         sellOrderModalConfirmLoading: false
       });
+
     return (
       <OwnedSellOrderModal
         estate={estate}
@@ -117,11 +142,19 @@ export class OwnedDetail extends React.Component<Props, State> {
         visible={sellOrderModalVisible}
         confirmLoading={sellOrderModalConfirmLoading}
         onOK={() => {
-          this.setState({sellOrderModalConfirmLoading: true}, () => {
-            // TODO api call
-            setTimeout(() => {
+          const {
+            repos: {estateRepo},
+            user: {address}
+          } = this.props;
+          const {unit, perUnit} = this.state;
+          this.setState({sellOrderModalConfirmLoading: true}, async () => {
+            try {
+              await estateRepo.postSellOrder(estate, unit, perUnit, address);
               resetState();
-            }, 2000);
+            } catch (e) {
+              log.error(e);
+              message.error("API Request Failed");
+            }
           });
         }}
         onCancel={() => {
