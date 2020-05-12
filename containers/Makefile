@@ -2,9 +2,9 @@ AWS?=aws
 AWS_REGION?=us-east-1
 AWS_ACCOUNT_ID?=513838501479
 
-TAG=latest
+TAG?=$(shell git rev-parse --short HEAD)
 
-REPO_BASE?=$(AWS_ACCOUNT_ID).dkr.ecr.us-east-1.amazonaws.com
+REPO_BASE?=$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 
 APP_REPO_URL?="https://github.com/datachainlab/cross-chain-hackathon"
 APP_DIR="cross-chain-hackathon/contract"
@@ -13,7 +13,7 @@ APP_DIR="cross-chain-hackathon/contract"
 		deploy-image deploy-image-api deploy-image-coin deploy-image-coordinator deploy-image-relayer deploy-image-security deploy-image-initializer
 
 ecr-login:
-	$(AWS) --region $(AWS_REGION) ecr get-login-password | docker login --username AWS --password-stdin https://$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
+	$(AWS) --region $(AWS_REGION) ecr get-login-password | docker login --username AWS --password-stdin https://$(REPO_BASE)
 
 build-image:
 	make build-image-coordinator
