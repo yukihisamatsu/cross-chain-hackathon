@@ -13,8 +13,10 @@ import (
 	"log"
 	"net/http"
 
-	api "github.com/datachainlab/cross-chain-hackathon/backend/apiserver/api"
+	"github.com/gorilla/handlers"
 	"github.com/spf13/viper"
+
+	api "github.com/datachainlab/cross-chain-hackathon/backend/apiserver/api"
 )
 
 func initConfig() *viper.Viper {
@@ -64,6 +66,7 @@ func main() {
 	UserApiController := api.NewUserApiController(UserApiService)
 
 	router := api.NewRouter(EstateApiController, TradeApiController, TxApiController, UserApiController)
-
-	log.Fatal(http.ListenAndServe(":8080", router))
+	handler := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}),
+		handlers.AllowCredentials())(router)
+	log.Fatal(http.ListenAndServe(":8000", handler))
 }

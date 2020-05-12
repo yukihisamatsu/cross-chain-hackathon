@@ -1,15 +1,19 @@
+import {DateTime} from "luxon";
+
 import {ESTATE_STATUS, MarketEstate, OwnedEstate} from "~models/estate";
 import {ORDER_STATUS, SellOrder} from "~models/order";
 import {
   Estate as EstateDAO,
   EstateApi,
   TradeApi,
+  TradeStatus,
   TradeType
 } from "~src/libs/api";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
+import {BaseRepo} from "~src/repos/base";
 import {Address} from "~src/types";
 
-export class EstateRepository {
+export class EstateRepository extends BaseRepo {
   estateApi: EstateApi;
   tradeApi: TradeApi;
   estateContract: EstateContract;
@@ -23,6 +27,7 @@ export class EstateRepository {
     tradeApi: TradeApi;
     estateContract: EstateContract;
   }) {
+    super();
     this.estateApi = estateApi;
     this.tradeApi = tradeApi;
     this.estateContract = estateContract;
@@ -114,7 +119,7 @@ export class EstateRepository {
       await Promise.all(
         daos.map(async (dao: EstateDAO) => await this.toOwnedEstate(dao, owner))
       )
-    ).filter(e => e !== null);
+    ).filter(e => e.units > 0);
 
     return ret as OwnedEstate[];
   };
@@ -122,7 +127,7 @@ export class EstateRepository {
   getOwnedEstate = async (
     estateId: string,
     owner: Address
-  ): Promise<OwnedEstate | null> => {
+  ): Promise<OwnedEstate> => {
     const {data: dao} = await this.estateApi.getEstateById(estateId);
     return this.toOwnedEstate(dao, owner);
   };
@@ -130,7 +135,7 @@ export class EstateRepository {
   private toOwnedEstate = async (
     dao: EstateDAO,
     owner: Address
-  ): Promise<OwnedEstate | null> => {
+  ): Promise<OwnedEstate> => {
     const {
       tokenId,
       name,
@@ -143,9 +148,6 @@ export class EstateRepository {
     } = dao;
 
     const units = await this.estateContract.balanceOf(owner, tokenId);
-    if (units.isZero()) {
-      return null;
-    }
 
     return new OwnedEstate({
       tokenId,
@@ -161,5 +163,26 @@ export class EstateRepository {
       dividend: [], // TODO
       status: ESTATE_STATUS.OWNED // TODO
     });
+  };
+
+  postSellOrder = async (
+    estate: OwnedEstate,
+    amount: number,
+    perUnit: number,
+    seller: Address
+  ) => {
+    await this.apiRequest(() =>
+      this.tradeApi.postTrade({
+        estateId: estate.tokenId,
+        unitPrice: perUnit,
+        amount,
+        seller,
+        type: TradeType.SELL,
+        id: 0,
+        status: TradeStatus.TRADE_OPENED,
+        updatedAt: DateTime.utc().toISO(),
+        requests: []
+      })
+    );
   };
 }

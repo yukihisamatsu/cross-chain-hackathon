@@ -2,7 +2,10 @@ import {Button, Form, InputNumber} from "antd";
 import React from "react";
 import styled from "styled-components";
 
+import {OwnedEstate} from "~models/estate";
+
 export const renderOwnedSellOrderForm = (
+  estate: OwnedEstate,
   onFinish: (values: {[key: string]: string | number}) => void
 ) => {
   return (
@@ -13,7 +16,15 @@ export const renderOwnedSellOrderForm = (
           {
             required: true,
             message: "Please input unit!"
-          }
+          },
+          () => ({
+            validator(_, value) {
+              if (value > estate.units) {
+                return Promise.reject("The value inputted exceeds the units.");
+              }
+              return Promise.resolve();
+            }
+          })
         ]}
       >
         <FormInputNumberStyled placeholder="UNIT" min={1} />

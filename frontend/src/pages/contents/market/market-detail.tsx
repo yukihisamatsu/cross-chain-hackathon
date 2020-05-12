@@ -37,10 +37,31 @@ export class MarketDetail extends React.Component<Props, State> {
     };
   }
 
+  async componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevStates: Readonly<State>
+  ) {
+    if (prevProps.user.address !== this.props.user.address) {
+      await this.getEstate();
+    }
+
+    if (
+      prevStates.estate.tokenId !== this.state.estate.tokenId ||
+      prevStates.estate.sellOrders.length !==
+        this.state.estate.sellOrders.length
+    ) {
+      await this.getEstate();
+    }
+  }
+
   async componentDidMount() {
+    await this.getEstate();
+  }
+
+  async getEstate() {
     const {
       repos: {estateRepo},
-      user,
+      user: {address},
       setHeaderText,
       match: {
         params: {id}
@@ -51,7 +72,7 @@ export class MarketDetail extends React.Component<Props, State> {
     let estate: MarketEstate;
 
     try {
-      estate = await estateRepo.getMarketEstate(id, user.address);
+      estate = await estateRepo.getMarketEstate(id, address);
       setHeaderText(estate.name);
       this.setState({
         estate

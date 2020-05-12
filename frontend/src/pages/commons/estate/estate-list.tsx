@@ -48,7 +48,6 @@ export class EstateList extends React.Component<Props> {
                   )}
 
                   {isOwnedEstate(estate) &&
-                    estate.status &&
                     estate.status !== ESTATE_STATUS.OWNED && (
                       <div>
                         <Tag

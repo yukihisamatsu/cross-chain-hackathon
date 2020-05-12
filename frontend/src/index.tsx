@@ -1,5 +1,6 @@
 import "antd/dist/antd.css";
 
+import log, {LogLevelDesc} from "loglevel";
 import React from "react";
 import ReactDOM from "react-dom";
 
@@ -15,6 +16,8 @@ import {UserRepository} from "~src/repos/user";
 
 (async () => {
   const config = parseEnv();
+  const logLevel: LogLevelDesc = config.env === "production" ? "warn" : "debug";
+  log.setLevel(logLevel);
   const {estateApi, tradeApi, userApi} = createApiClient({
     basePath: config.apiEndPoint
   });
