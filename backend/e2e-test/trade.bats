@@ -32,14 +32,9 @@ load helper
 }
 
 @test "cancel the trade" {
-    run ${CURL} -X PUT ${URL}/trades -d '{"id":1,"status":1}'
+    run ${CURL} -X DELETE ${URL}/trade/1
     [ "$status" -eq 0 ]
     [ "$(echo ${output} | jq -r '.status')" -eq 1 ]
-}
-
-@test "modifying the trade status after cancel should be fail" {
-    run ${CURL} -X PUT ${URL}/trades -d '{"id":1,"status":2}'
-    [ "$status" -ne 0 ]
 }
 
 @test "post another trade" {
@@ -58,16 +53,8 @@ load helper
     [ "$(echo ${output} | jq -r '.status')" -eq 0 ]
 }
 
-@test "put the trade as completed" {
-    run ${CURL} -X PUT ${URL}/trade/requests -d '{"id":1,"status":3}'
+@test "cancel the trade request" {
+    run ${CURL} -X DELETE ${URL}/trade/request/1
     [ "$status" -eq 0 ]
-    [ "$(echo ${output} | jq -r '.id')" -eq 1 ]
-    [ "$(echo ${output} | jq -r '.status')" -eq 3 ]
-}
-
-@test "completed request update the trade status" {
-    run ${CURL} -X GET ${URL}/estate/1
-    [ "$status" -eq 0 ]
-    [ "$(echo ${output} | jq -r '.trades[1].id')" -eq 2 ]
-    [ "$(echo ${output} | jq -r '.trades[1].status')" -eq 2 ]
+    [ "$(echo ${output} | jq -r '.status')" -eq 1 ]
 }
