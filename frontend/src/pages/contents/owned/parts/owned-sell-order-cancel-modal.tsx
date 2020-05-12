@@ -2,9 +2,11 @@ import {Modal} from "antd";
 import React from "react";
 
 import {OwnedEstate} from "~models/estate";
+import {SellOrder} from "~models/order";
 
 interface Props {
   estate: OwnedEstate;
+  sellOrder: SellOrder;
   onOK: () => void;
   onCancel: () => void;
   visible: boolean;
@@ -17,7 +19,14 @@ export class OwnedSellOrderCancelModal extends React.PureComponent<Props> {
   }
 
   render() {
-    const {estate, onOK, onCancel, visible, confirmLoading} = this.props;
+    const {
+      estate,
+      sellOrder,
+      onOK,
+      onCancel,
+      visible,
+      confirmLoading
+    } = this.props;
     return (
       <Modal
         title="CANCEL ORDER"
@@ -29,11 +38,12 @@ export class OwnedSellOrderCancelModal extends React.PureComponent<Props> {
         okText={"CONFIRM"}
         cancelText={"CANCEL"}
       >
-        <div>owner: {estate.name}</div>
-        <div>tokenId: {estate.tokenId}</div>
-        <div>units: {estate.units}</div>
-        {/*<div>perUnit: {estate.perUnit}</div>*/}
-        {/*<div>total: {estate.getTotal()}</div>*/}
+        <div>name: {estate.name}</div>
+        <div>tokenId: {sellOrder.tokenId}</div>
+        <div>tradeId: {sellOrder.tradeId}</div>
+        <div>units: {sellOrder.quantity}</div>
+        <div>perUnit: {sellOrder.perUnitPrice}</div>
+        <div>total: {sellOrder.getTotal()}</div>
       </Modal>
     );
   }

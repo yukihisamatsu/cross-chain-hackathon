@@ -132,7 +132,7 @@ export class MarketDetail extends React.Component<Props, State> {
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
         {renderMarketSellOrderTable(
-          estate.sellOrders.filter(e => !e.isFinished()),
+          estate.getUnFinishedSellOrders(),
           this.handleSellOrderButtonClick
         )}
         {this.renderSellOrderModal(estate)}

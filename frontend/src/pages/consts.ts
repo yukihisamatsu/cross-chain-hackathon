@@ -21,8 +21,8 @@ export const IssueDividendStatusTagColorMap: {[key: string]: string} = {
 };
 
 export const OrderStatusTagColorMap: {[key: string]: string} = {
-  [ORDER_STATUS.REQUESTING]: "orange",
-  [ORDER_STATUS.ONGOING]: "blue",
-  [ORDER_STATUS.SUCCEEDED]: "green",
+  [ORDER_STATUS.OPENED]: "blue",
+  [ORDER_STATUS.COMPLETED]: "green",
+  [ORDER_STATUS.CANCELED]: "orange",
   [ORDER_STATUS.FAILED]: "red"
 };

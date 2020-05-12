@@ -11,6 +11,7 @@ import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {RestClient} from "~src/libs/cosmos/rest-client";
 import {RPCClient} from "~src/libs/cosmos/rpc-client";
 import {EstateRepository} from "~src/repos/estate";
+import {OrderRepository} from "~src/repos/order";
 import {Repositories} from "~src/repos/types";
 import {UserRepository} from "~src/repos/user";
 
@@ -43,6 +44,10 @@ import {UserRepository} from "~src/repos/user";
       estateApi,
       tradeApi,
       estateContract
+    }),
+
+    orderRepo: OrderRepository.create({
+      tradeApi
     })
   };
 

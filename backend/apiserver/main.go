@@ -66,7 +66,9 @@ func main() {
 	UserApiController := api.NewUserApiController(UserApiService)
 
 	router := api.NewRouter(EstateApiController, TradeApiController, TxApiController, UserApiController)
-	handler := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}),
+	handler := handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT"}),
 		handlers.AllowCredentials())(router)
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }
