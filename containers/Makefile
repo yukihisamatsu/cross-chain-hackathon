@@ -2,7 +2,9 @@ AWS?=aws
 AWS_REGION?=us-east-1
 AWS_ACCOUNT_ID?=513838501479
 
-TAG?=$(shell git rev-parse --short HEAD)
+TAG=$(shell git rev-parse --short HEAD)
+LATEST_TAG_BRANCH=develop
+GIT_BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
 REPO_BASE?=$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 
@@ -10,7 +12,7 @@ APP_REPO_URL?="https://github.com/datachainlab/cross-chain-hackathon"
 APP_DIR="cross-chain-hackathon/contract"
 
 .PHONY: build-image build-image-coin build-image-coordinator build-image-security build-image-relayer build-image-api build-image-initializer\
-		deploy-image deploy-image-api deploy-image-coin deploy-image-coordinator deploy-image-relayer deploy-image-security deploy-image-initializer
+		deploy-image deploy-image-coin deploy-image-coordinator deploy-image-security deploy-image-relayer deploy-image-api deploy-image-initializer
 
 ecr-login:
 	$(AWS) --region $(AWS_REGION) ecr get-login-password | docker login --username AWS --password-stdin https://$(REPO_BASE)
@@ -44,6 +46,10 @@ build-image-coordinator:
 
 deploy-image-coordinator:
 	docker push $(REPO_BASE)/$(COORDINATOR_REPO):$(TAG)
+	@if [ "$(GIT_BRANCH)" = "$(LATEST_TAG_BRANCH)" ]; then \
+	  docker tag $(REPO_BASE)/$(COORDINATOR_REPO):$(TAG) $(REPO_BASE)/$(COORDINATOR_REPO):latest; \
+	  docker push $(REPO_BASE)/$(COORDINATOR_REPO):latest; \
+	fi
 
 SECURITY_REPO?=cch-security
 SECURITY_CHAIN_ID?=securityz
@@ -58,6 +64,10 @@ build-image-security:
 
 deploy-image-security:
 	docker push $(REPO_BASE)/$(SECURITY_REPO):$(TAG)
+	@if [ "$(GIT_BRANCH)" = "$(LATEST_TAG_BRANCH)" ]; then \
+	  docker tag $(REPO_BASE)/$(SECURITY_REPO):$(TAG) $(REPO_BASE)/$(SECURITY_REPO):latest; \
+	  docker push $(REPO_BASE)/$(SECURITY_REPO):latest; \
+	fi
 
 COIN_REPO?=cch-coin
 COIN_CHAIN_ID?=coinz
@@ -72,6 +82,10 @@ build-image-coin:
 
 deploy-image-coin:
 	docker push $(REPO_BASE)/$(COIN_REPO):$(TAG)
+	@if [ "$(GIT_BRANCH)" = "$(LATEST_TAG_BRANCH)" ]; then \
+	  docker tag $(REPO_BASE)/$(COIN_REPO):$(TAG) $(REPO_BASE)/$(COIN_REPO):latest; \
+	  docker push $(REPO_BASE)/$(COIN_REPO):latest; \
+	fi
 
 RELAYER_REPO=cch-relayer
 build-image-relayer:
@@ -79,6 +93,10 @@ build-image-relayer:
 
 deploy-image-relayer:
 	docker push $(REPO_BASE)/$(RELAYER_REPO):$(TAG)
+	@if [ "$(GIT_BRANCH)" = "$(LATEST_TAG_BRANCH)" ]; then \
+	  docker tag $(REPO_BASE)/$(RELAYER_REPO):$(TAG) $(REPO_BASE)/$(RELAYER_REPO):latest; \
+	  docker push $(REPO_BASE)/$(RELAYER_REPO):latest; \
+	fi
 
 API_REPO=cch-api
 build-image-api:
@@ -86,6 +104,10 @@ build-image-api:
 
 deploy-image-api:
 	docker push $(REPO_BASE)/$(API_REPO):$(TAG)
+	@if [ "$(GIT_BRANCH)" = "$(LATEST_TAG_BRANCH)" ]; then \
+	  docker tag $(REPO_BASE)/$(API_REPO):$(TAG) $(REPO_BASE)/$(API_REPO):latest; \
+	  docker push $(REPO_BASE)/$(API_REPO):latest; \
+	fi
 
 INITIALIZER_REPO?=cch-initializer
 build-image-initializer:
@@ -95,3 +117,7 @@ build-image-initializer:
 
 deploy-image-initializer:
 	docker push $(REPO_BASE)/$(INITIALIZER_REPO):$(TAG)
+	@if [ "$(GIT_BRANCH)" = "$(LATEST_TAG_BRANCH)" ]; then \
+	  docker tag $(REPO_BASE)/$(INITIALIZER_REPO):$(TAG) $(REPO_BASE)/$(INITIALIZER_REPO):latest; \
+	  docker push $(REPO_BASE)/$(INITIALIZER_REPO):latest; \
+	fi
