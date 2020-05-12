@@ -88,7 +88,7 @@ export class EstateRepository extends BaseRepo {
           tokenId,
           owner: seller,
           perUnitPrice: unitPrice,
-          quantity: amount / unitPrice,
+          quantity: amount,
           status: SellOrder.getStatus(status),
           buyOffers: [],
           updatedAt

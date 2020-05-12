@@ -14,7 +14,7 @@ interface Props extends RouteComponentProps {
   config: Config;
   repos: Repositories;
   user: User;
-  setUser: (user: User) => void;
+  setUser: (user: User) => Promise<void>;
   setHeaderText: (headerText: string) => void;
 }
 
@@ -61,9 +61,9 @@ export class SignUp extends React.Component<Props, State> {
           render={(_: string, user: User) => (
             <Button
               type={"default"}
-              onClick={() => {
+              onClick={async () => {
                 localStorage.setItem(LocalStorageUserKey, JSON.stringify(user));
-                setUser(user);
+                await setUser(user);
                 history.push(PATHS.TOP);
               }}
             >

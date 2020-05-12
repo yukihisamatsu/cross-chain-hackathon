@@ -1,37 +1,32 @@
 import {User} from "~models/user";
 import {UserApi} from "~src/libs/api";
-import {RPCClient} from "~src/libs/cosmos/rpc-client";
+import {CoinContract} from "~src/libs/cosmos/contract/coint";
 import {getAddress} from "~src/libs/cosmos/util";
+import {Address} from "~src/types";
 
 export class UserRepository {
   userApi: UserApi;
-  coinRPCClient: RPCClient;
-  securityRPCClient: RPCClient;
+  coinContract: CoinContract;
 
   constructor({
     userApi,
-    coinRPCClient,
-    securityRPCClient
+    coinContract
   }: {
     userApi: UserApi;
-    coinRPCClient: RPCClient;
-    securityRPCClient: RPCClient;
+    coinContract: CoinContract;
   }) {
     this.userApi = userApi;
-    this.coinRPCClient = coinRPCClient;
-    this.securityRPCClient = securityRPCClient;
+    this.coinContract = coinContract;
   }
 
   static create({
     userApi,
-    coinRPCClient,
-    securityRPCClient
+    coinContract
   }: {
     userApi: UserApi;
-    coinRPCClient: RPCClient;
-    securityRPCClient: RPCClient;
+    coinContract: CoinContract;
   }): UserRepository {
-    return new UserRepository({userApi, coinRPCClient, securityRPCClient});
+    return new UserRepository({userApi, coinContract});
   }
 
   getUsers = async (): Promise<User[]> => {
@@ -44,7 +39,8 @@ export class UserRepository {
         id,
         name,
         address,
-        mnemonic
+        mnemonic,
+        balance: 0
       };
     });
   };
@@ -60,7 +56,14 @@ export class UserRepository {
       id,
       name,
       address,
-      mnemonic
+      mnemonic,
+      balance: 0
     };
+  };
+
+  balanceOf = async (address: Address): Promise<number> => {
+    const balance = await this.coinContract.balanceOf(address);
+
+    return balance.toNumber();
   };
 }

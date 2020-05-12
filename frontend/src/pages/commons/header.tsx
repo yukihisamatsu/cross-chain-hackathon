@@ -12,7 +12,7 @@ const {Header} = Layout;
 interface Props extends RouteComponentProps {
   user: User;
   headerTitle: string;
-  setUser: (user: User) => void;
+  setUser: (user: User) => Promise<void>;
 }
 
 export class HeaderComponent extends React.PureComponent<Props> {
@@ -30,17 +30,20 @@ export class HeaderComponent extends React.PureComponent<Props> {
         <RightBlock>
           <UserTextWrap>
             <UserText>
+              <span>{user.address}</span>
+            </UserText>
+            <UserText>
               <span>{user.name}</span>
             </UserText>
             <UserText>
-              <span>{user.address}</span>
+              <span>{user.balance} DCC</span>
             </UserText>
           </UserTextWrap>
           <LogoutButton
             type={"default"}
-            onClick={() => {
+            onClick={async () => {
               localStorage.removeItem(LocalStorageUserKey);
-              setUser(User.default());
+              await setUser(User.default());
               history.push(PATHS.SIGN_UP);
             }}
           >
@@ -63,6 +66,8 @@ const HeaderTextWrap = styled.div``;
 const HeaderText = styled.div`
   color: white;
   font-size: 1.6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const RightBlock = styled.div`
@@ -80,7 +85,8 @@ const UserText = styled.div`
   font-size: 0.8rem;
   color: darkgray;
   text-align: right;
-  height: 20%;
+  height: 29%;
+  line-height: 26px;
 `;
 
 const LogoutButton = styled(Button)`

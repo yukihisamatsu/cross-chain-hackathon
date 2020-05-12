@@ -26,18 +26,30 @@ export const renderMarketSellOrderTable = (
         size={"small"}
       >
         <Column title="Owner" dataIndex="owner" key="owner" />
-        <Column title="Quantity" dataIndex="quantity" key="quantity" />
+        <Column
+          title="Quantity"
+          dataIndex="quantity"
+          key="quantity"
+          width={80}
+        />
         <Column
           title="PerUnitPrice"
           dataIndex="perUnitPrice"
           key="perUnitPrice"
+          width={180}
         />
-        <Column title="Total" dataIndex="total" key="total" />
+        <Column
+          title="Total"
+          key="total"
+          width={180}
+          render={(_: string, order: SellOrder) => order.getTotal()}
+        />
         <Column
           title=""
           dataIndex="owner"
           key="owner"
           align="center"
+          width={150}
           render={(owner: string, _: SellOrder) => (
             <Button type={"default"} onClick={onClick(owner)}>
               BUY NOW

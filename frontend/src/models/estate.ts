@@ -250,12 +250,11 @@ export class MarketEstate extends Estate {
   };
 
   getUnFinishedSellOrders(): SellOrder[] {
-    return this.sellOrders.filter(order => {
-      return (
-        order.status === ORDER_STATUS.COMPLETED ||
+    return this.sellOrders.filter(
+      order =>
+        order.status === ORDER_STATUS.OPENED ||
         order.status === ORDER_STATUS.FAILED
-      );
-    });
+    );
   }
 }
 

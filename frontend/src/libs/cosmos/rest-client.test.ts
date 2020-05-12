@@ -37,7 +37,7 @@ describe("cosmos rest client test suites", () => {
     expect(bn.toNumber()).toEqual(1000000);
   });
 
-  test("estate balanceOf Test", async () => {
+  test("balanceOf estate", async () => {
     const address = "cosmos1w9tumxvvxevq5gac5se2uq0s50q7yk9gyyvwe9"; // Alice
     const addressBase64 = Buffer.from(address, "utf-8").toString("base64");
     const tokenId = new BN(1).toBuffer("be", 8).toString("base64");
@@ -57,6 +57,23 @@ describe("cosmos rest client test suites", () => {
     const response = await securityClient.crossContractCall(params);
     const actual = new BN(Buffer.from(response.result.return_value, "base64"));
     expect(actual.toNumber()).toEqual(999);
+  });
+
+  test("balanceOf coin", async () => {
+    const address = "cosmos1yk0x4pqcwyuxtrsd8nqz2x0xd3ucafed96wd02"; // Alice
+    const addressBase64 = Buffer.from(address, "utf-8").toString("base64");
+    const params: CrossContractCallParams = {
+      from: address,
+      signers: [],
+      call_info: {
+        id: "dcc",
+        method: "balanceOf",
+        args: [addressBase64]
+      }
+    };
+    const response = await coinClient.crossContractCall(params);
+    const actual = new BN(Buffer.from(response.result.return_value, "base64"));
+    expect(actual.toNumber()).toEqual(1000000);
   });
 
   test("sell request status", async () => {
