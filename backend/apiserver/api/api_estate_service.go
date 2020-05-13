@@ -14,6 +14,8 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/jmoiron/sqlx"
+
 	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
 )
 
@@ -42,6 +44,39 @@ func (s *EstateApiService) GetEstateById(estateId string) (interface{}, error) {
 		log.Println(err)
 		return nil, ErrorFailedDBGet
 	}
+	if estate.Trades, err = s.getTrades(db, estate.TokenId); err != nil {
+		return nil, err
+	}
+	return estate, nil
+}
+
+// GetEstates - get all estates
+func (s *EstateApiService) GetEstates() (interface{}, error) {
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+	estates := &[]Estate{}
+	if err := db.Select(estates, "SELECT * FROM estate ORDER BY tokenId"); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+
+	for i := 0; i < len(*estates); i++ {
+		trades, err := s.getTrades(db, (*estates)[i].TokenId)
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("id: %s\ttrades: %+v\n", (*estates)[i].TokenId, trades)
+		(*estates)[i].Trades = trades
+	}
+	log.Printf("estates: %+v\n", estates)
+
+	return estates, nil
+}
+
+func (s *EstateApiService) getTrades(db *sqlx.DB, estateId string) ([]Trade, error) {
 	trades := []Trade{}
 	rows, err := db.Query("SELECT id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt FROM trade WHERE estateId = ?", estateId)
 	if err != nil {
@@ -80,46 +115,6 @@ func (s *EstateApiService) GetEstateById(estateId string) (interface{}, error) {
 		}
 		trades[i].Requests = reqs
 	}
-	estate.Trades = trades
-	return estate, nil
-}
 
-// GetEstates - get all estates
-func (s *EstateApiService) GetEstates() (interface{}, error) {
-	db, err := rdb.InitDB()
-	if err != nil {
-		log.Println(err)
-		return nil, ErrorFailedDBConnect
-	}
-	estates := &[]Estate{}
-	if err := db.Select(estates, "SELECT * FROM estate ORDER BY tokenId"); err != nil {
-		log.Println(err)
-		return nil, ErrorFailedDBGet
-	}
-
-	for i := 0; i < len(*estates); i++ {
-		trades := []Trade{}
-		q := `SELECT id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt FROM trade WHERE estateId = ?`
-		rows, err := db.Query(q, (*estates)[i].TokenId)
-		if err != nil {
-			return nil, err
-		}
-		for rows.Next() {
-			t := Trade{}
-			var buyer sql.NullString
-			if err := rows.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &buyer, &t.Seller, &t.Type, &t.Status, &t.UpdatedAt); err != nil {
-				log.Println(err)
-				return nil, ErrorFailedDBGet
-			}
-			if buyer.Valid {
-				t.Buyer = buyer.String
-			}
-			trades = append(trades, t)
-		}
-		log.Printf("id: %s\ttrades: %+v\n", (*estates)[i].TokenId, trades)
-		(*estates)[i].Trades = trades
-	}
-	log.Printf("estates: %+v\n", estates)
-
-	return estates, nil
+	return trades, nil
 }
