@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import {DateTime} from "luxon";
 
 import {Unbox} from "~src/heplers/util-types";
 import {
@@ -95,6 +96,14 @@ export class SellOrder extends Order {
     this.buyOffers = buyOffers;
     this.updatedAt = updatedAt;
   }
+
+  static sortDateDesc = (sellOrders: SellOrder[]) => {
+    return sellOrders.sort((a: SellOrder, b: SellOrder) => {
+      const aTime = DateTime.fromISO(a.updatedAt).toSeconds();
+      const bTime = DateTime.fromISO(b.updatedAt).toSeconds();
+      return aTime < bTime ? 1 : -1;
+    });
+  };
 }
 
 export const OFFER_STATUS = {
@@ -187,4 +196,12 @@ export class BuyOffer {
   getTotal(): number {
     return new BN(this.quantity).muln(this.perUnitPrice).toNumber();
   }
+
+  static sortDateDesc = (buyOffers: BuyOffer[]) => {
+    return buyOffers.sort((a: BuyOffer, b: BuyOffer) => {
+      const aTime = DateTime.fromISO(a.updatedAt).toSeconds();
+      const bTime = DateTime.fromISO(b.updatedAt).toSeconds();
+      return aTime < bTime ? 1 : -1;
+    });
+  };
 }

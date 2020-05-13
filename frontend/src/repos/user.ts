@@ -1,6 +1,6 @@
 import {User} from "~models/user";
 import {UserApi} from "~src/libs/api";
-import {CoinContract} from "~src/libs/cosmos/contract/coint";
+import {CoinContract} from "~src/libs/cosmos/contract/coin";
 import {Cosmos} from "~src/libs/cosmos/util";
 import {Address} from "~src/types";
 

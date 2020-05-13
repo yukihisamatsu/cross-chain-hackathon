@@ -1,5 +1,6 @@
 import {message} from "antd";
 import log from "loglevel";
+import {DateTime} from "luxon";
 import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
@@ -12,6 +13,7 @@ import {MarketSellOrderModal} from "~pages/contents/market/parts/market-sell-ord
 import {renderMarketSellOrderTable} from "~pages/contents/market/parts/market-sell-order-table";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
+import {CrossTx} from "~src/libs/api";
 import {Cosmos} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
 
@@ -122,11 +124,13 @@ export class MarketDetail extends React.Component<Props, State> {
           onOK={() => {
             this.setState({sellOrderModalConfirmLoading: true}, async () => {
               try {
-                const crossTx = await orderRepo.getBuyRequestTx(
+                const crossTx: CrossTx = await orderRepo.getBuyRequestTx(
                   selectedSellOrder,
                   address
                 );
                 log.debug(crossTx);
+                const nonce = DateTime.utc().toMillis();
+                crossTx.value.msg[0].value.Nonce = nonce.toString(10);
                 const ecPairPriv = Cosmos.getECPairPriv(mnemonic);
                 const signedTx = Cosmos.signCrossTx(crossTx.value, ecPairPriv);
 
@@ -168,7 +172,7 @@ export class MarketDetail extends React.Component<Props, State> {
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
         {renderMarketSellOrderTable(
-          estate.getUnFinishedSellOrders(user),
+          estate.getUnOfferedSellOrders(user),
           this.handleSellOrderButtonClick
         )}
         {this.renderSellOrderModal(estate)}

@@ -50,7 +50,9 @@ export class EstateOrderTab extends React.Component<Props> {
           )}
         {estate.status === ESTATE_STATUS.SELLING &&
           renderOwnedSellersBuyOfferTable(
-            activeSellOrder?.buyOffers ?? [],
+            activeSellOrder?.buyOffers
+              ? BuyOffer.sortDateDesc(activeSellOrder.buyOffers)
+              : [],
             handleSellersBuyOfferClick
           )}
       </React.Fragment>

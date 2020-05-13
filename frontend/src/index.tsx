@@ -7,7 +7,7 @@ import ReactDOM from "react-dom";
 import {Root} from "~pages/root";
 import {createApiClient} from "~src/heplers/api-client";
 import {parseEnv} from "~src/heplers/config";
-import {CoinContract} from "~src/libs/cosmos/contract/coint";
+import {CoinContract} from "~src/libs/cosmos/contract/coin";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {RestClient} from "~src/libs/cosmos/rest-client";
 import {EstateRepository} from "~src/repos/estate";

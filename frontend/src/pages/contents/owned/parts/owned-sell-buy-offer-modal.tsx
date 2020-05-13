@@ -43,6 +43,7 @@ export class OwnedSellBuyOfferModal extends React.PureComponent<Props> {
         <div>units: {selectedBuyOffer.quantity}</div>
         <div>perUnitPrice: {selectedBuyOffer.perUnitPrice}</div>
         <div>total: {selectedBuyOffer.getTotal()}</div>
+        <div>date: {selectedBuyOffer.updatedAt}</div>
       </Modal>
     );
   }
