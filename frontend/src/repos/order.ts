@@ -1,6 +1,6 @@
 import {DateTime} from "luxon";
 
-import {SellOrder} from "~models/order";
+import {BuyOffer, SellOrder} from "~models/order";
 import {
   CrossTx,
   TradeApi,
@@ -72,12 +72,17 @@ export class OrderRepository extends BaseRepo {
 
   cancelSellOrder = async (sellOrder: SellOrder) => {
     return await this.apiRequest(() => {
-      const trade = sellOrder.toTrade(TradeStatus.TRADE_CANCELED);
-      return this.tradeApi.putTrade(trade);
+      return this.tradeApi.deleteTrade(sellOrder.tradeId);
     });
   };
 
-  getBuyRequest = async (
+  cancelBuyOffer = async (offer: BuyOffer) => {
+    return await this.apiRequest(() => {
+      return this.tradeApi.deleteTradeRequest(offer.offerId);
+    });
+  };
+
+  getBuyRequestTx = async (
     sellOrder: SellOrder,
     from: Address
   ): Promise<CrossTx> => {
@@ -86,7 +91,7 @@ export class OrderRepository extends BaseRepo {
     });
   };
 
-  postBuyRequest = async (
+  postBuyOffer = async (
     sellOrder: SellOrder,
     from: string,
     crossTx: CrossTx

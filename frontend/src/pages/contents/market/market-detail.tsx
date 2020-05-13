@@ -122,14 +122,15 @@ export class MarketDetail extends React.Component<Props, State> {
           onOK={() => {
             this.setState({sellOrderModalConfirmLoading: true}, async () => {
               try {
-                const crossTx = await orderRepo.getBuyRequest(
+                const crossTx = await orderRepo.getBuyRequestTx(
                   selectedSellOrder,
                   address
                 );
+                log.debug(crossTx);
                 const ecPairPriv = Cosmos.getECPairPriv(mnemonic);
                 const signedTx = Cosmos.signCrossTx(crossTx.value, ecPairPriv);
 
-                const response = await orderRepo.postBuyRequest(
+                const response = await orderRepo.postBuyOffer(
                   selectedSellOrder,
                   address,
                   {
@@ -137,7 +138,7 @@ export class MarketDetail extends React.Component<Props, State> {
                     value: signedTx
                   }
                 );
-                log.info(response);
+                log.debug(response);
 
                 const newEstate = await estateRepo.getMarketEstate(
                   estate.tokenId,

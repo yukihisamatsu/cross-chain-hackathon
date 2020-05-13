@@ -3,10 +3,10 @@ import React from "react";
 import styled from "styled-components";
 
 import {User} from "~models/user";
-import {renderOwnedBuyOfferTable} from "~pages/contents/owned/parts/owned-buy-offer-table";
-import {renderOwnedBuyOrderTable} from "~pages/contents/owned/parts/owned-buy-order-table";
+import {renderOwnedBuyersBuyOfferTable} from "~pages/contents/owned/parts/owned-buyers-buy-offer-table";
 import {OwnedSellOrderForm} from "~pages/contents/owned/parts/owned-sell-order-form";
 import {renderOwnedSellOrderInfo} from "~pages/contents/owned/parts/owned-sell-order-info";
+import {renderOwnedSellersBuyOfferTable} from "~pages/contents/owned/parts/owned-sellers-buy-offer-table";
 import {ESTATE_STATUS, OwnedEstate} from "~src/models/estate";
 import {BuyOffer, SellOrder} from "~src/models/order";
 
@@ -16,9 +16,9 @@ interface Props {
   user: User;
   estate: OwnedEstate;
   handleSellOrderFormSubmit: (values: {[key: string]: string | number}) => void;
+  handleSellersBuyOfferClick: (order: BuyOffer) => () => void;
   handleChancelSellOrder: (order: SellOrder) => () => void;
-  handleChancelBuyOrder: (order: BuyOffer) => () => void;
-  handleBuyOfferClick: (order: BuyOffer) => () => void;
+  handleChancelBuyersBuyOffer: (order: BuyOffer) => () => void;
 }
 
 export class EstateOrderTab extends React.Component<Props> {
@@ -26,46 +26,68 @@ export class EstateOrderTab extends React.Component<Props> {
     super(props);
   }
 
-  render() {
+  renderSellTab(activeSellOrder: SellOrder | null) {
     const {
-      user,
       estate,
-      handleBuyOfferClick,
-      handleChancelBuyOrder,
+      handleSellersBuyOfferClick,
       handleChancelSellOrder,
       handleSellOrderFormSubmit
     } = this.props;
+
+    return (
+      <React.Fragment>
+        {estate.status === ESTATE_STATUS.OWNED && (
+          <OwnedSellOrderForm
+            estate={estate}
+            onFinish={handleSellOrderFormSubmit}
+          />
+        )}
+        {estate.status === ESTATE_STATUS.SELLING &&
+          activeSellOrder &&
+          renderOwnedSellOrderInfo(
+            activeSellOrder,
+            handleChancelSellOrder(activeSellOrder)
+          )}
+        {estate.status === ESTATE_STATUS.SELLING &&
+          renderOwnedSellersBuyOfferTable(
+            activeSellOrder?.buyOffers ?? [],
+            handleSellersBuyOfferClick
+          )}
+      </React.Fragment>
+    );
+  }
+
+  renderBuyTab(activeSellOrder: SellOrder | null) {
+    const {estate, user, handleChancelBuyersBuyOffer} = this.props;
+
+    return (
+      estate.status === ESTATE_STATUS.BUYING &&
+      activeSellOrder &&
+      renderOwnedBuyersBuyOfferTable(
+        estate.findActiveOwnedBuyOffer(user.address),
+        handleChancelBuyersBuyOffer
+      )
+    );
+  }
+
+  render() {
+    const {estate} = this.props;
 
     const activeSellOrder: SellOrder | null = estate.findActiveSellOrder();
 
     return (
       <EstateOrderTabWrap className={"card-container"}>
-        <Tabs type="card">
+        <Tabs
+          type="card"
+          defaultActiveKey={
+            estate.status === ESTATE_STATUS.BUYING ? "buy" : "sell"
+          }
+        >
           <TabPane tab="SELL" key="sell">
-            {estate.status === ESTATE_STATUS.OWNED && (
-              <OwnedSellOrderForm
-                estate={estate}
-                onFinish={handleSellOrderFormSubmit}
-              />
-            )}
-            {estate.status === ESTATE_STATUS.SELLING &&
-              activeSellOrder &&
-              renderOwnedSellOrderInfo(
-                activeSellOrder,
-                handleChancelSellOrder(activeSellOrder)
-              )}
-            {renderOwnedBuyOfferTable(
-              activeSellOrder?.buyOffers ?? [],
-              handleBuyOfferClick
-            )}
+            {this.renderSellTab(activeSellOrder)}
           </TabPane>
           <TabPane tab="BUY" key="buy">
-            {estate.status === ESTATE_STATUS.BUYING &&
-              activeSellOrder &&
-              renderOwnedBuyOrderTable(
-                estate.findActiveOwnedBuyOffer(user.address),
-                handleChancelBuyOrder
-              )}
+            {this.renderBuyTab(activeSellOrder)}
           </TabPane>
         </Tabs>
       </EstateOrderTabWrap>

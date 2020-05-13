@@ -4,7 +4,7 @@ import React from "react";
 import styled from "styled-components";
 
 import {OwnedEstateStatusTagColorMap} from "~pages/consts";
-import {EstateExtend, OwnedEstate} from "~src/models/estate";
+import {ESTATE_STATUS, EstateExtend, OwnedEstate} from "~src/models/estate";
 
 export const renderEstateDetailInfo = (estate: EstateExtend) => {
   return (
@@ -23,7 +23,7 @@ export const renderEstateDetailInfo = (estate: EstateExtend) => {
         />
       </EstateInfoImageWrap>
       <EstateInfoDetailWrap>
-        {isOwnedEstate(estate) && (
+        {isOwnedEstate(estate) && estate.status !== ESTATE_STATUS.OWNED && (
           <EstateInfoDetailStatus>
             <EstateInfoDetailStatusTag
               color={OwnedEstateStatusTagColorMap[estate.status]}
@@ -52,7 +52,7 @@ export const renderEstateDetailInfo = (estate: EstateExtend) => {
 };
 
 function isOwnedEstate(e: EstateExtend): e is OwnedEstate {
-  return !!e.status && !!e.units;
+  return !!e.status;
 }
 
 const EstateInfoWrap = styled.div`
