@@ -18,7 +18,6 @@ SECURITY_NODE=${SECURITY_NODE:-tcp://securityz:26657}
 COORDINATOR_CHAIN=coordinatorz
 COIN_CHAIN=coinz
 SECURITY_CHAIN=securityz
-WAIT_NEW_BLOCK=5s
 
 ACC0=n0
 
@@ -50,40 +49,43 @@ dockerize -wait http://coordinatorz:26657 \
           -wait http://coinz:26657 \
           -wait http://securityz:26657
 
-sleep 5s
+sleep 10s
 
 # mint DCC to everyone
 AMOUNT=$(hex64 1000000)
 for a in "${MINT_ADDR[@]}"; do
     echo "mint DCC to $a"
-    TX_ID=$(${NODE_CLI} tx contract call --node ${COIN_NODE} dcc mint $a ${AMOUNT} --from ${ACC0} --home ${COIN_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-    sleep ${WAIT_NEW_BLOCK}
-    ${NODE_CLI} query tx ${TX_ID} --node ${COIN_NODE} --chain-id ${COIN_CHAIN} -o json --trust-node
+    TX_HASH=$(${NODE_CLI} tx contract call --node ${COIN_NODE} dcc mint $a ${AMOUNT} --from ${ACC0} --home ${COIN_HOME} \
+        --keyring-backend=test --broadcast-mode block --yes \
+        | jq -r '.txhash')
+    ${NODE_CLI} query tx ${TX_HASH} --node ${COIN_NODE} --chain-id ${COIN_CHAIN} -o json --trust-node
 done
 
 for a in "${MINT_ADDR[@]}"; do
     echo "create an account of $a at CO"
-    TX=$(${NODE_CLI} tx send ${ISSUER_ADDR} $a 100000n0token --node ${COORDINATOR_NODE} --from ${ACC0} --home ${COORDINATOR_HOME} --keyring-backend=test --yes)
-    TX_ID=$(echo ${TX} | jq -r '.txhash')
-    sleep ${WAIT_NEW_BLOCK}
-    ${NODE_CLI} query tx ${TX_ID} --node ${COORDINATOR_NODE} --chain-id ${COORDINATOR_CHAIN} -o json --trust-node
+    TX_HASH=$(${NODE_CLI} tx send ${ISSUER_ADDR} $a 100000n0token --node ${COORDINATOR_NODE} --from ${ACC0} --home ${COORDINATOR_HOME} \
+        --keyring-backend=test --broadcast-mode block --yes \
+        | jq -r '.txhash')
+    ${NODE_CLI} query tx ${TX_HASH} --node ${COORDINATOR_NODE} --chain-id ${COORDINATOR_CHAIN} -o json --trust-node
 done
 
 # create estate tokens
 ESTATE_AMOUNT=(1000 1000 500 1000 800 1500)
 for es in "${ESTATE_AMOUNT[@]}"; do
     echo "create an estate with amount $es"
-    TX_ID=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate create $(hex64 $es) '' --from ${ACC0} --home ${SECURITY_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-    sleep ${WAIT_NEW_BLOCK}
-    ${NODE_CLI} query tx ${TX_ID} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
+    TX_HASH=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate create $(hex64 $es) '' --from ${ACC0} --home ${SECURITY_HOME} \
+        --keyring-backend=test --broadcast-mode block --yes \
+        | jq -r '.txhash')
+    ${NODE_CLI} query tx ${TX_HASH} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
 done
 
 # setup whitelist
 for a in "${WHITELIST_ADDR[@]}"; do
     echo "add $a to the issuer's whitelist"
-    TX_ID=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate addToWhitelist $a --from ${ACC0} --home ${SECURITY_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-    sleep ${WAIT_NEW_BLOCK}
-    ${NODE_CLI} query tx ${TX_ID} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
+    TX_HASH=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate addToWhitelist $a --from ${ACC0} --home ${SECURITY_HOME} \
+        --keyring-backend=test --broadcast-mode block --yes \
+        | jq -r '.txhash')
+    ${NODE_CLI} query tx ${TX_HASH} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
 done
 
 TO=(${ALICE_ADDR} ${ALICE_ADDR} ${CAROL_ADDR} ${DAVE_ADDR} ${ALICE_ADDR} ${DAVE_ADDR} ${ALICE_ADDR} ${ALICE_ADDR})
@@ -92,10 +94,13 @@ IDX=(1 2 2 2 3 4 5 6)
 # Transfer estates
 for i in "${!TO[@]}"; do
     echo "transfer the estate ${IDX[$i]} to ${TO[$i]}"
-    TX_ID=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate transfer $(hex64 ${IDX[$i]}) ${TO[$i]} $(hex64 ${AM[$i]}) --from ${ACC0} --home ${SECURITY_HOME} --keyring-backend=test --yes | jq -r '.txhash')
-    sleep ${WAIT_NEW_BLOCK}
-    ${NODE_CLI} query tx ${TX_ID} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
+    TX_HASH=$(${NODE_CLI} tx contract call --node ${SECURITY_NODE} estate transfer $(hex64 ${IDX[$i]}) ${TO[$i]} $(hex64 ${AM[$i]}) --from ${ACC0} --home ${SECURITY_HOME} \
+        --keyring-backend=test --broadcast-mode block --yes \
+        | jq -r '.txhash')
+    ${NODE_CLI} query tx ${TX_HASH} --node ${SECURITY_NODE} --chain-id ${SECURITY_CHAIN} -o json --trust-node
 done
 
 touch ${INITIALIZER_HOME}/done
+
+exit 0
 

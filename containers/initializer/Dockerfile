@@ -16,10 +16,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 RUN apk add --no-cache $PACKAGES
 
 COPY ./build.sh .
-COPY ./initdata.sh .
-
 RUN bash ./build.sh
-RUN chmod a+x ./initdata.sh
 
 FROM alpine:edge
 
@@ -32,7 +29,9 @@ WORKDIR /root
 # Copy over binaries and data from the build-env
 COPY --from=build-env /usr/bin/simappcli /usr/bin/simappcli
 COPY --from=build-env /usr/bin/simappd /usr/bin/simappd
-COPY --from=build-env /root/initdata.sh /root/initdata.sh
 COPY --from=build-env /usr/local/bin/dockerize /usr/bin/dockerize
+
+COPY ./initdata.sh /root/initdata.sh
+RUN chmod a+x /root/initdata.sh
 
 ENTRYPOINT ["./initdata.sh"]
