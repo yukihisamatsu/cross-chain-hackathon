@@ -12,20 +12,28 @@ type CommonTestSuite struct {
 	testutil.BaseTestSuite
 }
 
-func (s *CommonTestSuite) TestGetUInt64() {
-	key := []byte("sample")
-	val := uint64(10)
-	s.Store.Set(key, contract.ToBytes(val))
-
-	s.Equal(val, GetUInt64(key, s.Store))
-}
-
 func (s *CommonTestSuite) TestGetBool() {
 	key := []byte("sample")
 	val := true
 	s.Store.Set(key, contract.ToBytes(val))
 
 	s.Equal(val, GetBool(key, s.Store))
+}
+
+func (s *CommonTestSuite) TestGetInt64() {
+	key := []byte("sample")
+	val := int64(10)
+	s.Store.Set(key, contract.ToBytes(val))
+
+	s.Equal(val, GetInt64(key, s.Store))
+}
+
+func (s *CommonTestSuite) TestGetUInt64() {
+	key := []byte("sample")
+	val := uint64(10)
+	s.Store.Set(key, contract.ToBytes(val))
+
+	s.Equal(val, GetUInt64(key, s.Store))
 }
 
 // In order for 'go test' to run this suite, we need to create
