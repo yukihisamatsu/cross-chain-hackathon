@@ -21,3 +21,5 @@ contract:
     id: "dcc"
   security:
     id: "estate"
+job:
+  durationSec: 10

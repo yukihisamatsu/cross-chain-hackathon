@@ -15,6 +15,7 @@ import (
 	"log"
 
 	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
+	"github.com/jmoiron/sqlx"
 )
 
 // TradeApiService is a service that implents the logic for the TradeApiServicer
@@ -40,12 +41,19 @@ func (s *TradeApiService) DeleteTrade(id int64) (interface{}, error) {
 		log.Println(err)
 		return nil, ErrorFailedDBSet
 	}
-	trade := &Trade{}
-	q = `SELECT * FROM trade WHERE id = ?`
-	if err := db.Get(trade, q, id); err != nil {
+
+	t := &Trade{}
+	q = `SELECT id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt FROM trade WHERE id = ?`
+	row := db.QueryRow(q, id)
+	var buyer sql.NullString
+	if err := row.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &buyer, &t.Seller, &t.Type, &t.Status, &t.UpdatedAt); err != nil {
+		log.Println(err)
 		return nil, err
 	}
-	return trade, nil
+	if buyer.Valid {
+		t.Buyer = buyer.String
+	}
+	return t, nil
 }
 
 // DeleteTradeRequest - cancel a trade request
@@ -55,14 +63,22 @@ func (s *TradeApiService) DeleteTradeRequest(id int64) (interface{}, error) {
 		log.Println(err)
 		return nil, ErrorFailedDBConnect
 	}
-	q := `UPDATE tradeRequest SET status = ? WHERE id = ?`
+	q := `UPDATE trade_request SET status = ? WHERE id = ?`
 	if _, err := db.Exec(q, REQUEST_CANCELED, id); err != nil {
 		log.Println(err)
 		return nil, ErrorFailedDBSet
 	}
+
 	tr := &TradeRequest{}
-	q = `SELECT * FROM tradeRequest WHERE id = ?`
-	if err := db.Get(tr, q, id); err != nil {
+	q = `SELECT id, tradeId, "from", crossTx, status, updatedAt FROM trade_request WHERE id = ?`
+	row := db.QueryRow(q, id)
+	j := []byte{}
+	if err := row.Scan(&tr.Id, &tr.TradeId, &tr.From, &j, &tr.Status, &tr.UpdatedAt); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	if err := json.Unmarshal(j, &tr.CrossTx); err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return tr, nil
@@ -84,6 +100,7 @@ func (s *TradeApiService) PostTrade(trade Trade) (interface{}, error) {
 
 	res := &Trade{}
 	if err := db.Get(res, "select id, estateId, unitPrice, amount, seller, type, updatedAt from trade where rowid = last_insert_rowid()"); err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return res, nil
@@ -99,6 +116,7 @@ func (s *TradeApiService) PostTradeRequest(in PostTradeRequestInput) (interface{
 
 	j, err := json.Marshal(in.CrossTx)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	log.Println(string(j))
@@ -112,101 +130,72 @@ func (s *TradeApiService) PostTradeRequest(in PostTradeRequestInput) (interface{
 	res := &TradeRequest{}
 	q = `select id, tradeId, "from", status, updatedAt from trade_request where rowid = last_insert_rowid()`
 	if err := db.Get(res, q); err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	res.CrossTx = in.CrossTx
 	return res, nil
 }
 
-// PutTrade - update a trade request (mainly for updating status)
-func (s *TradeApiService) PutTrade(trade Trade) (interface{}, error) {
-	db, err := rdb.InitDB()
+func SelectOngoingTradeRequest(db *sqlx.DB) ([]TradeRequest, error) {
+	// status 0 = OPENED, 2 = ONGOING
+	q := `SELECT id, tradeId, crossTx, status FROM trade_request WHERE status IN (0, 2)`
+	rows, err := db.Query(q)
 	if err != nil {
 		log.Println(err)
-		return nil, ErrorFailedDBConnect
-	}
-
-	var status TradeStatus
-	q := `SELECT status from trade WHERE id = ?`
-	if err := db.Get(&status, q, trade.Id); err != nil {
 		return nil, err
 	}
-	if status != TRADE_OPENED {
-		return nil, ErrorWrongStatus
+	trs := []TradeRequest{}
+	for rows.Next() {
+		tr := TradeRequest{}
+		j := []byte{}
+		if err := rows.Scan(&tr.Id, &tr.TradeId, &j, &tr.Status); err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		if err := json.Unmarshal(j, &tr.CrossTx); err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		trs = append(trs, tr)
 	}
-
-	// only status is updated
-	q = `UPDATE trade SET status = ? WHERE id = ?`
-	if _, err := db.Exec(q, trade.Status, trade.Id); err != nil {
-		log.Println(err)
-		return nil, ErrorFailedDBSet
-	}
-
-	t := Trade{}
-	var buyer sql.NullString
-	q = `select id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt from trade where id = ?`
-	row := db.QueryRow(q, trade.Id)
-	if err := row.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &buyer, &t.Seller, &t.Type, &t.Status, &t.UpdatedAt); err != nil {
-		return nil, err
-	}
-	if buyer.Valid {
-		t.Buyer = buyer.String
-	}
-	return &t, nil
+	return trs, nil
 }
 
-// PutTradeRequest - update a trade request (mainly for updating status)
-func (s *TradeApiService) PutTradeRequest(tradeRequest TradeRequest) (interface{}, error) {
-	db, err := rdb.InitDB()
-	if err != nil {
-		log.Println(err)
-		return nil, ErrorFailedDBConnect
-	}
-
-	// get record at first
-	tr := &TradeRequest{}
-	q := `select id, tradeId, "from", status, updatedAt from trade_request where id = ?`
-	if err := db.Get(tr, q, tradeRequest.Id); err != nil {
-		return nil, err
-	}
-
-	if tr.Status != REQUEST_OPENED && tr.Status != REQUEST_ONGOING {
-		return nil, ErrorWrongStatus
-	}
-
+func UpdateTradeRequestStatus(db *sqlx.DB, tr TradeRequest) error {
 	// transaction
 	tx, err := db.Begin()
 	if err != nil {
-		return nil, err
+		log.Println(err)
+		return err
 	}
 
-	log.Printf("request status: %d\n", tradeRequest.Status)
-	q = `UPDATE trade_request SET status = ? WHERE id = ?`
-	if _, err := tx.Exec(q, tradeRequest.Status, tradeRequest.Id); err != nil {
+	q := `UPDATE trade_request SET status = ? WHERE id = ?`
+	if _, err := tx.Exec(q, tr.Status, tr.Id); err != nil {
 		log.Println(err)
 		if err = tx.Rollback(); err != nil {
-			// HACK
-			return nil, err
+			log.Println(err)
+			return err
 		}
-		return nil, ErrorFailedDBSet
+		return ErrorFailedDBSet
 	}
 
 	// if status is completed, then update also the trade
-	if tradeRequest.Status == REQUEST_COMPLETED {
+	if tr.Status == REQUEST_COMPLETED {
 		q = `UPDATE trade SET status = ?, buyer = ? WHERE id = ?`
 		if _, err := tx.Exec(q, TRADE_COMPLETED, tr.From, tr.TradeId); err != nil {
 			log.Println(err)
 			if err = tx.Rollback(); err != nil {
-				// HACK
-				return nil, err
+				log.Println(err)
+				return err
 			}
-			return nil, ErrorFailedDBSet
+			return ErrorFailedDBSet
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
-		// HACK
-		return nil, err
+		log.Println(err)
+		return err
 	}
-	return &tradeRequest, nil
+	return nil
 }

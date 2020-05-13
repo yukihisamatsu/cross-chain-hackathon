@@ -80,6 +80,7 @@ func (s *EstateApiService) getTrades(db *sqlx.DB, estateId string) ([]Trade, err
 	trades := []Trade{}
 	rows, err := db.Query("SELECT id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt FROM trade WHERE estateId = ?", estateId)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	for rows.Next() {
@@ -100,15 +101,18 @@ func (s *EstateApiService) getTrades(db *sqlx.DB, estateId string) ([]Trade, err
 		reqs := []TradeRequest{}
 		rs, err := db.Query(q, trades[i].Id)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		for rs.Next() {
 			tr := TradeRequest{}
 			j := []byte{}
 			if err := rs.Scan(&tr.Id, &tr.TradeId, &tr.From, &j, &tr.Status, &tr.UpdatedAt); err != nil {
+				log.Println(err)
 				return nil, err
 			}
 			if err := json.Unmarshal(j, &tr.CrossTx); err != nil {
+				log.Println(err)
 				return nil, err
 			}
 			reqs = append(reqs, tr)

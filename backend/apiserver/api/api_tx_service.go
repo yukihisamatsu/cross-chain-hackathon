@@ -19,18 +19,6 @@ import (
 	"github.com/datachainlab/cross/x/ibc/contract/types"
 )
 
-const (
-	CO_CHAIN_ID       = "ibc0"
-	TYPE_CROSS_TX     = "cosmos-sdk/StdTx"
-	TYPE_MSG_INITIATE = "cross/MsgInitiate"
-
-	KEY_COIN        = "coin"
-	KEY_COORDINATOR = "coordinator"
-	KEY_SECURITY    = "security"
-	KEY_CO_COIN     = "coordinator-coin"
-	KEY_CO_SECURITY = "coordinator-security"
-)
-
 // TxApiService is a service that implents the logic for the TxApiServicer
 // This service should implement the business logic for every endpoint for the TxApi API.
 // Include any external packages or services that will be required by this service.
@@ -65,6 +53,7 @@ func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{
 		return nil, ErrorFailedDBGet
 	}
 	if t.Status != TRADE_OPENED {
+		log.Println(err)
 		return nil, ErrorWrongStatus
 	}
 
@@ -75,10 +64,12 @@ func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{
 		s.config.Node[KEY_COIN],
 	)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	tokenId, err := stringToUint64(t.EstateId)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	simSecurity, err := cross.SimulateContractCall(
@@ -87,6 +78,7 @@ func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{
 		s.config.Node[KEY_SECURITY],
 	)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -98,6 +90,7 @@ func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{
 		s.config.Node[KEY_COORDINATOR],
 	)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return &crossTx, nil

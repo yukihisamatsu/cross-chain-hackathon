@@ -55,18 +55,6 @@ func (c *TradeApiController) Routes() Routes {
 			"/api/trade/requests",
 			c.PostTradeRequest,
 		},
-		{
-			"PutTrade",
-			strings.ToUpper("Put"),
-			"/api/trades",
-			c.PutTrade,
-		},
-		{
-			"PutTradeRequest",
-			strings.ToUpper("Put"),
-			"/api/trade/requests",
-			c.PutTradeRequest,
-		},
 	}
 }
 
@@ -82,6 +70,7 @@ func (c *TradeApiController) DeleteTrade(w http.ResponseWriter, r *http.Request)
 
 	result, err := c.service.DeleteTrade(id)
 	if err != nil {
+		log.Println(err)
 		w.WriteHeader(HttpStatus(err))
 		return
 	}
@@ -101,6 +90,7 @@ func (c *TradeApiController) DeleteTradeRequest(w http.ResponseWriter, r *http.R
 
 	result, err := c.service.DeleteTradeRequest(id)
 	if err != nil {
+		log.Println(err)
 		w.WriteHeader(HttpStatus(err))
 		return
 	}
@@ -119,6 +109,7 @@ func (c *TradeApiController) PostTrade(w http.ResponseWriter, r *http.Request) {
 
 	result, err := c.service.PostTrade(*trade)
 	if err != nil {
+		log.Println(err)
 		w.WriteHeader(HttpStatus(err))
 		return
 	}
@@ -137,40 +128,7 @@ func (c *TradeApiController) PostTradeRequest(w http.ResponseWriter, r *http.Req
 
 	result, err := c.service.PostTradeRequest(*postTradeRequestInput)
 	if err != nil {
-		w.WriteHeader(HttpStatus(err))
-		return
-	}
-
-	EncodeJSONResponse(result, nil, w)
-}
-
-// PutTrade - update a trade request (mainly for updating status)
-func (c *TradeApiController) PutTrade(w http.ResponseWriter, r *http.Request) {
-	trade := &Trade{}
-	if err := json.NewDecoder(r.Body).Decode(&trade); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	result, err := c.service.PutTrade(*trade)
-	if err != nil {
-		w.WriteHeader(HttpStatus(err))
-		return
-	}
-
-	EncodeJSONResponse(result, nil, w)
-}
-
-// PutTradeRequest - update a trade request (mainly for updating status)
-func (c *TradeApiController) PutTradeRequest(w http.ResponseWriter, r *http.Request) {
-	tradeRequest := &TradeRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&tradeRequest); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	result, err := c.service.PutTradeRequest(*tradeRequest)
-	if err != nil {
+		log.Println(err)
 		w.WriteHeader(HttpStatus(err))
 		return
 	}

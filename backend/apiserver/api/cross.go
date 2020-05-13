@@ -1,14 +1,13 @@
 package api
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	"log"
 	"strconv"
 
+	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/restcli"
 	"github.com/datachainlab/cross/x/ibc/contract/types"
 )
 
@@ -55,7 +54,7 @@ func NewCross() *Cross {
 
 func (c *Cross) SimulateContractCall(from string, ci types.ContractCallInfo, ni NodeInfo) (*ContractCallResult, error) {
 	url := ni.GetContractCallURL()
-	fmt.Printf("post url: %s\n", url)
+	log.Printf("post url: %s\n", url)
 
 	msg := &MsgContractCall{
 		from,
@@ -67,29 +66,7 @@ func (c *Cross) SimulateContractCall(from string, ci types.ContractCallInfo, ni 
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("request body: %s\n", string(j))
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(j))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	fmt.Printf("response body: %s\n", string(body))
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("response http status != 200")
-	}
-
+	body, err := restcli.Post(url, j)
 	res := ContractCallResult{}
 	if err := json.Unmarshal(body, &res); err != nil {
 		return nil, err

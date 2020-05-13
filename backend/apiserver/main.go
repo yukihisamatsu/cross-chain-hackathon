@@ -10,6 +10,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -70,5 +71,12 @@ func main() {
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"}),
 		handlers.AllowCredentials())(router)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	job := api.NewJob(config)
+	job.Start(ctx)
+
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }

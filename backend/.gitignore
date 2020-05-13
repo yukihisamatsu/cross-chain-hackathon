@@ -1,4 +1,4 @@
-apiserver
+apiserver/apiserver
 apiserver/api/openapi.yaml
 demo.db
 out/*
