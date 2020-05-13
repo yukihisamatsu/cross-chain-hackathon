@@ -91,6 +91,8 @@ func (j *Job) update(ctx context.Context) {
 	for _, tx := range txs {
 		for i := 0; i < len(trs); i++ {
 			tr := trs[i]
+			// for comparing
+			tx.Tx.Value.Signatures = []StdSignature{}
 			if cmp.Equal(tx.Tx, tr.CrossTx, cmpOpt) {
 				/* STEP4: check the coordinator status with tx.Data (= TxID of MsgInitiate) */
 				status, err := getCoordinatorStatus(url, tx.Data)
