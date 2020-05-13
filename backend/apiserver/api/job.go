@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -13,6 +14,16 @@ import (
 	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/restcli"
 	"github.com/datachainlab/cross/x/ibc/cross/types"
 	"github.com/google/go-cmp/cmp"
+)
+
+var (
+	alwaysEqual = cmp.Comparer(func(_, _ interface{}) bool { return true })
+	cmpOpt      = cmp.FilterValues(func(x, y interface{}) bool {
+		vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
+		return (vx.IsValid() && vy.IsValid() && vx.Type() == vy.Type()) &&
+			(vx.Kind() == reflect.Slice || vx.Kind() == reflect.Map) &&
+			(vx.Len() == 0 && vy.Len() == 0)
+	}, alwaysEqual)
 )
 
 type Job struct {
@@ -80,28 +91,27 @@ func (j *Job) update(ctx context.Context) {
 	for _, tx := range txs {
 		for i := 0; i < len(trs); i++ {
 			tr := trs[i]
-			if !cmp.Equal(tx.Tx, tr.CrossTx) {
-				continue
-			}
-
-			/* STEP4: check the coordinator status with tx.Data (= TxID of MsgInitiate) */
-			status, err := getCoordinatorStatus(url, tx.Data)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			if status != tr.Status {
-				tr.Status = status
-				if err := UpdateTradeRequestStatus(db, tr); err != nil {
+			if cmp.Equal(tx.Tx, tr.CrossTx, cmpOpt) {
+				/* STEP4: check the coordinator status with tx.Data (= TxID of MsgInitiate) */
+				status, err := getCoordinatorStatus(url, tx.Data)
+				if err != nil {
 					log.Println(err)
 					return
 				}
-			}
-			log.Printf("Job updated a TradeRequest status: ID: %d, Status: %d", tr.Id, tr.Status)
 
-			trs = append(trs[:i], trs[i+1:]...)
-			break
+				if status != tr.Status {
+					tr.Status = status
+					if err := UpdateTradeRequestStatus(db, tr); err != nil {
+						log.Println(err)
+						return
+					}
+				}
+				log.Printf("Job updated a TradeRequest status: ID: %d, Status: %d", tr.Id, tr.Status)
+
+				trs = append(trs[:i], trs[i+1:]...)
+				break
+			}
+
 		}
 	}
 }
