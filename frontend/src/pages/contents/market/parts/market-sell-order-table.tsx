@@ -8,7 +8,7 @@ const {Column} = Table;
 
 export const renderMarketSellOrderTable = (
   orders: SellOrder[],
-  onClick: (owner: string) => () => void
+  onClick: (sellOrder: SellOrder) => () => void
 ) => {
   return (
     <React.Fragment>
@@ -18,28 +18,40 @@ export const renderMarketSellOrderTable = (
         </MarketSellOrderInformationText>
       </MarketSellOrderInformation>
       <Table<SellOrder>
-        rowKey={(o: SellOrder) => o.owner}
+        rowKey={(o: SellOrder) => o.tradeId}
         dataSource={orders}
         pagination={false}
         bordered
         scroll={{y: 245}}
         size={"small"}
       >
-        <Column title="Owner" dataIndex="owner" key="owner" />
-        <Column title="Quantity" dataIndex="quantity" key="quantity" />
+        <Column title="Owner" dataIndex="owner" key="owner" width={340} />
+        <Column
+          title="Quantity"
+          dataIndex="quantity"
+          key="quantity"
+          width={80}
+        />
         <Column
           title="PerUnitPrice"
           dataIndex="perUnitPrice"
           key="perUnitPrice"
+          // width={170}
         />
-        <Column title="Total" dataIndex="total" key="total" />
+        <Column
+          title="Total"
+          key="total"
+          // width={200}
+          render={(_: string, order: SellOrder) => order.getTotal()}
+        />
         <Column
           title=""
           dataIndex="owner"
           key="owner"
           align="center"
-          render={(owner: string, _: SellOrder) => (
-            <Button type={"default"} onClick={onClick(owner)}>
+          width={150}
+          render={(_: string, sellOrder: SellOrder) => (
+            <Button type={"default"} onClick={onClick(sellOrder)}>
               BUY NOW
             </Button>
           )}

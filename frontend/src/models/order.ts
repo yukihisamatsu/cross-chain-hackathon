@@ -1,7 +1,14 @@
 import BN from "bn.js";
 
 import {Unbox} from "~src/heplers/util-types";
-import {Trade, TradeStatus, TradeType} from "~src/libs/api";
+import {
+  CrossTx,
+  Trade,
+  TradeRequest,
+  TradeRequestStatus,
+  TradeStatus,
+  TradeType
+} from "~src/libs/api";
 import {Address} from "~src/types";
 
 export const ORDER_STATUS = {
@@ -58,7 +65,7 @@ export class Order {
 
 export class SellOrder extends Order {
   owner: Address;
-  buyOffers: BuyOrder[];
+  buyOffers: BuyOffer[];
 
   constructor({
     tradeId,
@@ -76,7 +83,7 @@ export class SellOrder extends Order {
     perUnitPrice: number;
     status: OrderStatusType;
     owner: Address;
-    buyOffers: BuyOrder[];
+    buyOffers: BuyOffer[];
     updatedAt: string;
   }) {
     super({
@@ -107,35 +114,76 @@ export class SellOrder extends Order {
   }
 }
 
-export class BuyOrder extends Order {
+export const OFFER_STATUS = {
+  OPENED: "opened",
+  CANCELED: "canceled",
+  ONGOING: "ongoing",
+  COMPLETED: "completed",
+  FAILED: "failed"
+} as const;
+export type OfferStatusType = Unbox<typeof OFFER_STATUS>;
+
+export class BuyOffer {
   offerer: Address;
-  sellOffers: SellOrder[];
+  offerId: number;
+  tradeId: number;
+  updatedAt: string;
+  crossTx: CrossTx;
+  status: OfferStatusType;
 
   constructor({
-    tradeId,
-    tokenId,
-    quantity,
-    perUnitPrice,
-    status,
     offerer,
-    sellOffers
+    offerId,
+    tradeId,
+    status,
+    crossTx,
+    updatedAt
   }: {
-    tradeId: number;
-    tokenId: string;
-    quantity: number;
-    perUnitPrice: number;
-    status: OrderStatusType;
     offerer: Address;
-    sellOffers: SellOrder[];
+    offerId: number;
+    tradeId: number;
+    updatedAt: string;
+    crossTx: CrossTx;
+    status: OfferStatusType;
   }) {
-    super({
-      tradeId,
-      tokenId,
-      quantity,
-      perUnitPrice,
-      status
-    });
     this.offerer = offerer;
-    this.sellOffers = sellOffers;
+    this.offerId = offerId;
+    this.tradeId = tradeId;
+    this.status = status;
+    this.crossTx = crossTx;
+    this.updatedAt = updatedAt;
+  }
+
+  static from({
+    from: offerer,
+    id: offerId,
+    tradeId,
+    status,
+    crossTx,
+    updatedAt
+  }: TradeRequest) {
+    return new BuyOffer({
+      offerer,
+      offerId,
+      tradeId,
+      status: BuyOffer.getStatus(status),
+      crossTx,
+      updatedAt
+    });
+  }
+
+  static getStatus(tradeRequestStatus: TradeRequestStatus) {
+    switch (tradeRequestStatus) {
+      case TradeRequestStatus.REQUEST_OPENED:
+        return OFFER_STATUS.OPENED;
+      case TradeRequestStatus.REQUEST_CANCELED:
+        return OFFER_STATUS.CANCELED;
+      case TradeRequestStatus.REQUEST_ONGOING:
+        return OFFER_STATUS.ONGOING;
+      case TradeRequestStatus.REQUEST_COMPLETED:
+        return OFFER_STATUS.COMPLETED;
+      case TradeRequestStatus.REQUEST_FAILED:
+        return OFFER_STATUS.FAILED;
+    }
   }
 }

@@ -36,6 +36,7 @@ export class Top extends React.Component<Props> {
       >
         <Column title="Name" dataIndex="name" key="name" width={200} />
         <Column title="Address" dataIndex="address" key="address" />
+        <Column title="Balance" dataIndex="balance" key="balance" />
       </Table>
     );
   }

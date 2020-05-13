@@ -5,22 +5,26 @@ export class User {
   name: string;
   address: Address;
   mnemonic: string;
+  balance: number;
 
   constructor({
     id,
     name,
     address,
-    mnemonic
+    mnemonic,
+    balance
   }: {
     id: string;
     name: string;
     address: Address;
     mnemonic: string;
+    balance: number;
   }) {
     this.id = id;
     this.name = name;
     this.address = address;
     this.mnemonic = mnemonic;
+    this.balance = balance;
   }
 
   static create(jsonStr: string) {
@@ -31,7 +35,8 @@ export class User {
       id: json["id"],
       name: json["name"],
       address: json["address"],
-      mnemonic: json["mnemonic"]
+      mnemonic: json["mnemonic"],
+      balance: 0
     });
   }
 
@@ -40,7 +45,8 @@ export class User {
       id: "",
       name: "",
       address: "",
-      mnemonic: ""
+      mnemonic: "",
+      balance: 0
     });
   }
 }

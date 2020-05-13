@@ -2,11 +2,11 @@ import {Modal} from "antd";
 import React from "react";
 
 import {OwnedEstate} from "~models/estate";
-import {BuyOrder} from "~models/order";
+import {BuyOffer} from "~models/order";
 
 interface Props {
   estate: OwnedEstate;
-  order: BuyOrder;
+  order: BuyOffer;
   onOK: () => void;
   onCancel: () => void;
   visible: boolean;

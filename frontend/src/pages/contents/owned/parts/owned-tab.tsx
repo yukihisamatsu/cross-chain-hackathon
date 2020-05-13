@@ -8,7 +8,7 @@ import {renderOwnedBuyOrderTable} from "~pages/contents/owned/parts/owned-buy-or
 import {OwnedSellOrderForm} from "~pages/contents/owned/parts/owned-sell-order-form";
 import {renderOwnedSellOrderInfo} from "~pages/contents/owned/parts/owned-sell-order-info";
 import {ESTATE_STATUS, OwnedEstate} from "~src/models/estate";
-import {BuyOrder, SellOrder} from "~src/models/order";
+import {BuyOffer, SellOrder} from "~src/models/order";
 
 const {TabPane} = Tabs;
 
@@ -17,8 +17,8 @@ interface Props {
   estate: OwnedEstate;
   handleSellOrderFormSubmit: (values: {[key: string]: string | number}) => void;
   handleChancelSellOrder: (order: SellOrder) => () => void;
-  handleChancelBuyOrder: (order: BuyOrder) => () => void;
-  handleBuyOfferClick: (order: BuyOrder) => () => void;
+  handleChancelBuyOrder: (order: BuyOffer) => () => void;
+  handleBuyOfferClick: (order: BuyOffer) => () => void;
 }
 
 export class EstateOrderTab extends React.Component<Props> {

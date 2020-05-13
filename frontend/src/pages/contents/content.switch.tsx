@@ -20,7 +20,7 @@ interface Props {
   config: Config;
   repos: Repositories;
   user: User;
-  setUser: (user: User) => void;
+  setUser: (user: User) => Promise<void>;
   setHeaderTitle: (headerText: string) => void;
 }
 
@@ -231,7 +231,7 @@ const renderSignUp = (
   config: Config,
   repos: Repositories,
   user: User,
-  setUser: (user: User) => void,
+  setUser: (user: User) => Promise<void>,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps
 ) => {

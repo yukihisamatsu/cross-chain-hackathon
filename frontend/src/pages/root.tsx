@@ -1,4 +1,5 @@
 import {Layout} from "antd";
+import log from "loglevel";
 import React from "react";
 import {HashRouter, Route} from "react-router-dom";
 import styled from "styled-components";
@@ -34,17 +35,54 @@ export class Root extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount() {
+  timeOutId = 0;
+
+  async componentDidMount() {
     const data = localStorage.getItem(LocalStorageUserKey);
     if (!data) {
       return;
     }
     const user = User.create(data);
-    this.setUser(user);
+    await this.setUser(user);
   }
 
-  setUser = (user: User) => {
-    this.setState({user});
+  async componentDidUpdate(_: Readonly<Props>, prevState: Readonly<State>) {
+    if (prevState.user.address === this.state.user.address) {
+      await this.balanceOfCoinTimer(this.state.user);
+    }
+  }
+
+  setUser = async (user: User) => {
+    const {
+      repos: {userRepo}
+    } = this.props;
+    const balance = user.address ? await userRepo.balanceOf(user.address) : 0;
+    this.setState({user: {...user, balance}});
+    this.balanceOfCoinTimer(user).catch(log.error);
+  };
+
+  balanceOfCoinTimer = async (user: User) => {
+    const {
+      repos: {userRepo}
+    } = this.props;
+    this.timeOutId !== 0 && clearTimeout(this.timeOutId);
+    if (!user.address) {
+      return;
+    }
+    this.timeOutId = window.setTimeout(async () => {
+      const balance = await userRepo.balanceOf(user.address);
+      this.setState(
+        {
+          user: {
+            ...user,
+            balance
+          }
+        },
+        async () => {
+          await this.balanceOfCoinTimer(user);
+        }
+      );
+    }, 3000);
   };
 
   setHeaderTitle = (headerTitle: string) => {
@@ -98,6 +136,7 @@ const MainLayout = styled(Layout)`
 `;
 
 const ContentLayout = styled(Layout)`
+  max-width: 1280px;
   padding: 10px 24px 0;
 `;
 

@@ -2,22 +2,22 @@ import {Button, Table, Tag} from "antd";
 import React from "react";
 import styled from "styled-components";
 
-import {BuyOrder, ORDER_STATUS, OrderStatusType} from "~models/order";
+import {BuyOffer, ORDER_STATUS, OrderStatusType} from "~models/order";
 import {OrderStatusTagColorMap} from "~pages/consts";
 
 const {Column} = Table;
 
 export const renderOwnedBuyOfferTable = (
-  orders: BuyOrder[],
-  onClick: (order: BuyOrder) => () => void
+  orders: BuyOffer[],
+  onClick: (order: BuyOffer) => () => void
 ) => {
   return (
     <React.Fragment>
       <BuyOfferInformation>
         <BuyOfferInformationText>BuyOrders</BuyOfferInformationText>
       </BuyOfferInformation>
-      <Table<BuyOrder>
-        rowKey={(o: BuyOrder) => o.offerer}
+      <Table<BuyOffer>
+        rowKey={(o: BuyOffer) => o.offerer}
         dataSource={orders}
         pagination={false}
         bordered
@@ -25,17 +25,12 @@ export const renderOwnedBuyOfferTable = (
         size={"small"}
       >
         <Column title="Offerer" dataIndex="offerer" key="offerer" />
-        <Column title="Quantity" dataIndex="quantity" key="quantity" />
-        <Column
-          title="PerUnitPrice"
-          dataIndex="perUnitPrice"
-          key="perUnitPrice"
-        />
-        <Column title="Total" dataIndex="total" key="total" />
         <Column
           title="Status"
           dataIndex="status"
           key="status"
+          align="center"
+          width={120}
           render={(status: OrderStatusType) => (
             <Tag color={OrderStatusTagColorMap[status] ?? "green"}>
               {status}
@@ -47,7 +42,8 @@ export const renderOwnedBuyOfferTable = (
           dataIndex="offerer"
           key="offerer"
           align="center"
-          render={(_: string, order: BuyOrder) =>
+          width={150}
+          render={(_: string, order: BuyOffer) =>
             order.status === ORDER_STATUS.OPENED && (
               <Button type={"default"} onClick={onClick(order)}>
                 ACCEPT

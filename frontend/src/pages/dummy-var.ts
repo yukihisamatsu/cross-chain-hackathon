@@ -4,10 +4,10 @@ import {
   IssuerDividend
 } from "~models/dividend";
 import {Estate, IssuerEstate} from "~src/models/estate";
-// import {BuyOrder, ORDER_STATUS} from "~src/models/order";
+// import {BuyOffer, ORDER_STATUS} from "~src/models/order";
 
-// const buyOffers: BuyOrder[] = [
-//   new BuyOrder({
+// const buyOffers: BuyOffer[] = [
+//   new BuyOffer({
 //     tradeId: 10,
 //     tokenId: "offerer103tokenId",
 //     offerer: "offerer101",
@@ -17,7 +17,7 @@ import {Estate, IssuerEstate} from "~src/models/estate";
 //     status: ORDER_STATUS.REQUESTING,
 //     sellOffers: []
 //   }),
-//   new BuyOrder({
+//   new BuyOffer({
 //     tradeId: 11,
 //     tokenId: "offerer103tokenId",
 //     offerer: "offerer102",
@@ -27,7 +27,7 @@ import {Estate, IssuerEstate} from "~src/models/estate";
 //     status: ORDER_STATUS.ONGOING,
 //     sellOffers: []
 //   }),
-//   new BuyOrder({
+//   new BuyOffer({
 //     tradeId: 12,
 //     tokenId: "offerer103tokenId",
 //     offerer: "offerer103",
@@ -37,7 +37,7 @@ import {Estate, IssuerEstate} from "~src/models/estate";
 //     status: ORDER_STATUS.SUCCEEDED,
 //     sellOffers: []
 //   }),
-//   new BuyOrder({
+//   new BuyOffer({
 //     tradeId: 13,
 //     tokenId: "offerer104tokenId",
 //     offerer: "offerer104",
