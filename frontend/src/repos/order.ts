@@ -1,4 +1,3 @@
-import log from "loglevel";
 import {DateTime} from "luxon";
 
 import {BuyOffer, SellOrder} from "~models/order";
@@ -111,11 +110,12 @@ export class OrderRepository extends BaseRepo {
     stdTx: StdTx,
     mode: "block" | "sync" | "async" = "block"
   ) => {
-    const txString = JSON.stringify({tx: stdTx, mode});
-    log.debug(txString);
-    const response = await this.coordinatorRestClient.txsPost(txString);
-    if (response.error) {
-      throw new Error(response.error);
+    const response = await this.coordinatorRestClient.txsPost({
+      tx: stdTx,
+      mode
+    });
+    if (response.error || response.code || response.codespace) {
+      throw new Error(JSON.stringify(response));
     }
     return response;
   };

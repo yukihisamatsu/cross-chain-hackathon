@@ -8,7 +8,7 @@ import {OwnedEstate} from "~models/estate";
 import {BuyOffer, SellOrder} from "~models/order";
 import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
-import {OwnedBuyOfferCancelModal} from "~pages/contents/owned/parts/owned-buy-offer-cancel-modal";
+import {OwnedBuyersBuyOfferCancelModal} from "~pages/contents/owned/parts/owned-buyers-buy-offer-cancel-modal";
 import {renderOwnedDividendTable} from "~pages/contents/owned/parts/owned-dividend-table";
 import {OwnedSellBuyOfferModal} from "~pages/contents/owned/parts/owned-sell-buy-offer-modal";
 import {OwnedSellOrderCancelModal} from "~pages/contents/owned/parts/owned-sell-order-cancel-modal";
@@ -16,8 +16,7 @@ import {OwnedSellOrderModal} from "~pages/contents/owned/parts/owned-sell-order-
 import {EstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
-import {StdTx} from "~src/libs/api";
-import {Cosmos} from "~src/libs/cosmos/util";
+import {COORDINATOR_CHAIN_ID, Cosmos} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
@@ -187,7 +186,7 @@ export class OwnedDetail extends React.Component<Props, State> {
 
   handleBuyOfferOKClick = (resetState: () => void) => () => {
     const {
-      repos: {estateRepo, orderRepo},
+      repos: {estateRepo, orderRepo, userRepo},
       user: {address, mnemonic}
     } = this.props;
 
@@ -204,11 +203,21 @@ export class OwnedDetail extends React.Component<Props, State> {
         const crossTx = selectedBuyOffer.crossTx;
         log.debug(crossTx);
 
-        const ecPairPriv = Cosmos.getECPairPriv(mnemonic);
-        const signedTx: StdTx = Cosmos.signCrossTx(crossTx.value, ecPairPriv);
-        log.debug(signedTx);
+        const {accountNumber, sequence} = await userRepo.getAuthAccount(
+          address
+        );
+        const sig = Cosmos.signCrossTx(
+          crossTx,
+          COORDINATOR_CHAIN_ID,
+          accountNumber,
+          sequence,
+          mnemonic
+        );
+        log.debug(sig);
 
-        const response = await orderRepo.broadcastTx(signedTx);
+        crossTx.value.signatures?.unshift(sig);
+
+        const response = await orderRepo.broadcastTx(crossTx.value);
         log.debug(response);
 
         const newEstate = await estateRepo.getOwnedEstate(
@@ -218,7 +227,7 @@ export class OwnedDetail extends React.Component<Props, State> {
         this.setState({estate: newEstate});
       } catch (e) {
         log.error(e);
-        message.error("API Request Failed");
+        message.error(e.toString());
       } finally {
         resetState();
       }
@@ -322,8 +331,8 @@ export class OwnedDetail extends React.Component<Props, State> {
 
   renderCancelBuyersBuyOfferModal = () => {
     const {
-      user: {address},
-      repos: {estateRepo, orderRepo}
+      repos: {orderRepo},
+      history
     } = this.props;
 
     const {
@@ -345,7 +354,7 @@ export class OwnedDetail extends React.Component<Props, State> {
       });
 
     return (
-      <OwnedBuyOfferCancelModal
+      <OwnedBuyersBuyOfferCancelModal
         estate={estate}
         order={canceledBuyersBuyOffer}
         visible={cancelBuyersBuyOfferModalVisible}
@@ -359,17 +368,10 @@ export class OwnedDetail extends React.Component<Props, State> {
                   canceledBuyersBuyOffer
                 );
                 log.debug(response);
-
-                const newEstate = await estateRepo.getOwnedEstate(
-                  estate.tokenId,
-                  address
-                );
-                this.setState({estate: newEstate});
+                history.push(PATHS.OWNED);
               } catch (e) {
                 log.error(e);
                 message.error("API Request Failed");
-              } finally {
-                resetState();
               }
             }
           );

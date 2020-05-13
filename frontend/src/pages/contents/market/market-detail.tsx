@@ -14,7 +14,7 @@ import {renderMarketSellOrderTable} from "~pages/contents/market/parts/market-se
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
 import {CrossTx} from "~src/libs/api";
-import {Cosmos} from "~src/libs/cosmos/util";
+import {COORDINATOR_CHAIN_ID, Cosmos} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
@@ -98,7 +98,7 @@ export class MarketDetail extends React.Component<Props, State> {
   renderSellOrderModal = (estate: MarketEstate) => {
     const {
       user: {address, mnemonic},
-      repos: {estateRepo, orderRepo}
+      repos: {estateRepo, orderRepo, userRepo}
     } = this.props;
 
     const {
@@ -129,17 +129,30 @@ export class MarketDetail extends React.Component<Props, State> {
                   address
                 );
                 log.debug(crossTx);
+
                 const nonce = DateTime.utc().toMillis();
                 crossTx.value.msg[0].value.Nonce = nonce.toString(10);
-                const ecPairPriv = Cosmos.getECPairPriv(mnemonic);
-                const signedTx = Cosmos.signCrossTx(crossTx.value, ecPairPriv);
+
+                const {accountNumber, sequence} = await userRepo.getAuthAccount(
+                  address
+                );
+                const sig = Cosmos.signCrossTx(
+                  crossTx,
+                  COORDINATOR_CHAIN_ID,
+                  accountNumber,
+                  sequence,
+                  mnemonic
+                );
 
                 const response = await orderRepo.postBuyOffer(
                   selectedSellOrder,
                   address,
                   {
                     ...crossTx,
-                    value: signedTx
+                    value: {
+                      ...crossTx.value,
+                      signatures: [sig]
+                    }
                   }
                 );
                 log.debug(response);

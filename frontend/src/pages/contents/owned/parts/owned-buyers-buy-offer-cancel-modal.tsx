@@ -13,7 +13,7 @@ interface Props {
   confirmLoading: boolean;
 }
 
-export class OwnedBuyOfferCancelModal extends React.PureComponent<Props> {
+export class OwnedBuyersBuyOfferCancelModal extends React.PureComponent<Props> {
   constructor(props: Props) {
     super(props);
   }

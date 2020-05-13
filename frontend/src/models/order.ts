@@ -104,6 +104,10 @@ export class SellOrder extends Order {
       return aTime < bTime ? 1 : -1;
     });
   };
+
+  isOwner(owner: Address) {
+    return this.owner === owner;
+  }
 }
 
 export const OFFER_STATUS = {

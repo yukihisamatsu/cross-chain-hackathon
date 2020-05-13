@@ -30,6 +30,7 @@
     "test:unit:watch": "yarn test:unit --watch --verbose"
   },
   "dependencies": {
+    "@tendermint/amino-js": "^0.6.2",
     "antd": "^4.2.0",
     "axios": "^0.19.2",
     "bech32": "^1.1.4",
@@ -46,7 +47,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.1.2",
-    "secp256k1": "^3.7.1",
+    "secp256k1": "3.6.2",
     "styled-components": "^5.1.0",
     "styled-reset": "^4.1.4",
     "valid-url": "^1.0.9"

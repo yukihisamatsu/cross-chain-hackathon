@@ -18,7 +18,7 @@ export const renderOwnedSellOrderInfo = (
       scroll={{y: 245}}
       size={"small"}
     >
-      <Column title="Quantity" dataIndex="quantity" key="quantity" />
+      <Column title="Quantity" dataIndex="quantity" key="quantity" width={80} />
       <Column
         title="PerUnitPrice"
         dataIndex="perUnitPrice"
@@ -31,11 +31,13 @@ export const renderOwnedSellOrderInfo = (
           return order.getTotal();
         }}
       />
+      <Column title="Date" dataIndex="updatedAt" key="updatedAt" width={190} />
       <Column
         title=""
         dataIndex="offerer"
         key="offerer"
         align="center"
+        width={150}
         render={(_: string, order: SellOrder) =>
           order.status === ORDER_STATUS.OPENED && (
             <Button type={"default"} danger onClick={onCancel}>

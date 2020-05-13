@@ -70,18 +70,19 @@ export class Root extends React.Component<Props, State> {
       return;
     }
     this.timeOutId = window.setTimeout(async () => {
-      const balance = await userRepo.balanceOf(user.address);
-      this.setState(
-        {
+      try {
+        const balance = await userRepo.balanceOf(user.address);
+        this.setState({
           user: {
             ...user,
             balance
           }
-        },
-        async () => {
-          await this.balanceOfCoinTimer(user);
-        }
-      );
+        });
+      } catch (e) {
+        log.error(e);
+      } finally {
+        await this.balanceOfCoinTimer(user);
+      }
     }, 3000);
   };
 

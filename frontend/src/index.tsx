@@ -23,10 +23,6 @@ import {UserRepository} from "~src/repos/user";
     basePath: config.apiEndPoint
   });
 
-  // const coinRPCClient = new RPCClient(config.coinRPCEndPoint);
-  // const securityRPCClient = new RPCClient(config.securityRPCEndPoint);
-  // const coordinatorRPCClient = new RPCClient(config.coordinatorRPCEndPoint);
-
   const coinRestClient = new RestClient(config.coinRESTEndPoint);
   const securityRestClient = new RestClient(config.securityRESTEndPoint);
   const coordinatorRestClient = new RestClient(config.coordinatorRESTEndPoint);
@@ -37,15 +33,14 @@ import {UserRepository} from "~src/repos/user";
   const repos: Repositories = {
     userRepo: UserRepository.create({
       userApi,
-      coinContract
+      coinContract,
+      coordinatorRestClient
     }),
-
     estateRepo: EstateRepository.create({
       estateApi,
       tradeApi,
       estateContract
     }),
-
     orderRepo: OrderRepository.create({
       tradeApi,
       txApi,
