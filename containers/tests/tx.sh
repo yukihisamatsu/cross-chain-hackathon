@@ -18,12 +18,8 @@ COORDINATOR_HOME=${COORDINATOR_HOME:-./data/cli/coordinatorz/simappcli}
 COIN_HOME=${COIN_HOME:-./data/cli/coinz/simappcli}
 SECURITY_HOME=${SECURITY_HOME:-./data/cli/securityz/simappcli}
 
-ALICE_COORDINATOR_HOME=${ALICE_COORDINATOR_HOME:-./data/cli/alice/coordinatorz}
-ALICE_SECURITY_HOME=${ALICE_SECURITY_HOME:-./data/cli/alice/securityz}
-ALICE_COIN_HOME=${ALICE_COIN_HOME:-./data/cli/alice/coinz}
-BOB_COORDINATOR_HOME=${BOB_COORDINATOR_HOME:-./data/cli/bob/coordinatorz}
-BOB_SECURITY_HOME=${BOB_SECURITY_HOME:-./data/cli/bob/securityz}
-BOB_COIN_HOME=${BOB_COIN_HOME:-./data/cli/bob/coinz}
+ALICE_HOME=${ALICE_HOME:-./data/cli/alice}
+BOB_HOME=${BOB_HOME:-./data/cli/bob}
 
 COORDINATOR_NODE=${COORDINATOR_NODE:-tcp://localhost:26657}
 SECURITY_NODE=${SECURITY_NODE:-tcp://localhost:26660}
@@ -50,32 +46,33 @@ DST02_PORT=$(cat ${PATH02_CONF} | jq -r '.dst."port-id"')
 
 SAVE_DIR=${SAVE_DIR:-./data/test}
 
-${NODE_CLI} query --home ${BOB_COIN_HOME} contract call --node ${COIN_NODE} --chain-id ${COIN_ID} --from bob --keyring-backend=test \
+${NODE_CLI} query --home ${BOB_HOME} contract call --node ${COIN_NODE} --chain-id ${COIN_ID} --from bob --keyring-backend=test \
     ${COIN_CALL} --save ${SAVE_DIR}/coin.json
-${NODE_CLI} query --home ${ALICE_SECURITY_HOME} contract call --node ${SECURITY_NODE} --chain-id ${SECURITY_ID} --from alice --keyring-backend=test \
+${NODE_CLI} query --home ${ALICE_HOME} contract call --node ${SECURITY_NODE} --chain-id ${SECURITY_ID} --from alice --keyring-backend=test \
     ${SECURITY_CALL} --save ${SAVE_DIR}/security.json
 
 LATEST_HEIGHT=$(${NODE_CLI} --home ${COORDINATOR_HOME} status | jq -r '.sync_info.latest_block_height')
 
-# bob create a tx
-${NODE_CLI} tx --home ${BOB_COORDINATOR_HOME} cross create --from ${ALICE_ADDR} --keyring-backend=test --yes \
+# bob creates a tx
+${NODE_CLI} tx --home ${BOB_HOME} cross create --from ${ALICE_ADDR} --keyring-backend=test --yes \
     --chain-id ${COORDINATOR_ID} \
-    --contract ./data/coin.json --channel ${SRC01_CHAN}:${SRC01_PORT} \
-    --contract ./data/security.json --channel ${SRC02_CHAN}:${SRC02_PORT} \
+    --contract ${SAVE_DIR}/coin.json --channel ${SRC01_CHAN}:${SRC01_PORT} \
+    --contract ${SAVE_DIR}/security.json --channel ${SRC02_CHAN}:${SRC02_PORT} \
     --generate-only \
     --offline \
     $((${LATEST_HEIGHT}+100)) 0 > ${SAVE_DIR}/txNoSigned.json
 
-# alice signed
-${NODE_CLI} tx --home ${ALICE_COORDINATOR_HOME} sign ${SAVE_DIR}/txNoSigned.json --from ${ALICE_ADDR} --keyring-backend=test --yes \
+# alice signs (in demo, bob signs at first)
+${NODE_CLI} tx --home ${ALICE_HOME} sign ${SAVE_DIR}/txNoSigned.json --from ${ALICE_ADDR} --keyring-backend=test --yes \
     --chain-id ${COORDINATOR_ID} > ${SAVE_DIR}/txAliceSigned.json
 
-# bob signed
-${NODE_CLI} tx --home ${BOB_COORDINATOR_HOME} sign ${SAVE_DIR}/txALiceSigned.json --from ${BOB_ADDR} --keyring-backend=test --yes \
+# bob signs
+${NODE_CLI} tx --home ${BOB_HOME} sign ${SAVE_DIR}/txALiceSigned.json --from ${BOB_ADDR} --keyring-backend=test --yes \
     --chain-id ${COORDINATOR_ID} > ${SAVE_DIR}/txBothSigned.json
 
-TX_HASH=$(${NODE_CLI} tx --home ${ALICE_COORDINATOR_HOME} broadcast ./txBothSigned.json --from ${ALICE_ADDR} --keyring-backend=test \
-    --node=${COORDINATOR_NODE} --output json | jq -r '.txhash') 
+# alice broadcast
+TX_HASH=$(${NODE_CLI} tx --home ${ALICE_HOME} broadcast ${SAVE_DIR}/txBothSigned.json --from ${ALICE_ADDR} --keyring-backend=test \
+    --node ${COORDINATOR_NODE} --output json | jq -r '.txhash') 
 echo TX_HASH=${TX_HASH}
 
 sleep 5s
@@ -94,5 +91,3 @@ else
   exit 1
 fi
 ###
-
-
