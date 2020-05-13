@@ -6,21 +6,21 @@ import {BuyOffer, ORDER_STATUS, OrderStatusType} from "~src/models/order";
 
 const {Column} = Table;
 
-export const renderOwnedBuyOrderTable = (
-  order: BuyOffer | null,
+export const renderOwnedBuyersBuyOfferTable = (
+  offer: BuyOffer | null,
   onCancel: (order: BuyOffer) => () => void
 ) => {
   return (
     <React.Fragment>
       <Table<BuyOffer>
         rowKey={(o: BuyOffer) => o.offerer}
-        dataSource={order ? [order] : []}
+        dataSource={offer ? [offer] : []}
         pagination={false}
         bordered
         scroll={{y: 245}}
         size={"small"}
       >
-        <Column title="Offerer" dataIndex="offerer" key="offerer" width={340} />
+        <Column title="Offerer" dataIndex="offerer" key="offerer" />
         <Column
           title="Quantity"
           dataIndex="quantity"
@@ -32,12 +32,17 @@ export const renderOwnedBuyOrderTable = (
           dataIndex="perUnitPrice"
           key="perUnitPrice"
         />
-        <Column title="Total" dataIndex="total" key="total" />
+        <Column
+          title="Total"
+          key="total"
+          render={(_: string, offer: BuyOffer) => <div>{offer.getTotal()}</div>}
+        />
         <Column
           title="Status"
           dataIndex="status"
           key="status"
-          width={150}
+          align="center"
+          width={100}
           render={(status: OrderStatusType) => (
             <Tag color={OrderStatusTagColorMap[status] ?? "green"}>
               {status}

@@ -8,9 +8,9 @@ import {OwnedEstate} from "~models/estate";
 import {BuyOffer, SellOrder} from "~models/order";
 import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
-import {OwnedBuyOfferModal} from "~pages/contents/owned/parts/owned-buy-offer-modal";
-import {OwnedBuyOrderCancelModal} from "~pages/contents/owned/parts/owned-buy-order-cancel-modal";
+import {OwnedBuyOfferCancelModal} from "~pages/contents/owned/parts/owned-buy-offer-cancel-modal";
 import {renderOwnedDividendTable} from "~pages/contents/owned/parts/owned-dividend-table";
+import {OwnedSellBuyOfferModal} from "~pages/contents/owned/parts/owned-sell-buy-offer-modal";
 import {OwnedSellOrderCancelModal} from "~pages/contents/owned/parts/owned-sell-order-cancel-modal";
 import {OwnedSellOrderModal} from "~pages/contents/owned/parts/owned-sell-order-modal";
 import {EstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
@@ -35,9 +35,9 @@ interface State {
   canceledSellOrder?: SellOrder;
   cancelSellOrderModalVisible: boolean;
   cancelSellOrderModalConfirmLoading: boolean;
-  canceledBuyOrder?: BuyOffer;
-  cancelBuyOrderModalVisible: boolean;
-  cancelBuyOrderModalConfirmLoading: boolean;
+  canceledBuyOffer?: BuyOffer;
+  cancelBuyersBuyOfferModalVisible: boolean;
+  cancelBuyersBuyOfferModalConfirmLoading: boolean;
   buyOfferModalVisible: boolean;
   buyOfferModalConfirmLoading: boolean;
 }
@@ -51,8 +51,8 @@ export class OwnedDetail extends React.Component<Props, State> {
       sellOrderModalConfirmLoading: false,
       cancelSellOrderModalVisible: false,
       cancelSellOrderModalConfirmLoading: false,
-      cancelBuyOrderModalVisible: false,
-      cancelBuyOrderModalConfirmLoading: false,
+      cancelBuyersBuyOfferModalVisible: false,
+      cancelBuyersBuyOfferModalConfirmLoading: false,
       unit: 0,
       perUnit: 0,
       selectedTradeId: 0,
@@ -118,8 +118,9 @@ export class OwnedDetail extends React.Component<Props, State> {
     });
   };
 
-  renderSellOrderModal = (estate: OwnedEstate) => {
+  renderSellOrderModal = () => {
     const {
+      estate,
       unit,
       perUnit,
       sellOrderModalVisible,
@@ -149,12 +150,14 @@ export class OwnedDetail extends React.Component<Props, State> {
           const {unit, perUnit} = this.state;
           this.setState({sellOrderModalConfirmLoading: true}, async () => {
             try {
-              await orderRepo.postSellOrder(
+              const response = await orderRepo.postSellOrder(
                 estate.tokenId,
                 unit,
                 perUnit,
                 address
               );
+              log.debug(response);
+
               const newEstate = await estateRepo.getOwnedEstate(
                 estate.tokenId,
                 address
@@ -175,15 +178,16 @@ export class OwnedDetail extends React.Component<Props, State> {
     );
   };
 
-  handleCancelSellOrderButtonClick = (sellOrder: SellOrder) => () => {
+  handleCancelSellOrderButtonClick = (canceledSellOrder: SellOrder) => () => {
     this.setState({
-      canceledSellOrder: sellOrder,
+      canceledSellOrder,
       cancelSellOrderModalVisible: true
     });
   };
 
-  renderCancelSellOrderModal = (estate: OwnedEstate) => {
+  renderCancelSellOrderModal = () => {
     const {
+      estate,
       canceledSellOrder,
       cancelSellOrderModalVisible,
       cancelSellOrderModalConfirmLoading
@@ -235,44 +239,66 @@ export class OwnedDetail extends React.Component<Props, State> {
     );
   };
 
-  handleCancelBuyOrderButtonClick = (buyOrder: BuyOffer) => () => {
+  handleCancelBuyersBuyOfferButtonClick = (buyOffer: BuyOffer) => () => {
     this.setState({
-      selectedTradeId: buyOrder.tradeId,
-      cancelSellOrderModalVisible: true
+      canceledBuyOffer: buyOffer,
+      cancelBuyersBuyOfferModalVisible: true
     });
   };
 
-  renderCancelBuyOrderModal = (estate: OwnedEstate) => {
+  renderCancelBuyersBuyOfferModal = () => {
     const {
-      canceledBuyOrder,
-      cancelBuyOrderModalVisible,
-      cancelBuyOrderModalConfirmLoading
+      estate,
+      canceledBuyOffer,
+      cancelBuyersBuyOfferModalVisible,
+      cancelBuyersBuyOfferModalConfirmLoading
     } = this.state;
 
-    if (!canceledBuyOrder) {
+    if (!canceledBuyOffer) {
       return;
     }
 
     const resetState = () =>
       this.setState({
         selectedTradeId: 0,
-        cancelBuyOrderModalVisible: false,
-        cancelBuyOrderModalConfirmLoading: false
+        cancelBuyersBuyOfferModalVisible: false,
+        cancelBuyersBuyOfferModalConfirmLoading: false
       });
 
     return (
-      <OwnedBuyOrderCancelModal
+      <OwnedBuyOfferCancelModal
         estate={estate}
-        order={canceledBuyOrder}
-        visible={cancelBuyOrderModalVisible}
-        confirmLoading={cancelBuyOrderModalConfirmLoading}
+        order={canceledBuyOffer}
+        visible={cancelBuyersBuyOfferModalVisible}
+        confirmLoading={cancelBuyersBuyOfferModalConfirmLoading}
         onOK={() => {
-          this.setState({cancelBuyOrderModalConfirmLoading: true}, () => {
-            // TODO api
-            setTimeout(() => {
-              resetState();
-            }, 2000);
-          });
+          this.setState(
+            {cancelBuyersBuyOfferModalConfirmLoading: true},
+            async () => {
+              const {
+                user: {address},
+                repos: {estateRepo, orderRepo}
+              } = this.props;
+
+              try {
+                const response = await orderRepo.cancelBuyOffer(
+                  canceledBuyOffer
+                );
+                log.debug(response);
+
+                const newEstate = await estateRepo.getOwnedEstate(
+                  estate.tokenId,
+                  address
+                );
+                this.setState({estate: newEstate});
+              } catch (e) {
+                log.error(e);
+                message.error("API Request Failed");
+              } finally {
+                resetState();
+              }
+            }
+          );
         }}
         onCancel={() => {
           resetState();
@@ -288,8 +314,9 @@ export class OwnedDetail extends React.Component<Props, State> {
     });
   };
 
-  renderBuyOfferModal = (estate: OwnedEstate) => {
+  renderBuyOfferModal = () => {
     const {
+      estate,
       selectedTradeId,
       buyOfferModalVisible,
       buyOfferModalConfirmLoading
@@ -303,7 +330,7 @@ export class OwnedDetail extends React.Component<Props, State> {
       });
 
     return (
-      <OwnedBuyOfferModal
+      <OwnedSellBuyOfferModal
         estate={estate}
         selectedTradeId={selectedTradeId}
         visible={buyOfferModalVisible}
@@ -334,15 +361,17 @@ export class OwnedDetail extends React.Component<Props, State> {
         <EstateOrderTab
           user={user}
           estate={estate}
-          handleBuyOfferClick={this.handleBuyOfferButtonClick}
+          handleSellersBuyOfferClick={this.handleBuyOfferButtonClick}
           handleSellOrderFormSubmit={this.handleSellOrderButtonClick}
           handleChancelSellOrder={this.handleCancelSellOrderButtonClick}
-          handleChancelBuyOrder={this.handleCancelBuyOrderButtonClick}
+          handleChancelBuyersBuyOffer={
+            this.handleCancelBuyersBuyOfferButtonClick
+          }
         />
-        {this.renderSellOrderModal(estate)}
-        {this.renderCancelSellOrderModal(estate)}
-        {this.renderCancelBuyOrderModal(estate)}
-        {this.renderBuyOfferModal(estate)}
+        {this.renderSellOrderModal()}
+        {this.renderBuyOfferModal()}
+        {this.renderCancelSellOrderModal()}
+        {this.renderCancelBuyersBuyOfferModal()}
       </EstateDetailWrap>
     );
   }

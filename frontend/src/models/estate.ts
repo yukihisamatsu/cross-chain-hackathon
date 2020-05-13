@@ -126,25 +126,23 @@ export class OwnedEstate extends Estate {
     });
   };
 
-  static getStatus(sellOrders: SellOrder[]): EstateStatusType {
-    const opened = sellOrders.find(
-      order => order.status === ORDER_STATUS.OPENED
+  static getStatus(sellOrders: SellOrder[], owner: Address): EstateStatusType {
+    const openedOrder = sellOrders.find(
+      order =>
+        order.owner === owner ||
+        order.status === ORDER_STATUS.OPENED ||
+        order.buyOffers.find(offer => offer.offerer === owner)
     );
 
-    let status: EstateStatusType;
-    if (opened) {
-      if (
-        !opened.buyOffers.find(offer => offer.status === ORDER_STATUS.COMPLETED)
-      ) {
-        status = ESTATE_STATUS.SELLING;
-      } else {
-        status = ESTATE_STATUS.BUYING;
-      }
-    } else {
-      status = ESTATE_STATUS.OWNED;
+    if (!openedOrder) {
+      return ESTATE_STATUS.OWNED;
     }
 
-    return status;
+    if (openedOrder.buyOffers.find(offer => offer.offerer === owner)) {
+      return ESTATE_STATUS.BUYING;
+    }
+
+    return ESTATE_STATUS.SELLING;
   }
 
   getTotal(perUnit: number): number {

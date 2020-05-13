@@ -7,7 +7,7 @@ import {OrderStatusTagColorMap} from "~pages/consts";
 
 const {Column} = Table;
 
-export const renderOwnedBuyOfferTable = (
+export const renderOwnedSellersBuyOfferTable = (
   orders: BuyOffer[],
   onClick: (order: BuyOffer) => () => void
 ) => {

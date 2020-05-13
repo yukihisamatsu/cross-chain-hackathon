@@ -3,11 +3,9 @@ import BN from "bn.js";
 import {Unbox} from "~src/heplers/util-types";
 import {
   CrossTx,
-  Trade,
   TradeRequest,
   TradeRequestStatus,
-  TradeStatus,
-  TradeType
+  TradeStatus
 } from "~src/libs/api";
 import {Address} from "~src/types";
 
@@ -97,21 +95,6 @@ export class SellOrder extends Order {
     this.buyOffers = buyOffers;
     this.updatedAt = updatedAt;
   }
-
-  toTrade(status: TradeStatus): Trade {
-    return {
-      id: this.tradeId,
-      estateId: this.tokenId,
-      seller: this.owner,
-      buyer: undefined,
-      amount: this.quantity,
-      unitPrice: this.perUnitPrice,
-      requests: [],
-      status: status,
-      updatedAt: this.updatedAt,
-      type: TradeType.SELL
-    };
-  }
 }
 
 export const OFFER_STATUS = {
@@ -127,6 +110,8 @@ export class BuyOffer {
   offerer: Address;
   offerId: number;
   tradeId: number;
+  quantity: number;
+  perUnitPrice: number;
   updatedAt: string;
   crossTx: CrossTx;
   status: OfferStatusType;
@@ -135,6 +120,8 @@ export class BuyOffer {
     offerer,
     offerId,
     tradeId,
+    quantity,
+    perUnitPrice,
     status,
     crossTx,
     updatedAt
@@ -142,6 +129,8 @@ export class BuyOffer {
     offerer: Address;
     offerId: number;
     tradeId: number;
+    quantity: number;
+    perUnitPrice: number;
     updatedAt: string;
     crossTx: CrossTx;
     status: OfferStatusType;
@@ -149,23 +138,31 @@ export class BuyOffer {
     this.offerer = offerer;
     this.offerId = offerId;
     this.tradeId = tradeId;
+    this.quantity = quantity;
+    this.perUnitPrice = perUnitPrice;
     this.status = status;
     this.crossTx = crossTx;
     this.updatedAt = updatedAt;
   }
 
-  static from({
-    from: offerer,
-    id: offerId,
-    tradeId,
-    status,
-    crossTx,
-    updatedAt
-  }: TradeRequest) {
+  static from(
+    {
+      from: offerer,
+      id: offerId,
+      tradeId,
+      status,
+      crossTx,
+      updatedAt
+    }: TradeRequest,
+    quantity: number,
+    perUnitPrice: number
+  ) {
     return new BuyOffer({
       offerer,
       offerId,
       tradeId,
+      quantity,
+      perUnitPrice,
       status: BuyOffer.getStatus(status),
       crossTx,
       updatedAt
@@ -185,5 +182,9 @@ export class BuyOffer {
       case TradeRequestStatus.REQUEST_FAILED:
         return OFFER_STATUS.FAILED;
     }
+  }
+
+  getTotal(): number {
+    return new BN(this.quantity).muln(this.perUnitPrice).toNumber();
   }
 }

@@ -90,7 +90,9 @@ export class EstateRepository extends BaseRepo {
           perUnitPrice: unitPrice,
           quantity: amount,
           status: SellOrder.getStatus(status),
-          buyOffers: Array.isArray(requests) ? requests.map(BuyOffer.from) : [],
+          buyOffers: Array.isArray(requests)
+            ? requests.map(req => BuyOffer.from(req, amount, unitPrice))
+            : [],
           updatedAt
         });
       });
@@ -147,7 +149,11 @@ export class EstateRepository extends BaseRepo {
 
     const sellOrders: SellOrder[] = trades
       .filter(trade => {
-        return trade.seller === owner && trade.estateId === tokenId;
+        return (
+          (trade.seller === owner ||
+            trade.requests.find(req => req.from === owner)) &&
+          trade.estateId === tokenId
+        );
       })
       .map(trade => {
         const {
@@ -169,7 +175,9 @@ export class EstateRepository extends BaseRepo {
           quantity,
           perUnitPrice,
           status: SellOrder.getStatus(status),
-          buyOffers: Array.isArray(requests) ? requests.map(BuyOffer.from) : [],
+          buyOffers: Array.isArray(requests)
+            ? requests.map(req => BuyOffer.from(req, quantity, perUnitPrice))
+            : [],
           updatedAt
         });
       });
@@ -184,7 +192,7 @@ export class EstateRepository extends BaseRepo {
       expectedYield,
       offerPrice,
       units: units.toNumber(),
-      status: OwnedEstate.getStatus(sellOrders),
+      status: OwnedEstate.getStatus(sellOrders, owner),
       sellOrders,
       dividend: [] // TODO
     });

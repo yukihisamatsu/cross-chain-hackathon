@@ -68,7 +68,7 @@ export class EstateList extends React.Component<Props> {
 }
 
 function isOwnedEstate(e: EstateExtend): e is OwnedEstate {
-  return !!e.status && !!e.units;
+  return !!e.status;
 }
 
 const EstateListWrap = styled.div`

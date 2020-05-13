@@ -13,7 +13,7 @@ interface Props {
   confirmLoading: boolean;
 }
 
-export class OwnedBuyOrderCancelModal extends React.PureComponent<Props> {
+export class OwnedBuyOfferCancelModal extends React.PureComponent<Props> {
   constructor(props: Props) {
     super(props);
   }
@@ -36,8 +36,8 @@ export class OwnedBuyOrderCancelModal extends React.PureComponent<Props> {
         <div>tradeId: {order.tradeId}</div>
         <div>tokenId: {estate.tokenId}</div>
         <div>units: {estate.units}</div>
-        {/*<div>perUnit: {estate.perUnit}</div>*/}
-        {/*<div>total: {estate.getTotal()}</div>*/}
+        <div>perUnit: {order.perUnitPrice}</div>
+        <div>total: {order.getTotal()}</div>
       </Modal>
     );
   }
