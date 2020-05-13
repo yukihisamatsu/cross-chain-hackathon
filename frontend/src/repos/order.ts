@@ -1,8 +1,10 @@
+import log from "loglevel";
 import {DateTime} from "luxon";
 
 import {BuyOffer, SellOrder} from "~models/order";
 import {
   CrossTx,
+  StdTx,
   TradeApi,
   TradeRequest,
   TradeStatus,
@@ -103,5 +105,18 @@ export class OrderRepository extends BaseRepo {
         crossTx
       });
     });
+  };
+
+  broadcastTx = async (
+    stdTx: StdTx,
+    mode: "block" | "sync" | "async" = "block"
+  ) => {
+    const txString = JSON.stringify({tx: stdTx, mode});
+    log.debug(txString);
+    const response = await this.coordinatorRestClient.txsPost(txString);
+    if (response.error) {
+      throw new Error(response.error);
+    }
+    return response;
   };
 }

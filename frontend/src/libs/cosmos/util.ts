@@ -55,12 +55,17 @@ export const Cosmos = {
     const signObj = secp256k1.sign(buf, ecPairPriv);
     const signatureBase64 = signObj.signature.toString("base64");
 
-    signedStdTx.signatures = [
-      {
-        pub_key: Cosmos.getPubKeyBase64(ecPairPriv),
-        signature: signatureBase64
-      }
-    ];
+    const sig = {
+      pub_key: Cosmos.getPubKeyBase64(ecPairPriv),
+      signature: signatureBase64
+    };
+
+    const sigs = Array.isArray(signedStdTx.signatures)
+      ? signedStdTx.signatures
+      : [];
+
+    sigs.push(sig);
+    signedStdTx.signatures = sigs;
 
     return signedStdTx;
   }

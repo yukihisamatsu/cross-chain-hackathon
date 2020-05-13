@@ -1,10 +1,12 @@
 import fetch from "cross-fetch";
 import {stringify} from "query-string";
 
+import {TxResponseDataEvent} from "~src/libs/cosmos/rpc-client";
+
 type ContractIdType = "dcc" | "estate";
 
 type RestGetMethods = "txs" | "cross/coordinator";
-type RestGetParamTypes = TxsParams | CrossCoordinatorStatusParams;
+type RestGetParamTypes = GetTxsParams | CrossCoordinatorStatusParams;
 
 const initGet = (): RequestInit => {
   return {
@@ -16,11 +18,12 @@ const initGet = (): RequestInit => {
   };
 };
 
-type RestPostMethods = "cross/contract/call";
-type RestPostParamTypes = CrossContractCallParams;
+type RestPostMethods = "txs" | "cross/contract/call";
+type RestPostParamTypes = string | CrossContractCallParams;
 
 type RestResponseTypes =
-  | TxsResponse
+  | GetTxsResponse
+  | BroadcastTxCommitResponse
   | CrossContractCallResponse
   | CrossCoordinatorStatusResponse;
 
@@ -81,7 +84,8 @@ export class RestClient {
     return data;
   };
 
-  txs = this.get<TxsResponse, TxsParams>("txs");
+  txs = this.get<GetTxsResponse, GetTxsParams>("txs");
+  txsPost = this.post<BroadcastTxCommitResponse, string>("txs");
 
   crossCoordinatorStatus = this.get<
     CrossCoordinatorStatusResponse,
@@ -98,17 +102,48 @@ type Address = string;
 type Base64EncodedString = string;
 type DecimalString = string;
 
-export interface TxsParams {
+export interface GetTxsParams {
   [key: string]: string;
 }
 
-interface TxsResponse {
+interface GetTxsResponse {
   total_count: DecimalString;
   count: DecimalString;
   page_number: DecimalString;
   page_total: DecimalString;
   limit: DecimalString;
   txs: boolean[];
+}
+
+interface BroadcastTxCommitResponse {
+  height: string;
+  hash: string;
+  check_tx: BroadcastTxResponseCheckTx;
+  deliver_tx: BroadcastTxResponseDeliverTx;
+  error?: string;
+}
+
+type BroadcastTxResponseCheckTx =
+  | BroadcastTxResponseCheckTxSuccess
+  | BroadcastTxResponseCheckTxFailed;
+
+interface BroadcastTxResponseCheckTxSuccess {
+  data: Base64EncodedString;
+  events: TxResponseDataEvent[];
+  gasUsed: string;
+}
+
+interface BroadcastTxResponseCheckTxFailed {
+  code: number;
+  events: TxResponseDataEvent[];
+  gasUsed: string;
+  log: string;
+}
+
+interface BroadcastTxResponseDeliverTx {
+  data?: Base64EncodedString;
+  events?: TxResponseDataEvent[];
+  gasUsed?: string;
 }
 
 export interface CrossContractCallParams {
