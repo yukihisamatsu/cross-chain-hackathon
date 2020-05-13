@@ -19,7 +19,7 @@ import {UserRepository} from "~src/repos/user";
   const config = parseEnv();
   const logLevel: LogLevelDesc = config.env === "production" ? "warn" : "debug";
   log.setLevel(logLevel);
-  const {estateApi, tradeApi, userApi} = createApiClient({
+  const {estateApi, tradeApi, txApi, userApi} = createApiClient({
     basePath: config.apiEndPoint
   });
 
@@ -29,7 +29,7 @@ import {UserRepository} from "~src/repos/user";
 
   const coinRestClient = new RestClient(config.coinRESTEndPoint);
   const securityRestClient = new RestClient(config.securityRESTEndPoint);
-  // const coordinatorRestClient = new RestClient(config.coordinatorRESTEndPoint);
+  const coordinatorRestClient = new RestClient(config.coordinatorRESTEndPoint);
 
   const estateContract = new EstateContract({securityRestClient});
   const coinContract = new CoinContract({coinRestClient});
@@ -47,7 +47,9 @@ import {UserRepository} from "~src/repos/user";
     }),
 
     orderRepo: OrderRepository.create({
-      tradeApi
+      tradeApi,
+      txApi,
+      coordinatorRestClient
     })
   };
 

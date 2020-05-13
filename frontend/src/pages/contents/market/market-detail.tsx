@@ -1,15 +1,18 @@
 import {message} from "antd";
+import log from "loglevel";
 import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
 
 import {MarketEstate} from "~models/estate";
+import {SellOrder} from "~models/order";
 import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
 import {MarketSellOrderModal} from "~pages/contents/market/parts/market-sell-order-modal-tsx";
 import {renderMarketSellOrderTable} from "~pages/contents/market/parts/market-sell-order-table";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
+import {Cosmos} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
@@ -23,7 +26,7 @@ interface State {
   estate: MarketEstate;
   sellOrderModalVisible: boolean;
   sellOrderModalConfirmLoading: boolean;
-  selectedOwner: string;
+  selectedSellOrder?: SellOrder;
 }
 
 export class MarketDetail extends React.Component<Props, State> {
@@ -31,7 +34,6 @@ export class MarketDetail extends React.Component<Props, State> {
     super(props);
     this.state = {
       estate: MarketEstate.default(),
-      selectedOwner: "",
       sellOrderModalVisible: false,
       sellOrderModalConfirmLoading: false
     };
@@ -84,55 +86,88 @@ export class MarketDetail extends React.Component<Props, State> {
     }
   }
 
-  handleSellOrderButtonClick = (selectedOwner: string) => () => {
+  handleSellOrderButtonClick = (selectedSellOrder: SellOrder) => () => {
     this.setState({
-      selectedOwner,
+      selectedSellOrder,
       sellOrderModalVisible: true
     });
   };
 
   renderSellOrderModal = (estate: MarketEstate) => {
     const {
-      selectedOwner,
+      user: {address, mnemonic},
+      repos: {estateRepo, orderRepo}
+    } = this.props;
+
+    const {
+      selectedSellOrder,
       sellOrderModalVisible,
       sellOrderModalConfirmLoading
     } = this.state;
 
     const resetState = () =>
       this.setState({
-        selectedOwner: "",
+        selectedSellOrder: undefined,
         sellOrderModalVisible: false,
         sellOrderModalConfirmLoading: false
       });
 
     return (
-      <MarketSellOrderModal
-        estate={estate}
-        selectedOwner={selectedOwner}
-        visible={sellOrderModalVisible}
-        confirmLoading={sellOrderModalConfirmLoading}
-        onOK={() => {
-          this.setState({sellOrderModalConfirmLoading: true}, () => {
-            // TODO sign & broadcastTx
-            setTimeout(() => {
-              resetState();
-            }, 2000);
-          });
-        }}
-        onCancel={() => {
-          resetState();
-        }}
-      />
+      selectedSellOrder && (
+        <MarketSellOrderModal
+          estate={estate}
+          selectedSellOrder={selectedSellOrder}
+          visible={sellOrderModalVisible}
+          confirmLoading={sellOrderModalConfirmLoading}
+          onOK={() => {
+            this.setState({sellOrderModalConfirmLoading: true}, async () => {
+              try {
+                const crossTx = await orderRepo.getBuyRequest(
+                  selectedSellOrder,
+                  address
+                );
+                const ecPairPriv = Cosmos.getECPairPriv(mnemonic);
+                const signedTx = Cosmos.signCrossTx(crossTx.value, ecPairPriv);
+
+                const response = await orderRepo.postBuyRequest(
+                  selectedSellOrder,
+                  address,
+                  {
+                    ...crossTx,
+                    value: signedTx
+                  }
+                );
+                log.info(response);
+
+                const newEstate = await estateRepo.getMarketEstate(
+                  estate.tokenId,
+                  address
+                );
+                this.setState({estate: newEstate});
+              } catch (e) {
+                log.error(e);
+                message.error("API Request Failed");
+              } finally {
+                resetState();
+              }
+            });
+          }}
+          onCancel={() => {
+            resetState();
+          }}
+        />
+      )
     );
   };
 
   render() {
+    const {user} = this.props;
     const {estate} = this.state;
     return (
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
         {renderMarketSellOrderTable(
-          estate.getUnFinishedSellOrders(),
+          estate.getUnFinishedSellOrders(user),
           this.handleSellOrderButtonClick
         )}
         {this.renderSellOrderModal(estate)}

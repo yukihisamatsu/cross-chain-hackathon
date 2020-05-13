@@ -77,6 +77,10 @@ const RightBlock = styled.div`
 `;
 
 const UserTextWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: flex-end;
   height: 100%;
   padding-right: 20px;
 `;
@@ -84,9 +88,8 @@ const UserTextWrap = styled.div`
 const UserText = styled.div`
   font-size: 0.8rem;
   color: darkgray;
-  text-align: right;
-  height: 29%;
-  line-height: 26px;
+  height: 0.8rem;
+  line-height: 1.1;
 `;
 
 const LogoutButton = styled(Button)`

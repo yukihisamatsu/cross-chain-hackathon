@@ -26,7 +26,7 @@ gen-client:
 	${DOCKER} run --rm -v ${PWD}:/local openapitools/openapi-generator-cli generate \
  	   -i /local/${OPENAPI_SRC} \
  	   -g ${TS_CLIENT_TYPE} \
- 	   -o /local/out/${TS_CLIENT_TYPE}
+ 	   -o /local/out/api
 
 run-mock-server:
 	${DOCKER} run --rm -v ${PWD}:/local -p 8000:8000 danielgtaylor/apisprout /local/${OPENAPI_SRC}

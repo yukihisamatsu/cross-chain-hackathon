@@ -51,8 +51,9 @@ export class SignUp extends React.Component<Props, State> {
         bordered
         size={"small"}
       >
-        <Column title="Name" dataIndex="name" key="name" width={200} />
+        <Column title="Name" dataIndex="name" key="name" width={80} />
         <Column title="Address" dataIndex="address" key="address" />
+        <Column title="Balance" dataIndex="balance" key="balance" />
         <Column
           title=""
           dataIndex=""

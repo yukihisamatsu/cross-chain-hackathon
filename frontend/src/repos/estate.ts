@@ -1,5 +1,5 @@
-import {MarketEstate, OwnedEstate} from "~models/estate";
-import {SellOrder} from "~models/order";
+import {ESTATE_STATUS, MarketEstate, OwnedEstate} from "~models/estate";
+import {BuyOffer, SellOrder} from "~models/order";
 import {
   Estate as EstateDAO,
   EstateApi,
@@ -82,7 +82,7 @@ export class EstateRepository extends BaseRepo {
           trade.estateId === tokenId
         );
       })
-      .map(({id, amount, seller, unitPrice, status, updatedAt}) => {
+      .map(({id, amount, seller, unitPrice, status, requests, updatedAt}) => {
         return new SellOrder({
           tradeId: id,
           tokenId,
@@ -90,7 +90,7 @@ export class EstateRepository extends BaseRepo {
           perUnitPrice: unitPrice,
           quantity: amount,
           status: SellOrder.getStatus(status),
-          buyOffers: [],
+          buyOffers: Array.isArray(requests) ? requests.map(BuyOffer.from) : [],
           updatedAt
         });
       });
@@ -114,7 +114,7 @@ export class EstateRepository extends BaseRepo {
       await Promise.all(
         daos.map(async (dao: EstateDAO) => await this.toOwnedEstate(dao, owner))
       )
-    ).filter(e => e.units > 0);
+    ).filter(e => e.units > 0 || e.status === ESTATE_STATUS.BUYING);
 
     return ret as OwnedEstate[];
   };
@@ -157,7 +157,7 @@ export class EstateRepository extends BaseRepo {
           amount: quantity,
           unitPrice: perUnitPrice,
           // buyer,
-          // requests,
+          requests,
           status,
           updatedAt
         } = trade;
@@ -169,7 +169,7 @@ export class EstateRepository extends BaseRepo {
           quantity,
           perUnitPrice,
           status: SellOrder.getStatus(status),
-          buyOffers: [], // TODO
+          buyOffers: Array.isArray(requests) ? requests.map(BuyOffer.from) : [],
           updatedAt
         });
       });

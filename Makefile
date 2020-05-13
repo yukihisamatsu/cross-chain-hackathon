@@ -6,3 +6,7 @@ run-mock-server:
 
 run-doc:
 	${MAKE} -C ./backend run-doc
+
+gen-client:
+	${MAKE} -C ./backend gen-client
+	mv -f -v ./backend/out/api/* ./frontend/src/libs/api

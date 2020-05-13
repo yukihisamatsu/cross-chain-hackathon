@@ -5,7 +5,7 @@ import {RouteComponentProps} from "react-router-dom";
 import styled from "styled-components";
 
 import {OwnedEstate} from "~models/estate";
-import {BuyOrder, SellOrder} from "~models/order";
+import {BuyOffer, SellOrder} from "~models/order";
 import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
 import {OwnedBuyOfferModal} from "~pages/contents/owned/parts/owned-buy-offer-modal";
@@ -35,7 +35,7 @@ interface State {
   canceledSellOrder?: SellOrder;
   cancelSellOrderModalVisible: boolean;
   cancelSellOrderModalConfirmLoading: boolean;
-  canceledBuyOrder?: BuyOrder;
+  canceledBuyOrder?: BuyOffer;
   cancelBuyOrderModalVisible: boolean;
   cancelBuyOrderModalConfirmLoading: boolean;
   buyOfferModalVisible: boolean;
@@ -235,7 +235,7 @@ export class OwnedDetail extends React.Component<Props, State> {
     );
   };
 
-  handleCancelBuyOrderButtonClick = (buyOrder: BuyOrder) => () => {
+  handleCancelBuyOrderButtonClick = (buyOrder: BuyOffer) => () => {
     this.setState({
       selectedTradeId: buyOrder.tradeId,
       cancelSellOrderModalVisible: true
@@ -281,7 +281,7 @@ export class OwnedDetail extends React.Component<Props, State> {
     );
   };
 
-  handleBuyOfferButtonClick = (order: BuyOrder) => () => {
+  handleBuyOfferButtonClick = (order: BuyOffer) => () => {
     this.setState({
       selectedTradeId: order.tradeId,
       buyOfferModalVisible: true
