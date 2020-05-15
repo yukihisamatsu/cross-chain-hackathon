@@ -138,8 +138,9 @@ func (s *TradeApiService) PostTradeRequest(in PostTradeRequestInput) (interface{
 }
 
 func SelectOngoingTradeRequest(db *sqlx.DB) ([]TradeRequest, error) {
-	// status 0 = OPENED, 2 = ONGOING
-	q := `SELECT id, tradeId, crossTx, status FROM trade_request WHERE status IN (0, 2)`
+	// if a request was canceled after its tx are broadcasted, the tx status will supersedes the cancel
+	// status 0 = OPENED, 1 = CANCELED, 2 = ONGOING
+	q := `SELECT id, tradeId, crossTx, status FROM trade_request WHERE status <= 2`
 	rows, err := db.Query(q)
 	if err != nil {
 		log.Println(err)
