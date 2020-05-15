@@ -4,7 +4,7 @@ package safemath
 // returning a result and status
 func Add64(a, b uint64) (uint64, bool) {
 	c := a + b
-	if c > a {
+	if c >= a {
 		return c, true
 	}
 	return c, false
@@ -14,7 +14,7 @@ func Add64(a, b uint64) (uint64, bool) {
 // returning a result and status
 func Sub64(a, b uint64) (uint64, bool) {
 	c := a - b
-	if c < a {
+	if c <= a {
 		return c, true
 	}
 	return c, false

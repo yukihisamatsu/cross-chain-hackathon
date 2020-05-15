@@ -1,7 +1,6 @@
 package securitychain
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/datachainlab/cross-chain-hackathon/contract/simapp/common"
@@ -30,11 +29,16 @@ const (
 	FnNameIsWhitelisted  = "isWhitelisted"
 	// FnNameRemoveFromWhitelist  = "removeFromWhitelist"
 
-	FnNameAddDividendPerShare = "addDividendPerShare"
-	FnNamePayDividend         = "payDividend"
-	FnNameDividendOf          = "dividendOf"
+	FnNameRegisterDividend   = "registerDividend"
+	FnNamePayDividend        = "payDividend"
+	FnNameDividendIndexOf    = "dividendIndexOf"
+	FnNameDividendOf         = "dividendOf"
+	FnNameDividendPerShareOf = "dividendPerShareOf"
+	FnNameIsDividendPaid     = "isDividendPaid"
 
-	EventNameTransfer = "Transfer"
+	EventNameTransfer           = "Transfer"
+	EventNameDividendRegistered = "DividendRegistered"
+	EventNameDividendPaid       = "DividendPaid"
 )
 
 func EstateTokenContractHandler(k contract.Keeper) cross.ContractHandler {
@@ -75,13 +79,22 @@ func GetEstateTokenContract() contract.Contract {
 		},
 		// Dividend
 		{
-			Name: FnNameAddDividendPerShare, F: addDividendPerShare,
+			Name: FnNameRegisterDividend, F: registerDividend,
 		},
 		{
 			Name: FnNamePayDividend, F: payDividend,
 		},
 		{
+			Name: FnNameDividendIndexOf, F: dividendIndexOf,
+		},
+		{
 			Name: FnNameDividendOf, F: dividendOf,
+		},
+		{
+			Name: FnNameDividendPerShareOf, F: dividendPerShareOf,
+		},
+		{
+			Name: FnNameIsDividendPaid, F: isDividendPaid,
 		},
 	})
 }
@@ -114,7 +127,7 @@ func create(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if tokenID, ok = safemath.Add64(tokenID, 1); ok {
 		setTokenID(tokenID, store)
 	} else {
-		return nil, ErrorAdditionOverflow
+		return nil, ErrorAddition
 	}
 	tokenIDB := contract.ToBytes(tokenID)
 	setCreator(creator, tokenID, store)
@@ -148,9 +161,7 @@ func mint(ctx contract.Context, store cross.Store) ([]byte, error) {
 	}
 
 	tokenID := contract.UInt64(args[0])
-	sender := ctx.Signers()[0]
-	creator := getCreator(tokenID, store)
-	if creator == nil || !bytes.Equal(creator, sender.Bytes()) {
+	if !isCreator(ctx.Signers()[0], tokenID, store) {
 		return nil, ErrorInvalidSender
 	}
 
@@ -168,16 +179,21 @@ func mint(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if toAmount, ok := safemath.Add64(toAmount, value); ok {
 		setAmount(to, tokenID, toAmount, store)
 	} else {
-		return nil, ErrorAdditionOverflow
+		return nil, ErrorAddition
 	}
 	if totalSupply, ok := safemath.Add64(getTotalSupply(tokenID, store), value); ok {
 		setTotalSupply(totalSupply, tokenID, store)
 	} else {
-		return nil, ErrorAdditionOverflow
+		return nil, ErrorAddition
 	}
 
 	if err := check([]byte{}, to, tokenID, store); err != nil {
 		return nil, err
+	}
+
+	dividendIndex := getDividendIndex(tokenID, store)
+	if dividendIndex != 0 && !getDividendPaid(tokenID, dividendIndex, store) {
+		setDividendDelta(to, tokenID, dividendIndex, (int64)(-value), store)
 	}
 
 	emitTransfer(ctx, []byte{}, to, tokenID, value)
@@ -228,12 +244,18 @@ func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 	if toAmount, ok := safemath.Add64(toAmount, value); ok {
 		setAmount(to, tokenID, toAmount, store)
 	} else {
-		return nil, ErrorAdditionOverflow
+		return nil, ErrorAddition
 	}
 	setOwnerCount(ownerCount, tokenID, store)
 
 	if err := check(from, to, tokenID, store); err != nil {
 		return nil, err
+	}
+
+	dividendIndex := getDividendIndex(tokenID, store)
+	if dividendIndex != 0 && !getDividendPaid(tokenID, dividendIndex, store) {
+		setDividendDelta(from, tokenID, dividendIndex, (int64)(value), store)
+		setDividendDelta(to, tokenID, dividendIndex, (int64)(-value), store)
 	}
 
 	emitTransfer(ctx, from, to, tokenID, value)
@@ -267,13 +289,18 @@ func emitTransfer(ctx contract.Context, from, to sdk.AccAddress, tokenID, value 
 		))
 }
 
-func getAmount(addr sdk.AccAddress, token uint64, store cross.Store) uint64 {
-	key := makeAccountKey(addr, token)
+func getAmount(addr sdk.AccAddress, tokenID uint64, store cross.Store) uint64 {
+	key := makeAccountKey(addr, tokenID)
 	return common.GetUInt64(key, store)
 }
 
-func getCreator(token uint64, store cross.Store) sdk.AccAddress {
-	key := makeCreatorKey(token)
+func isCreator(addr sdk.AccAddress, tokenID uint64, store cross.Store) bool {
+	creator := getCreator(tokenID, store)
+	return creator != nil && creator.Equals(addr)
+}
+
+func getCreator(tokenID uint64, store cross.Store) sdk.AccAddress {
+	key := makeCreatorKey(tokenID)
 	if store.Has(key) {
 		return store.Get(key)
 	}

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var (
+const (
 	addr1 = "cosmos1j42p6wpqwgw8tcyk44vdkyywa0d4qhk2f7kv73"
 	addr2 = "cosmos1fl8s5ea88asrw0rewzgkwrsm2w8r54j43e6hqz"
 	addr3 = "cosmos1w3uxw5vhjlrlyh7gvylacvgvca93wen9dggp2g"

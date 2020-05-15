@@ -18,6 +18,7 @@ func TestAdd64(t *testing.T) {
 	}{
 		{"normal", args{100, 10}, 110, true},
 		{"overflow", args{math.MaxUint64, 2}, 1, false},
+		{"add 0", args{100, 0}, 100, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
