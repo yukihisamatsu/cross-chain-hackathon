@@ -7,9 +7,32 @@ info:
 servers:
   - url: http://localhost:8080/api/
 paths:
+  /dividends/{estateId}:
+    get:
+      summary: get the dividends of an estate token
+      operationId: getDividendsByEstateId
+      tags:
+        - dividend
+      parameters:
+        - name: estateId
+          in: path
+          description: query target estate id
+          required: true
+          schema:
+            $ref: "#/components/schemas/estate_id"
+      responses:
+        "200":
+          description: success to get all dividends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Dividend"
+
   /estates:
     get:
-      summary: get all estates and their associated trades, but trade requests are not included
+      summary: get all estates and their associated trades and requests
       operationId: getEstates
       tags:
         - estate
@@ -22,6 +45,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Estate"
+
   /estate/{estateId}:
     get:
       summary: get an estate and its trade data
@@ -42,6 +66,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Estate"
+
   /users:
     get:
       summary: get all users
@@ -100,6 +125,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Trade"
+
   /trades:
     post:
       summary: post a new sell offer
@@ -162,6 +188,7 @@ paths:
   /tx/trade/request:
     get:
       summary: get a CrossTx to be signed
+      operationId: getTxTradeRequest
       tags:
         - tx
       parameters:
@@ -186,6 +213,7 @@ paths:
   /tx/dividend:
     get:
       summary: get a CrossTx to be signed
+      operationId: getTxDividend
       tags:
         - tx
       parameters:
@@ -194,11 +222,14 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/estate_id"
-        - name: perShare
+        - name: index
           in: query
           required: true
           schema:
-            $ref: "#/components/schemas/dividend_per_share"
+            type: integer
+            format: int64
+            example: 1
+            minimum: 1
       responses:
         "200":
           description: success to get a CrossTx
@@ -279,6 +310,19 @@ components:
         - REQUEST_ONGOING
         - REQUEST_COMPLETED
         - REQUEST_FAILED
+
+    DividendStatus:
+      type: integer
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+      x-enum-varnames:
+        - DIVIDEND_REGISTERED
+        - DIVIDEND_ONGOING
+        - DIVIDEND_COMPLETED
+        - DIVIDEND_FAILED
 
     Trade:
       type: object
@@ -363,6 +407,39 @@ components:
           $ref: "#/components/schemas/AccAddress"
         crossTx:
           $ref: "#/components/schemas/CrossTx"
+
+    Dividend:
+      type: object
+      required:
+        - id
+        - estateId
+        - perShare
+        - crossTx
+        - status
+      properties:
+        id:
+          description: for primary key
+          type: integer
+          format: int64
+          example: 0
+          minimum: 0
+        estateId:
+          $ref: "#/components/schemas/estate_id"
+        index:
+          description: this is determined by the contract
+          type: integer
+          format: int64
+          example: 1
+          minimum: 1 # this depends on the contract impl
+        perShare:
+          type: integer
+          format: int64
+          example: 50
+          minimum: 0
+        crossTx:
+          $ref: "#/components/schemas/CrossTx"
+        status:
+          $ref: "#/components/schemas/DividendStatus"
 
     Estate:
       type: object

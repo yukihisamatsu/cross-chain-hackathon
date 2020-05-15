@@ -32,19 +32,19 @@ func (c *TxApiController) Routes() Routes {
 			"TxDividendGet",
 			strings.ToUpper("Get"),
 			"/api/tx/dividend",
-			c.TxDividendGet,
+			c.GetTxDividend,
 		},
 		{
 			"TxTradeRequestGet",
 			strings.ToUpper("Get"),
 			"/api/tx/trade/request",
-			c.TxTradeRequestGet,
+			c.GetTxTradeRequest,
 		},
 	}
 }
 
-// TxDividendGet - get a CrossTx to be signed
-func (c *TxApiController) TxDividendGet(w http.ResponseWriter, r *http.Request) {
+// GetTxDividend - get a CrossTx to be signed
+func (c *TxApiController) GetTxDividend(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	estateId := query.Get("estateId")
 	perShare, err := parseIntParameter(query.Get("perShare"))
@@ -53,7 +53,7 @@ func (c *TxApiController) TxDividendGet(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	result, err := c.service.TxDividendGet(estateId, perShare)
+	result, err := c.service.GetTxDividend(estateId, perShare)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -62,8 +62,8 @@ func (c *TxApiController) TxDividendGet(w http.ResponseWriter, r *http.Request) 
 	EncodeJSONResponse(result, nil, w)
 }
 
-// TxTradeRequestGet - get a CrossTx to be signed
-func (c *TxApiController) TxTradeRequestGet(w http.ResponseWriter, r *http.Request) {
+// GetTxTradeRequest - get a CrossTx to be signed
+func (c *TxApiController) GetTxTradeRequest(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	tradeId, err := parseIntParameter(query.Get("tradeId"))
 	if err != nil {
@@ -72,7 +72,7 @@ func (c *TxApiController) TxTradeRequestGet(w http.ResponseWriter, r *http.Reque
 	}
 
 	from := query.Get("from")
-	result, err := c.service.TxTradeRequestGet(tradeId, from)
+	result, err := c.service.GetTxTradeRequest(tradeId, from)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
