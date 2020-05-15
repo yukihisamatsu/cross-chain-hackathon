@@ -92,7 +92,11 @@ export class IssueDetail extends React.Component<Props, State> {
       estate = await estateRepo.getIssuerEstate(id, address);
       setHeaderText(estate.name);
       this.setState({
-        estate
+        estate,
+        registeredQuantity: estate.owners.reduce(
+          (acc, owner) => acc + owner.balance,
+          0
+        )
       });
     } catch (e) {
       message.error(e);
@@ -198,6 +202,7 @@ export class IssueDetail extends React.Component<Props, State> {
   };
 
   render() {
+    const {user} = this.props;
     const {
       estate,
       registeredPerUnit,
@@ -209,6 +214,7 @@ export class IssueDetail extends React.Component<Props, State> {
         {renderEstateDetailInfo(estate)}
         {renderIssueDividendOwnerTable(estate.owners)}
         {renderDividendRegisterForm(
+          user,
           registeredPerUnit,
           registeredQuantity,
           registeredTotal,

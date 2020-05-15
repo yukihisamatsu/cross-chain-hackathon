@@ -9,17 +9,15 @@ const {Column, Summary} = Table;
 export const renderIssueDividendOwnerTable = (orders: DividendOwner[]) => {
   return (
     <React.Fragment>
-      <IssueDividendOwnerInformation>
-        <IssueDividendOwnerInformationText>
-          Owners
-        </IssueDividendOwnerInformationText>
-      </IssueDividendOwnerInformation>
+      <Title>
+        <TitleText>Owners</TitleText>
+      </Title>
       <Table<DividendOwner>
         rowKey={(o: DividendOwner) => o.address}
         dataSource={orders}
         pagination={false}
         bordered
-        scroll={{y: 215}}
+        scroll={{y: 245}}
         size={"small"}
         summary={pageData => {
           let totalBalance = 0;
@@ -31,9 +29,13 @@ export const renderIssueDividendOwnerTable = (orders: DividendOwner[]) => {
           return (
             <>
               <Summary.Row>
-                <Summary.Cell index={0}>Total</Summary.Cell>
+                <Summary.Cell index={0}>
+                  <TotalBalanceText>Total</TotalBalanceText>
+                </Summary.Cell>
                 <Summary.Cell index={1} />
-                <Summary.Cell index={2}>{totalBalance}</Summary.Cell>
+                <Summary.Cell index={2}>
+                  <TotalBalanceText>{totalBalance}</TotalBalanceText>
+                </Summary.Cell>
               </Summary.Row>
             </>
           );
@@ -47,7 +49,7 @@ export const renderIssueDividendOwnerTable = (orders: DividendOwner[]) => {
   );
 };
 
-const IssueDividendOwnerInformation = styled.div`
+const Title = styled.div`
   font-size: 1.1rem;
   font-weight: 800;
   color: black;
@@ -55,6 +57,10 @@ const IssueDividendOwnerInformation = styled.div`
   padding: 20px 0;
 `;
 
-const IssueDividendOwnerInformationText = styled.span`
+const TitleText = styled.span`
   padding-left: 10px;
+`;
+
+const TotalBalanceText = styled.span`
+  font-weight: 600;
 `;
