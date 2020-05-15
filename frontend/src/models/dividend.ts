@@ -61,3 +61,8 @@ export class DividendHistory {
     });
   };
 }
+
+export class DividendOwner {
+  owner: Address;
+  balance: number;
+}

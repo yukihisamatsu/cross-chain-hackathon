@@ -11,7 +11,6 @@ import {renderIssueDividendHistoryTable} from "~pages/contents/issue/parts/issue
 import {renderIssueDividendOwnerTable} from "~pages/contents/issue/parts/issue-diviend-owner-table";
 import {renderDividendRegisterForm} from "~pages/contents/issue/parts/issue-diviend-register-form";
 import {IssueDividendRegisterModal} from "~pages/contents/issue/parts/issue-diviend-register-modal";
-import {dummyIssuerEstateList} from "~pages/dummy-var";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
 import {Repositories} from "~src/repos/types";
@@ -54,13 +53,13 @@ export class IssueDetail extends React.Component<Props, State> {
   componentDidMount() {
     const {
       setHeaderText,
-      match: {
-        params: {id}
-      },
+      // match: {
+      //   params: {id}
+      // },
       history
     } = this.props;
     // TODO get Estate Request & setState({estate)
-    const estate = dummyIssuerEstateList.find(e => e.tokenId === id);
+    const estate = IssuerEstate.default();
     if (!estate) {
       history.push(PATHS.MARKET);
       return;

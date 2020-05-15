@@ -1,4 +1,9 @@
-import {ESTATE_STATUS, MarketEstate, OwnedEstate} from "~models/estate";
+import {
+  ESTATE_STATUS,
+  IssuerEstate,
+  MarketEstate,
+  OwnedEstate
+} from "~models/estate";
 import {BuyOffer, SellOrder} from "~models/order";
 import {
   Estate as EstateDAO,
@@ -197,4 +202,38 @@ export class EstateRepository extends BaseRepo {
       dividend: [] // TODO
     });
   };
+
+  getIssuerEstates = async (): Promise<IssuerEstate[]> => {
+    const {data: daos} = await this.estateApi.getEstates();
+    return await Promise.all(
+      daos.map(async (dao: EstateDAO) => await this.toIssuerEstate(dao))
+    );
+  };
+
+  private toIssuerEstate(dao: EstateDAO): IssuerEstate {
+    const {
+      tokenId,
+      name,
+      imagePath,
+      description,
+      issuedBy,
+      dividendDate,
+      expectedYield,
+      offerPrice
+    } = dao;
+
+    return new IssuerEstate({
+      tokenId,
+      name,
+      imagePath,
+      description,
+      issuedBy,
+      dividendDate,
+      offerPrice,
+      expectedYield,
+      owners: [],
+      issuerDividend: [],
+      histories: []
+    });
+  }
 }
