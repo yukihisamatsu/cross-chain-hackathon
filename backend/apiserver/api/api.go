@@ -33,6 +33,9 @@ type EstateApiRouter interface {
 type TradeApiRouter interface { 
 	DeleteTrade(http.ResponseWriter, *http.Request)
 	DeleteTradeRequest(http.ResponseWriter, *http.Request)
+	GetTradeById(http.ResponseWriter, *http.Request)
+	GetTradeRequest(http.ResponseWriter, *http.Request)
+	GetTradeRequestsByUserId(http.ResponseWriter, *http.Request)
 	PostTrade(http.ResponseWriter, *http.Request)
 	PostTradeRequest(http.ResponseWriter, *http.Request)
 }
@@ -78,6 +81,9 @@ type EstateApiServicer interface {
 type TradeApiServicer interface { 
 	DeleteTrade(int64) (interface{}, error)
 	DeleteTradeRequest(int64) (interface{}, error)
+	GetTradeById(int64) (interface{}, error)
+	GetTradeRequest(int64) (interface{}, error)
+	GetTradeRequestsByUserId(string) (interface{}, error)
 	PostTrade(Trade) (interface{}, error)
 	PostTradeRequest(PostTradeRequestInput) (interface{}, error)
 }

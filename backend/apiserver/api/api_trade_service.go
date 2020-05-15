@@ -12,6 +12,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 
 	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
@@ -82,6 +83,27 @@ func (s *TradeApiService) DeleteTradeRequest(id int64) (interface{}, error) {
 		return nil, err
 	}
 	return tr, nil
+}
+
+// GetTradeById - get a trade with requests
+func (s *TradeApiService) GetTradeById(id int64) (interface{}, error) {
+	// TODO - update GetTradeById with the required logic for this service method.
+	// Add api_trade_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	return nil, errors.New("service method 'GetTradeById' not implemented")
+}
+
+// GetTradeRequest - get a trade request
+func (s *TradeApiService) GetTradeRequest(id int64) (interface{}, error) {
+	// TODO - update GetTradeRequest with the required logic for this service method.
+	// Add api_trade_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	return nil, errors.New("service method 'GetTradeRequest' not implemented")
+}
+
+// GetTradeRequestsByUserId - get requests by user id
+func (s *TradeApiService) GetTradeRequestsByUserId(id string) (interface{}, error) {
+	// TODO - update GetTradeRequestsByUserId with the required logic for this service method.
+	// Add api_trade_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	return nil, errors.New("service method 'GetTradeRequestsByUserId' not implemented")
 }
 
 // PostTrade - post a new sell offer

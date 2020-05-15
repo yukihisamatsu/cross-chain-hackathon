@@ -44,6 +44,24 @@ func (c *TradeApiController) Routes() Routes {
 			c.DeleteTradeRequest,
 		},
 		{
+			"GetTradeById",
+			strings.ToUpper("Get"),
+			"/api/trade/{id}",
+			c.GetTradeById,
+		},
+		{
+			"GetTradeRequest",
+			strings.ToUpper("Get"),
+			"/api/trade/request/{id}",
+			c.GetTradeRequest,
+		},
+		{
+			"GetTradeRequestsByUserId",
+			strings.ToUpper("Get"),
+			"/api/trade/requests",
+			c.GetTradeRequestsByUserId,
+		},
+		{
 			"PostTrade",
 			strings.ToUpper("Post"),
 			"/api/trades",
@@ -92,6 +110,55 @@ func (c *TradeApiController) DeleteTradeRequest(w http.ResponseWriter, r *http.R
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(HttpStatus(err))
+		return
+	}
+
+	EncodeJSONResponse(result, nil, w)
+}
+
+// GetTradeById - get a trade with requests
+func (c *TradeApiController) GetTradeById(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := parseIntParameter(params["id"])
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+
+	result, err := c.service.GetTradeById(id)
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+
+	EncodeJSONResponse(result, nil, w)
+}
+
+// GetTradeRequest - get a trade request
+func (c *TradeApiController) GetTradeRequest(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := parseIntParameter(params["id"])
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+
+	result, err := c.service.GetTradeRequest(id)
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+
+	EncodeJSONResponse(result, nil, w)
+}
+
+// GetTradeRequestsByUserId - get requests by user id
+func (c *TradeApiController) GetTradeRequestsByUserId(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+	result, err := c.service.GetTradeRequestsByUserId(id)
+	if err != nil {
+		w.WriteHeader(500)
 		return
 	}
 
