@@ -1,5 +1,5 @@
 AWS?=aws
-AWS_REGION?=us-east-1
+AWS_REGION?=ap-northeast-1
 AWS_ACCOUNT_ID?=513838501479
 
 TAG=$(shell git rev-parse --short HEAD)
