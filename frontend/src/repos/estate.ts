@@ -1,10 +1,17 @@
-import {ESTATE_STATUS, MarketEstate, OwnedEstate} from "~models/estate";
+import {DividendOwner} from "~models/dividend";
+import {
+  ESTATE_STATUS,
+  IssuerEstate,
+  MarketEstate,
+  OwnedEstate
+} from "~models/estate";
 import {BuyOffer, SellOrder} from "~models/order";
 import {
   Estate as EstateDAO,
   EstateApi,
   TradeApi,
-  TradeType
+  TradeType,
+  UserApi
 } from "~src/libs/api";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {BaseRepo} from "~src/repos/base";
@@ -13,35 +20,42 @@ import {Address} from "~src/types";
 export class EstateRepository extends BaseRepo {
   estateApi: EstateApi;
   tradeApi: TradeApi;
+  userApi: UserApi;
   estateContract: EstateContract;
 
   constructor({
     estateApi,
     tradeApi,
+    userApi,
     estateContract
   }: {
     estateApi: EstateApi;
     tradeApi: TradeApi;
+    userApi: UserApi;
     estateContract: EstateContract;
   }) {
     super();
     this.estateApi = estateApi;
     this.tradeApi = tradeApi;
+    this.userApi = userApi;
     this.estateContract = estateContract;
   }
 
   static create({
     estateApi,
     tradeApi,
+    userApi,
     estateContract
   }: {
     estateApi: EstateApi;
     tradeApi: TradeApi;
+    userApi: UserApi;
     estateContract: EstateContract;
   }): EstateRepository {
     return new EstateRepository({
       estateApi,
       tradeApi,
+      userApi,
       estateContract
     });
   }
@@ -197,4 +211,65 @@ export class EstateRepository extends BaseRepo {
       dividend: [] // TODO
     });
   };
+
+  getIssuerEstates = async (): Promise<IssuerEstate[]> => {
+    const {data: daos} = await this.estateApi.getEstates();
+    return await Promise.all(
+      daos.map(async (dao: EstateDAO) => await this.toIssuerEstate(dao))
+    );
+  };
+
+  getIssuerEstate = async (
+    estateId: string,
+    owner: Address
+  ): Promise<IssuerEstate> => {
+    const {data: dao} = await this.estateApi.getEstateById(estateId);
+    const estate = await this.toIssuerEstate(dao);
+    const {data: users} = await this.userApi.getUsers();
+
+    estate.owners = await Promise.all(
+      users
+        .filter(user => user.id !== owner)
+        .map(async user => {
+          const balance = await this.estateContract.balanceOf(
+            user.id,
+            estateId
+          );
+          return new DividendOwner({
+            name: user.name,
+            address: user.id,
+            balance: balance.toNumber()
+          });
+        })
+    );
+
+    return estate;
+  };
+
+  private toIssuerEstate(dao: EstateDAO): IssuerEstate {
+    const {
+      tokenId,
+      name,
+      imagePath,
+      description,
+      issuedBy,
+      dividendDate,
+      expectedYield,
+      offerPrice
+    } = dao;
+
+    return new IssuerEstate({
+      tokenId,
+      name,
+      imagePath,
+      description,
+      issuedBy,
+      dividendDate,
+      offerPrice,
+      expectedYield,
+      owners: [],
+      issuerDividend: [],
+      histories: []
+    });
+  }
 }

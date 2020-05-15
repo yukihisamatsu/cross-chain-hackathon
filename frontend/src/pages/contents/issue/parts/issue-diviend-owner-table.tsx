@@ -2,11 +2,11 @@ import {Table} from "antd";
 import React from "react";
 import styled from "styled-components";
 
-import {IssuerDividend} from "~models/dividend";
+import {DividendOwner} from "~models/dividend";
 
-const {Column} = Table;
+const {Column, Summary} = Table;
 
-export const renderIssueDividendOwnerTable = (orders: IssuerDividend[]) => {
+export const renderIssueDividendOwnerTable = (orders: DividendOwner[]) => {
   return (
     <React.Fragment>
       <IssueDividendOwnerInformation>
@@ -14,27 +14,34 @@ export const renderIssueDividendOwnerTable = (orders: IssuerDividend[]) => {
           Owners
         </IssueDividendOwnerInformationText>
       </IssueDividendOwnerInformation>
-      <Table<IssuerDividend>
-        rowKey={(o: IssuerDividend) => o.userAddress}
+      <Table<DividendOwner>
+        rowKey={(o: DividendOwner) => o.address}
         dataSource={orders}
         pagination={false}
         bordered
-        scroll={{y: 245}}
+        scroll={{y: 215}}
         size={"small"}
+        summary={pageData => {
+          let totalBalance = 0;
+
+          pageData.forEach((data: DividendOwner) => {
+            totalBalance += data.balance;
+          });
+
+          return (
+            <>
+              <Summary.Row>
+                <Summary.Cell index={0}>Total</Summary.Cell>
+                <Summary.Cell index={1} />
+                <Summary.Cell index={2}>{totalBalance}</Summary.Cell>
+              </Summary.Row>
+            </>
+          );
+        }}
       >
-        <Column
-          title="UserName"
-          dataIndex="userName"
-          key="userName"
-          width={250}
-        />
-        <Column title="Address" dataIndex="userAddress" key="userAddress" />
-        <Column
-          title="PurchaseDate"
-          dataIndex="purchaseDate"
-          key="purchaseDate"
-          width={220}
-        />
+        <Column title="UserName" dataIndex="name" key="name" width={100} />
+        <Column title="Address" dataIndex="address" key="address" width={260} />
+        <Column title="Balance" dataIndex="balance" key="balance" width={250} />
       </Table>
     </React.Fragment>
   );

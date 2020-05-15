@@ -1,4 +1,4 @@
-import {DividendHistory, IssuerDividend} from "~models/dividend";
+import {DividendHistory, DividendOwner, IssuerDividend} from "~models/dividend";
 import {User} from "~models/user";
 import {Unbox} from "~src/heplers/util-types";
 import {
@@ -142,10 +142,7 @@ export class OwnedEstate extends Estate {
 
     if (
       openedOrder.buyOffers.find(
-        offer =>
-          (offer.status === OFFER_STATUS.ONGOING ||
-            offer.status === OFFER_STATUS.OPENED) &&
-          offer.offerer === owner
+        offer => offer.isActive() && offer.offerer === owner
       )
     ) {
       return ESTATE_STATUS.BUYING;
@@ -160,10 +157,6 @@ export class OwnedEstate extends Estate {
         order => order.status === ORDER_STATUS.OPENED
       ) ?? null
     );
-  };
-
-  isActiveSellOrder = (): boolean => {
-    return !!this.findActiveSellOrder();
   };
 
   findOwnedBuyOffer = (offerer: Address): BuyOffer[] => {
@@ -251,6 +244,7 @@ export class MarketEstate extends Estate {
 }
 
 export class IssuerEstate extends Estate {
+  owners: DividendOwner[];
   issuerDividend: IssuerDividend[];
   histories: DividendHistory[];
 
@@ -263,6 +257,7 @@ export class IssuerEstate extends Estate {
     dividendDate,
     offerPrice,
     issuedBy,
+    owners,
     issuerDividend,
     histories
   }: {
@@ -274,6 +269,7 @@ export class IssuerEstate extends Estate {
     dividendDate: string;
     offerPrice: number;
     issuedBy: Address;
+    owners: DividendOwner[];
     issuerDividend: IssuerDividend[];
     histories: DividendHistory[];
   }) {
@@ -288,6 +284,7 @@ export class IssuerEstate extends Estate {
       issuedBy
     });
 
+    this.owners = owners;
     this.issuerDividend = issuerDividend;
     this.histories = histories;
   }
@@ -302,6 +299,7 @@ export class IssuerEstate extends Estate {
       dividendDate: "",
       offerPrice: 0,
       issuedBy: "",
+      owners: [],
       issuerDividend: [],
       histories: []
     });

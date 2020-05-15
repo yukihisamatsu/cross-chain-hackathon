@@ -39,6 +39,7 @@ import {UserRepository} from "~src/repos/user";
     estateRepo: EstateRepository.create({
       estateApi,
       tradeApi,
+      userApi,
       estateContract
     }),
     orderRepo: OrderRepository.create({

@@ -387,8 +387,7 @@ export class OwnedDetail extends React.Component<Props, State> {
     return (
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
-        {estate.dividend.length > 0 &&
-          renderOwnedDividendTable(estate.dividend)}
+        {renderOwnedDividendTable(estate.dividend)}
         <EstateOrderTab
           user={user}
           estate={estate}
