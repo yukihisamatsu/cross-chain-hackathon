@@ -36,13 +36,21 @@ export const renderEstateDetailInfo = (estate: EstateExtend) => {
         <EstateInfoDetailTokenId>id: {estate.tokenId}</EstateInfoDetailTokenId>
         <EstateInfoDetailIssuedBy>
           <UserOutlined /> Issued by{" "}
-          <span style={{color: "cornflowerblue"}}>{estate.issuedBy}</span>
+          <EstateInfoDetailIssuedByAddress>
+            {estate.issuedBy}
+          </EstateInfoDetailIssuedByAddress>
         </EstateInfoDetailIssuedBy>
         {isOwnedEstate(estate) && (
           <EstateInfoDetailUnits>
             Units: {estate.units.toString(10) ?? "0"}
           </EstateInfoDetailUnits>
         )}
+        <EstateInfoDetailPlaneDividend>
+          Planned dividend: {estate.dividendDate}
+        </EstateInfoDetailPlaneDividend>
+        <EstateInfoDetailExpectedYield>
+          Expected dividend per unit: {estate.expectedYield}
+        </EstateInfoDetailExpectedYield>
         <EstateInfoDetailDescription>
           {estate.description}
         </EstateInfoDetailDescription>
@@ -106,6 +114,26 @@ const EstateInfoDetailIssuedBy = styled.div`
   font-size: 0.9rem;
   font-weight: 200;
   color: darkgray;
+
+  padding-bottom: 20px;
+`;
+
+const EstateInfoDetailIssuedByAddress = styled.span`
+  color: cornflowerblue;
+`;
+
+const EstateInfoDetailPlaneDividend = styled.div`
+  font-size: 0.9rem;
+  font-weight: 200;
+  color: #777777;
+
+  padding-bottom: 5px;
+`;
+
+const EstateInfoDetailExpectedYield = styled.div`
+  font-size: 0.9rem;
+  font-weight: 200;
+  color: #777777;
 
   padding-bottom: 20px;
 `;

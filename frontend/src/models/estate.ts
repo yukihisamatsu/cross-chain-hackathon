@@ -142,10 +142,7 @@ export class OwnedEstate extends Estate {
 
     if (
       openedOrder.buyOffers.find(
-        offer =>
-          (offer.status === OFFER_STATUS.ONGOING ||
-            offer.status === OFFER_STATUS.OPENED) &&
-          offer.offerer === owner
+        offer => offer.isActive() && offer.offerer === owner
       )
     ) {
       return ESTATE_STATUS.BUYING;
@@ -160,10 +157,6 @@ export class OwnedEstate extends Estate {
         order => order.status === ORDER_STATUS.OPENED
       ) ?? null
     );
-  };
-
-  isActiveSellOrder = (): boolean => {
-    return !!this.findActiveSellOrder();
   };
 
   findOwnedBuyOffer = (offerer: Address): BuyOffer[] => {

@@ -208,4 +208,11 @@ export class BuyOffer {
       return aTime < bTime ? 1 : -1;
     });
   };
+
+  isActive(): boolean {
+    return (
+      this.status === OFFER_STATUS.OPENED ||
+      this.status === OFFER_STATUS.ONGOING
+    );
+  }
 }

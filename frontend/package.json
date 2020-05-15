@@ -21,9 +21,8 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "start": "webpack-dev-server --config webpack.config.ts --development",
-    "build:dev": "webpack --config webpack.config.ts",
-    "build:prod": "webpack --config webpack.config.ts --production --vervose",
+    "start": "webpack-dev-server --config webpack.config.ts",
+    "build:prod": "NODE_OPTIONS=\"--max-old-space-size=8192\" ENV=prodcution webpack --config webpack.config.ts --vervose",
     "lint": "tslint --project .",
     "lint:fix": "tslint --fix --project .",
     "test:unit": "NODE_ENV=test jest -u --silent=false",

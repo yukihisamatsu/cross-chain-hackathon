@@ -111,7 +111,6 @@ const devServerConfig: DevServer.Configuration = {
 };
 
 const Config: Configuration = {
-  mode: ENV,
   watch: ENV !== "production",
   devtool: ENV === "production" ? false : "inline-source-map",
   entry: {
