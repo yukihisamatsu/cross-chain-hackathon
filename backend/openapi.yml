@@ -106,6 +106,26 @@ paths:
 
   # if needed, add 'get'
   /trade/{id}:
+    get:
+      summary: get a trade with requests
+      operationId: getTradeById
+      tags:
+        - trade
+      parameters:
+        - name: id
+          in: path
+          description: trade id
+          required: true
+          schema:
+            $ref: "#/components/schemas/trade_id"
+      responses:
+        "200":
+          description: success to get
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+
     delete:
       summary: cancel a trade
       operationId: deleteTrade
@@ -145,7 +165,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/Trade"
 
-  /trade/requests:
+  /trade_requests:
+    get:
+      summary: get requests by user id
+      operationId: getTradeRequestsByUserId
+      tags:
+        - trade
+      parameters:
+        - name: userId
+          in: query
+          description: user id
+          required: true
+          schema:
+            $ref: "#/components/schemas/user_id"
+      responses:
+        "200":
+          description: success to post
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradeRequest"
+
     post:
       summary: post a new trade request
       operationId: postTradeRequest
@@ -164,7 +206,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/TradeRequest"
 
-  /trade/request/{id}:
+  /trade_request/{id}:
+    get:
+      summary: get a trade request
+      operationId: getTradeRequestById
+      tags:
+        - trade
+      parameters:
+        - name: id
+          in: path
+          description: trade request id
+          required: true
+          schema:
+            $ref: "#/components/schemas/trade_request_id"
+      responses:
+        "200":
+          description: success to get
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TradeRequest"
+
     delete:
       summary: cancel a trade request
       operationId: deleteTradeRequest
@@ -185,7 +247,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TradeRequest"
 
-  /tx/trade/request:
+  /tx/trade_request:
     get:
       summary: get a CrossTx to be signed
       operationId: getTxTradeRequest
@@ -222,14 +284,14 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/estate_id"
-        - name: index
+        - name: perShare
           in: query
           required: true
           schema:
             type: integer
             format: int64
-            example: 1
-            minimum: 1
+            example: 10
+            minimum: 0
       responses:
         "200":
           description: success to get a CrossTx

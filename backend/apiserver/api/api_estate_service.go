@@ -11,7 +11,6 @@ package api
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
 
 	"github.com/jmoiron/sqlx"
@@ -96,29 +95,12 @@ func (s *EstateApiService) getTrades(db *sqlx.DB, estateId string) ([]Trade, err
 		trades = append(trades, t)
 	}
 
-	q := `SELECT id, tradeId, "from", crossTx, status, updatedAt FROM trade_request WHERE tradeId = ?`
 	for i := 0; i < len(trades); i++ {
-		reqs := []TradeRequest{}
-		rs, err := db.Query(q, trades[i].Id)
+		reqs, err := SelectTradeRequestByTradeId(db, trades[i].Id)
 		if err != nil {
-			log.Println(err)
 			return nil, err
-		}
-		for rs.Next() {
-			tr := TradeRequest{}
-			j := []byte{}
-			if err := rs.Scan(&tr.Id, &tr.TradeId, &tr.From, &j, &tr.Status, &tr.UpdatedAt); err != nil {
-				log.Println(err)
-				return nil, err
-			}
-			if err := json.Unmarshal(j, &tr.CrossTx); err != nil {
-				log.Println(err)
-				return nil, err
-			}
-			reqs = append(reqs, tr)
 		}
 		trades[i].Requests = reqs
 	}
-
 	return trades, nil
 }

@@ -29,15 +29,15 @@ func NewTxApiController(s TxApiServicer) Router {
 func (c *TxApiController) Routes() Routes {
 	return Routes{
 		{
-			"TxDividendGet",
+			"GetTxDividend",
 			strings.ToUpper("Get"),
 			"/api/tx/dividend",
 			c.GetTxDividend,
 		},
 		{
-			"TxTradeRequestGet",
+			"GetTxTradeRequest",
 			strings.ToUpper("Get"),
-			"/api/tx/trade/request",
+			"/api/tx/trade_request",
 			c.GetTxTradeRequest,
 		},
 	}

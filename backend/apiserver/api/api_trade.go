@@ -40,8 +40,26 @@ func (c *TradeApiController) Routes() Routes {
 		{
 			"DeleteTradeRequest",
 			strings.ToUpper("Delete"),
-			"/api/trade/request/{id}",
+			"/api/trade_request/{id}",
 			c.DeleteTradeRequest,
+		},
+		{
+			"GetTradeById",
+			strings.ToUpper("Get"),
+			"/api/trade/{id}",
+			c.GetTradeById,
+		},
+		{
+			"GetTradeRequestById",
+			strings.ToUpper("Get"),
+			"/api/trade_request/{id}",
+			c.GetTradeRequestById,
+		},
+		{
+			"GetTradeRequestsByUserId",
+			strings.ToUpper("Get"),
+			"/api/trade_requests",
+			c.GetTradeRequestsByUserId,
 		},
 		{
 			"PostTrade",
@@ -52,7 +70,7 @@ func (c *TradeApiController) Routes() Routes {
 		{
 			"PostTradeRequest",
 			strings.ToUpper("Post"),
-			"/api/trade/requests",
+			"/api/trade_requests",
 			c.PostTradeRequest,
 		},
 	}
@@ -91,6 +109,55 @@ func (c *TradeApiController) DeleteTradeRequest(w http.ResponseWriter, r *http.R
 	result, err := c.service.DeleteTradeRequest(id)
 	if err != nil {
 		log.Println(err)
+		w.WriteHeader(HttpStatus(err))
+		return
+	}
+
+	EncodeJSONResponse(result, nil, w)
+}
+
+// GetTradeById - get a trade with requests
+func (c *TradeApiController) GetTradeById(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := parseIntParameter(params["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	result, err := c.service.GetTradeById(id)
+	if err != nil {
+		w.WriteHeader(HttpStatus(err))
+		return
+	}
+
+	EncodeJSONResponse(result, nil, w)
+}
+
+// GetTradeRequestById - get a trade request
+func (c *TradeApiController) GetTradeRequestById(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := parseIntParameter(params["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	result, err := c.service.GetTradeRequestById(id)
+	if err != nil {
+		w.WriteHeader(HttpStatus(err))
+		return
+	}
+
+	EncodeJSONResponse(result, nil, w)
+}
+
+// GetTradeRequestsByUserId - get requests by user id
+func (c *TradeApiController) GetTradeRequestsByUserId(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	userId := query.Get("userId")
+	result, err := c.service.GetTradeRequestsByUserId(userId)
+	if err != nil {
 		w.WriteHeader(HttpStatus(err))
 		return
 	}

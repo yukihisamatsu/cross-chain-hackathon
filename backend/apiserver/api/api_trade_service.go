@@ -84,6 +84,87 @@ func (s *TradeApiService) DeleteTradeRequest(id int64) (interface{}, error) {
 	return tr, nil
 }
 
+// GetTradeById - get a trade with requests
+func (s *TradeApiService) GetTradeById(id int64) (interface{}, error) {
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+	q := `SELECT id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt FROM trade WHERE id = ?`
+	row := db.QueryRow(q, id)
+	t := Trade{}
+	var buyer sql.NullString
+	if err := row.Scan(&t.Id, &t.EstateId, &t.UnitPrice, &t.Amount, &buyer, &t.Seller, &t.Type, &t.Status, &t.UpdatedAt); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+	if buyer.Valid {
+		t.Buyer = buyer.String
+	}
+
+	trs, err := SelectTradeRequestByTradeId(db, id)
+	if err != nil {
+		return nil, err
+	}
+	t.Requests = trs
+	return &t, nil
+}
+
+// GetTradeRequestById - get a trade request
+func (s *TradeApiService) GetTradeRequestById(id int64) (interface{}, error) {
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+
+	tr := TradeRequest{}
+	q := `SELECT id, tradeId, "from", crossTx, status, updatedAt FROM trade_request WHERE id = ?`
+	row := db.QueryRow(q, id)
+	j := []byte{}
+	if err := row.Scan(&tr.Id, &tr.TradeId, &tr.From, &j, &tr.Status, &tr.UpdatedAt); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	if err := json.Unmarshal(j, &tr.CrossTx); err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &tr, nil
+}
+
+// GetTradeRequestsByUserId - get requests by user id
+func (s *TradeApiService) GetTradeRequestsByUserId(userId string) (interface{}, error) {
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+
+	q := `SELECT id, tradeId, "from", crossTx, status, updatedAt FROM trade_request WHERE "from" = ?`
+	rows, err := db.Query(q, userId)
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+	trs := []TradeRequest{}
+	for rows.Next() {
+		tr := TradeRequest{}
+		j := []byte{}
+		if err := rows.Scan(&tr.Id, &tr.TradeId, &tr.From, &j, &tr.Status, &tr.UpdatedAt); err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		if err := json.Unmarshal(j, &tr.CrossTx); err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		trs = append(trs, tr)
+	}
+	return &trs, nil
+}
+
 // PostTrade - post a new sell offer
 func (s *TradeApiService) PostTrade(trade Trade) (interface{}, error) {
 	db, err := rdb.InitDB()
@@ -135,6 +216,30 @@ func (s *TradeApiService) PostTradeRequest(in PostTradeRequestInput) (interface{
 	}
 	res.CrossTx = in.CrossTx
 	return res, nil
+}
+
+func SelectTradeRequestByTradeId(db *sqlx.DB, tradeId int64) ([]TradeRequest, error) {
+	q := `SELECT id, tradeId, "from", crossTx, status, updatedAt FROM trade_request WHERE tradeId = ?`
+	trs := []TradeRequest{}
+	rows, err := db.Query(q, tradeId)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	for rows.Next() {
+		tr := TradeRequest{}
+		j := []byte{}
+		if err := rows.Scan(&tr.Id, &tr.TradeId, &tr.From, &j, &tr.Status, &tr.UpdatedAt); err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		if err := json.Unmarshal(j, &tr.CrossTx); err != nil {
+			log.Println(err)
+			return nil, err
+		}
+		trs = append(trs, tr)
+	}
+	return trs, nil
 }
 
 func SelectOngoingTradeRequest(db *sqlx.DB) ([]TradeRequest, error) {
