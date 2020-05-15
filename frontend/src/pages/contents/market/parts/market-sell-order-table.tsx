@@ -45,6 +45,12 @@ export const renderMarketSellOrderTable = (
           render={(_: string, order: SellOrder) => order.getTotal()}
         />
         <Column
+          title="Date"
+          dataIndex="updatedAt"
+          key="updatedAt"
+          width={190}
+        />
+        <Column
           title=""
           dataIndex="owner"
           key="owner"

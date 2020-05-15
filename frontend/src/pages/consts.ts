@@ -1,6 +1,6 @@
 import {ISSUER_DIVIDEND_HISTORY_STATUS} from "~models/dividend";
 import {ESTATE_STATUS} from "~models/estate";
-import {ORDER_STATUS} from "~models/order";
+import {OFFER_STATUS, ORDER_STATUS} from "~models/order";
 
 export const LocalStorageUserKey = "USER";
 
@@ -25,4 +25,12 @@ export const OrderStatusTagColorMap: {[key: string]: string} = {
   [ORDER_STATUS.COMPLETED]: "green",
   [ORDER_STATUS.CANCELED]: "orange",
   [ORDER_STATUS.FAILED]: "red"
+};
+
+export const OfferStatusTagColorMap: {[key: string]: string} = {
+  [OFFER_STATUS.OPENED]: "blue",
+  [OFFER_STATUS.ONGOING]: "cyan",
+  [OFFER_STATUS.COMPLETED]: "green",
+  [OFFER_STATUS.CANCELED]: "orange",
+  [OFFER_STATUS.FAILED]: "red"
 };

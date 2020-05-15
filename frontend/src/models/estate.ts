@@ -1,10 +1,12 @@
-import BN from "bn.js";
-import {DateTime} from "luxon";
-
 import {DividendHistory, IssuerDividend} from "~models/dividend";
 import {User} from "~models/user";
 import {Unbox} from "~src/heplers/util-types";
-import {BuyOffer, ORDER_STATUS, SellOrder} from "~src/models/order";
+import {
+  BuyOffer,
+  OFFER_STATUS,
+  ORDER_STATUS,
+  SellOrder
+} from "~src/models/order";
 import {Address} from "~src/types";
 
 export const ESTATE_STATUS = {
@@ -129,53 +131,56 @@ export class OwnedEstate extends Estate {
   static getStatus(sellOrders: SellOrder[], owner: Address): EstateStatusType {
     const openedOrder = sellOrders.find(
       order =>
-        order.owner === owner ||
-        order.status === ORDER_STATUS.OPENED ||
-        order.buyOffers.find(offer => offer.offerer === owner)
+        (order.owner === owner ||
+          order.buyOffers.find(offer => offer.offerer === owner)) &&
+        order.status === ORDER_STATUS.OPENED
     );
 
     if (!openedOrder) {
       return ESTATE_STATUS.OWNED;
     }
 
-    if (openedOrder.buyOffers.find(offer => offer.offerer === owner)) {
+    if (
+      openedOrder.buyOffers.find(
+        offer =>
+          (offer.status === OFFER_STATUS.ONGOING ||
+            offer.status === OFFER_STATUS.OPENED) &&
+          offer.offerer === owner
+      )
+    ) {
       return ESTATE_STATUS.BUYING;
     }
 
     return ESTATE_STATUS.SELLING;
   }
 
-  getTotal(perUnit: number): number {
-    return new BN(this.units).muln(perUnit).toNumber();
-  }
-
-  sortDescSellOrder = (): SellOrder[] =>
-    this.sellOrders.sort(
-      (a: SellOrder, b: SellOrder) =>
-        DateTime.fromISO(b.updatedAt).toSeconds() -
-        DateTime.fromISO(a.updatedAt).toSeconds()
-    );
-
   findActiveSellOrder = (): SellOrder | null => {
     return (
-      this.sortDescSellOrder().find(
+      SellOrder.sortDateDesc(this.sellOrders).find(
         order => order.status === ORDER_STATUS.OPENED
       ) ?? null
     );
   };
 
-  findActiveOwnedBuyOffer = (offerer: Address): BuyOffer | null => {
-    const activeSellOrder = this.sortDescSellOrder().find(
-      order =>
-        order.status === ORDER_STATUS.OPENED &&
-        order.buyOffers.find(offer => offer.offerer === offerer)
+  isActiveSellOrder = (): boolean => {
+    return !!this.findActiveSellOrder();
+  };
+
+  findOwnedBuyOffer = (offerer: Address): BuyOffer[] => {
+    const activeSellOrderBuyOffers = SellOrder.sortDateDesc(this.sellOrders)
+      .filter(
+        order =>
+          order.status === ORDER_STATUS.OPENED &&
+          order.buyOffers.find(offer => offer.offerer === offerer)
+      )
+      .map(order => order.buyOffers);
+
+    const ret: BuyOffer[] = [];
+    activeSellOrderBuyOffers.forEach(offers =>
+      offers.forEach(offer => ret.push(offer))
     );
 
-    if (!activeSellOrder) {
-      return null;
-    }
-
-    return activeSellOrder.buyOffers[0];
+    return BuyOffer.sortDateDesc(ret);
   };
 }
 
@@ -231,16 +236,17 @@ export class MarketEstate extends Estate {
     });
   };
 
-  getUnFinishedSellOrders(user: User): SellOrder[] {
-    return this.sellOrders
-      .filter(
-        order =>
-          order.status === ORDER_STATUS.OPENED ||
-          order.status === ORDER_STATUS.FAILED
-      )
-      .filter(order => {
-        return !order.buyOffers.find(offer => offer.offerer === user.address);
-      });
+  getUnOfferedSellOrders(user: User): SellOrder[] {
+    return this.sellOrders.filter(
+      order =>
+        order.status === ORDER_STATUS.OPENED &&
+        order.owner !== user.address &&
+        !order.buyOffers.find(
+          offer =>
+            offer.offerer === user.address &&
+            offer.status === OFFER_STATUS.OPENED
+        )
+    );
   }
 }
 

@@ -1,20 +1,20 @@
 import {Button, Table, Tag} from "antd";
 import React from "react";
 
-import {OrderStatusTagColorMap} from "~pages/consts";
-import {BuyOffer, ORDER_STATUS, OrderStatusType} from "~src/models/order";
+import {OfferStatusTagColorMap} from "~pages/consts";
+import {BuyOffer, OFFER_STATUS, OfferStatusType} from "~src/models/order";
 
 const {Column} = Table;
 
 export const renderOwnedBuyersBuyOfferTable = (
-  offer: BuyOffer | null,
-  onCancel: (order: BuyOffer) => () => void
+  offers: BuyOffer[],
+  onCancel: (offer: BuyOffer) => () => void
 ) => {
   return (
     <React.Fragment>
       <Table<BuyOffer>
         rowKey={(o: BuyOffer) => o.offerer}
-        dataSource={offer ? [offer] : []}
+        dataSource={offers}
         pagination={false}
         bordered
         scroll={{y: 245}}
@@ -38,13 +38,19 @@ export const renderOwnedBuyersBuyOfferTable = (
           render={(_: string, offer: BuyOffer) => <div>{offer.getTotal()}</div>}
         />
         <Column
+          title="Date"
+          dataIndex="updatedAt"
+          key="updatedAt"
+          width={190}
+        />
+        <Column
           title="Status"
           dataIndex="status"
           key="status"
           align="center"
           width={100}
-          render={(status: OrderStatusType) => (
-            <Tag color={OrderStatusTagColorMap[status] ?? "green"}>
+          render={(status: OfferStatusType) => (
+            <Tag color={OfferStatusTagColorMap[status] ?? "green"}>
               {status}
             </Tag>
           )}
@@ -55,9 +61,9 @@ export const renderOwnedBuyersBuyOfferTable = (
           key="offerer"
           align="center"
           width={150}
-          render={(_: string, order: BuyOffer) =>
-            order.status === ORDER_STATUS.OPENED && (
-              <Button type={"default"} danger onClick={onCancel(order)}>
+          render={(_: string, offer: BuyOffer) =>
+            offer.status === OFFER_STATUS.OPENED && (
+              <Button type={"default"} danger onClick={onCancel(offer)}>
                 CANCEL
               </Button>
             )

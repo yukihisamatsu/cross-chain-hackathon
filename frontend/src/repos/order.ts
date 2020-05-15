@@ -3,6 +3,7 @@ import {DateTime} from "luxon";
 import {BuyOffer, SellOrder} from "~models/order";
 import {
   CrossTx,
+  StdTx,
   TradeApi,
   TradeRequest,
   TradeStatus,
@@ -103,5 +104,19 @@ export class OrderRepository extends BaseRepo {
         crossTx
       });
     });
+  };
+
+  broadcastTx = async (
+    stdTx: StdTx,
+    mode: "block" | "sync" | "async" = "block"
+  ) => {
+    const response = await this.coordinatorRestClient.txsPost({
+      tx: stdTx,
+      mode
+    });
+    if (response.error || response.code || response.codespace) {
+      throw new Error(JSON.stringify(response));
+    }
+    return response;
   };
 }

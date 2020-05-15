@@ -1,10 +1,13 @@
 import fetch from "cross-fetch";
 import {stringify} from "query-string";
 
-type ContractIdType = "dcc" | "estate";
+import {StdTx} from "~src/libs/api";
 
-type RestGetMethods = "txs" | "cross/coordinator";
-type RestGetParamTypes = TxsParams | CrossCoordinatorStatusParams;
+type ContractIdType = "dcc" | "estate";
+type RestGetParamTypes =
+  | GetTxsParams
+  | CrossCoordinatorStatusParams
+  | undefined;
 
 const initGet = (): RequestInit => {
   return {
@@ -16,11 +19,13 @@ const initGet = (): RequestInit => {
   };
 };
 
-type RestPostMethods = "cross/contract/call";
-type RestPostParamTypes = CrossContractCallParams;
+type RestPostMethods = "txs" | "cross/contract/call";
+type RestPostParamTypes = BroadcastTxParams | CrossContractCallParams;
 
-type RestResponseTypes =
-  | TxsResponse
+export type RestResponseTypes =
+  | GetTxsResponse
+  | BroadcastTxCommitResponse
+  | AuthAccountResponse
   | CrossContractCallResponse
   | CrossCoordinatorStatusResponse;
 
@@ -39,14 +44,17 @@ export class RestClient {
     this.endPoint = endPoint;
   }
 
-  get = <R extends RestResponseTypes, P extends RestGetParamTypes>(
-    method: RestGetMethods
-  ) => async (params: P) => {
+  get = <R extends RestResponseTypes, P extends RestGetParamTypes = undefined>(
+    method: string
+  ) => async (params?: P) => {
     let url = `${this.endPoint}/${method}`;
 
-    const query = stringify(params);
-    if (query) {
-      url += `?${query}`;
+    if (params) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const query = stringify(params!);
+      if (query) {
+        url += `?${query}`;
+      }
     }
 
     return await this.request<R>(fetch(url, initGet()));
@@ -81,7 +89,10 @@ export class RestClient {
     return data;
   };
 
-  txs = this.get<TxsResponse, TxsParams>("txs");
+  txs = this.get<GetTxsResponse, GetTxsParams>("txs");
+  txsPost = this.post<BroadcastTxCommitResponse, BroadcastTxParams>("txs");
+  authAccounts = (address: Address) =>
+    this.get<AuthAccountResponse>(`auth/accounts/${address}`);
 
   crossCoordinatorStatus = this.get<
     CrossCoordinatorStatusResponse,
@@ -98,17 +109,46 @@ type Address = string;
 type Base64EncodedString = string;
 type DecimalString = string;
 
-export interface TxsParams {
+export interface GetTxsParams {
   [key: string]: string;
 }
 
-interface TxsResponse {
+interface GetTxsResponse {
   total_count: DecimalString;
   count: DecimalString;
   page_number: DecimalString;
   page_total: DecimalString;
   limit: DecimalString;
   txs: boolean[];
+}
+
+interface BroadcastTxParams {
+  tx: StdTx;
+  mode: "block" | "sync" | "async";
+}
+
+interface BroadcastTxCommitResponse {
+  height: string;
+  txhash: string;
+  code?: number;
+  codespace?: string;
+  gas_wanted?: string;
+  gas_used?: DecimalString;
+  row_log?: string;
+  error?: string;
+}
+
+export interface AuthAccountResponse {
+  height: DecimalString;
+  result: {
+    type: "cosmos-sdk/Account";
+    value: {
+      address: Address;
+      public_key: string;
+      account_number: DecimalString;
+      sequence?: DecimalString;
+    };
+  };
 }
 
 export interface CrossContractCallParams {

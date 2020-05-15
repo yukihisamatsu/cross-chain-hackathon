@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eux
 
 hex64 () {
     printf "0x%016x" $1

@@ -2,13 +2,13 @@ import {Button, Table, Tag} from "antd";
 import React from "react";
 import styled from "styled-components";
 
-import {BuyOffer, ORDER_STATUS, OrderStatusType} from "~models/order";
-import {OrderStatusTagColorMap} from "~pages/consts";
+import {BuyOffer, OFFER_STATUS, OfferStatusType} from "~models/order";
+import {OfferStatusTagColorMap} from "~pages/consts";
 
 const {Column} = Table;
 
 export const renderOwnedSellersBuyOfferTable = (
-  orders: BuyOffer[],
+  offers: BuyOffer[],
   onClick: (order: BuyOffer) => () => void
 ) => {
   return (
@@ -18,7 +18,7 @@ export const renderOwnedSellersBuyOfferTable = (
       </BuyOfferInformation>
       <Table<BuyOffer>
         rowKey={(o: BuyOffer) => o.offerer}
-        dataSource={orders}
+        dataSource={offers}
         pagination={false}
         bordered
         scroll={{y: 245}}
@@ -26,13 +26,19 @@ export const renderOwnedSellersBuyOfferTable = (
       >
         <Column title="Offerer" dataIndex="offerer" key="offerer" />
         <Column
+          title="Date"
+          dataIndex="updatedAt"
+          key="updatedAt"
+          width={190}
+        />
+        <Column
           title="Status"
           dataIndex="status"
           key="status"
           align="center"
           width={120}
-          render={(status: OrderStatusType) => (
-            <Tag color={OrderStatusTagColorMap[status] ?? "green"}>
+          render={(status: OfferStatusType) => (
+            <Tag color={OfferStatusTagColorMap[status] ?? "green"}>
               {status}
             </Tag>
           )}
@@ -43,9 +49,9 @@ export const renderOwnedSellersBuyOfferTable = (
           key="offerer"
           align="center"
           width={150}
-          render={(_: string, order: BuyOffer) =>
-            order.status === ORDER_STATUS.OPENED && (
-              <Button type={"default"} onClick={onClick(order)}>
+          render={(_: string, offer: BuyOffer) =>
+            offer.status === OFFER_STATUS.OPENED && (
+              <Button type={"default"} onClick={onClick(offer)}>
                 ACCEPT
               </Button>
             )

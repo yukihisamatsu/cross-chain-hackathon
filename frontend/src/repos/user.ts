@@ -1,32 +1,39 @@
 import {User} from "~models/user";
 import {UserApi} from "~src/libs/api";
-import {CoinContract} from "~src/libs/cosmos/contract/coint";
+import {CoinContract} from "~src/libs/cosmos/contract/coin";
+import {RestClient} from "~src/libs/cosmos/rest-client";
 import {Cosmos} from "~src/libs/cosmos/util";
 import {Address} from "~src/types";
 
 export class UserRepository {
   userApi: UserApi;
   coinContract: CoinContract;
+  coordinatorRestClient: RestClient;
 
   constructor({
     userApi,
-    coinContract
+    coinContract,
+    coordinatorRestClient
   }: {
     userApi: UserApi;
     coinContract: CoinContract;
+    coordinatorRestClient: RestClient;
   }) {
     this.userApi = userApi;
     this.coinContract = coinContract;
+    this.coordinatorRestClient = coordinatorRestClient;
   }
 
   static create({
     userApi,
-    coinContract
+    coinContract,
+    coordinatorRestClient
   }: {
     userApi: UserApi;
     coinContract: CoinContract;
+    coordinatorRestClient: RestClient;
   }): UserRepository {
-    return new UserRepository({userApi, coinContract});
+    return new UserRepository({userApi, coinContract, coordinatorRestClient});
   }
 
   getUsers = async (): Promise<User[]> => {
@@ -63,5 +70,19 @@ export class UserRepository {
   balanceOf = async (address: Address): Promise<number> => {
     const balance = await this.coinContract.balanceOf(address);
     return balance.toNumber();
+  };
+
+  getAuthAccount = async (
+    address: Address
+  ): Promise<{accountNumber: string; sequence: string}> => {
+    const {
+      result: {
+        value: {account_number, sequence}
+      }
+    } = await this.coordinatorRestClient.authAccounts(address)();
+    return {
+      accountNumber: account_number,
+      sequence: sequence ?? "0"
+    };
   };
 }

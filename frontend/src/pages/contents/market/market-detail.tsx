@@ -1,5 +1,6 @@
 import {message} from "antd";
 import log from "loglevel";
+import {DateTime} from "luxon";
 import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
@@ -12,7 +13,8 @@ import {MarketSellOrderModal} from "~pages/contents/market/parts/market-sell-ord
 import {renderMarketSellOrderTable} from "~pages/contents/market/parts/market-sell-order-table";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
-import {Cosmos} from "~src/libs/cosmos/util";
+import {CrossTx} from "~src/libs/api";
+import {COORDINATOR_CHAIN_ID, Cosmos} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
@@ -96,7 +98,7 @@ export class MarketDetail extends React.Component<Props, State> {
   renderSellOrderModal = (estate: MarketEstate) => {
     const {
       user: {address, mnemonic},
-      repos: {estateRepo, orderRepo}
+      repos: {estateRepo, orderRepo, userRepo}
     } = this.props;
 
     const {
@@ -122,20 +124,35 @@ export class MarketDetail extends React.Component<Props, State> {
           onOK={() => {
             this.setState({sellOrderModalConfirmLoading: true}, async () => {
               try {
-                const crossTx = await orderRepo.getBuyRequestTx(
+                const crossTx: CrossTx = await orderRepo.getBuyRequestTx(
                   selectedSellOrder,
                   address
                 );
                 log.debug(crossTx);
-                const ecPairPriv = Cosmos.getECPairPriv(mnemonic);
-                const signedTx = Cosmos.signCrossTx(crossTx.value, ecPairPriv);
+
+                const nonce = DateTime.utc().toMillis();
+                crossTx.value.msg[0].value.Nonce = nonce.toString(10);
+
+                const {accountNumber, sequence} = await userRepo.getAuthAccount(
+                  address
+                );
+                const sig = Cosmos.signCrossTx(
+                  crossTx,
+                  COORDINATOR_CHAIN_ID,
+                  accountNumber,
+                  sequence,
+                  mnemonic
+                );
 
                 const response = await orderRepo.postBuyOffer(
                   selectedSellOrder,
                   address,
                   {
                     ...crossTx,
-                    value: signedTx
+                    value: {
+                      ...crossTx.value,
+                      signatures: [sig]
+                    }
                   }
                 );
                 log.debug(response);
@@ -168,7 +185,7 @@ export class MarketDetail extends React.Component<Props, State> {
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
         {renderMarketSellOrderTable(
-          estate.getUnFinishedSellOrders(user),
+          estate.getUnOfferedSellOrders(user),
           this.handleSellOrderButtonClick
         )}
         {this.renderSellOrderModal(estate)}
