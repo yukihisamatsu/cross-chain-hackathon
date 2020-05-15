@@ -88,7 +88,7 @@ export class OrderRepository extends BaseRepo {
     from: Address
   ): Promise<CrossTx> => {
     return await this.apiRequest(() => {
-      return this.txApi.txTradeRequestGet(sellOrder.tradeId, from);
+      return this.txApi.getTxTradeRequest(sellOrder.tradeId, from);
     });
   };
 

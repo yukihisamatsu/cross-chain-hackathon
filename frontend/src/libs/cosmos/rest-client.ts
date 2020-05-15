@@ -75,7 +75,7 @@ export class RestClient {
 
     if (!response.ok) {
       if (response.status > 400) {
-        throw Error(`response error. ${response}`);
+        throw Error(`response error. ${response.toString()}`);
       }
     }
     const rawData = await response.text();

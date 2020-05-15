@@ -6,19 +6,22 @@ import * as crypto from "crypto";
 import log from "loglevel";
 import * as secp256k1 from "secp256k1";
 
-import {
-  ChannelInfo,
-  CrossTx,
-  Msg,
-  Op,
-  OpValue,
-  StdSignature
-} from "~src/libs/api";
+import {CrossTx, Msg, StdFee, StdSignature} from "~src/libs/api";
 
 const path = "m/44'/118'/0'/0/0";
 const bech32MainPrefix = "cosmos";
 
 export const COORDINATOR_CHAIN_ID = "coordinatorz";
+
+interface CrossSignedMessage {
+  account_number: string;
+  chain_id: string;
+  fee: StdFee;
+  memo: string;
+  msgs: Array<Msg>;
+  sequence: string;
+  signatures?: Array<StdSignature>;
+}
 
 export const Cosmos = {
   getAddress: (mnemonic: string) => {
@@ -54,152 +57,107 @@ export const Cosmos = {
     return Cosmos.getPublicKey(privateKey).toString("base64");
   },
 
-  signCrossTx: (
-    crossTx: CrossTx,
-    chainId: string,
-    accountNumber: string,
-    sequence: string,
-    mnemonic: string
-  ) => {
+  signCrossTx: ({
+    crossTx,
+    chainId: chain_id,
+    accountNumber: account_number,
+    sequence,
+    mnemonic
+  }: {
+    crossTx: CrossTx;
+    chainId: string;
+    accountNumber: string;
+    sequence: string;
+    mnemonic: string;
+  }) => {
     const {
       value: {msg, fee, memo}
     } = crossTx;
 
     const signedMessage: CrossSignedMessage = {
-      account_number: accountNumber,
-      chain_id: chainId,
-      fee: {...fee},
-      memo: memo,
+      account_number,
+      chain_id,
+      fee,
+      memo,
       msgs: msg,
-      sequence: sequence
+      sequence
     };
-
-    const sortedSignedMessage = JSON.stringify(sortObject(signedMessage));
-    log.debug("sortedSignedMessage", sortedSignedMessage);
-
-    const hash = crypto
-      .createHash("sha256")
-      .update(sortedSignedMessage)
-      .digest("hex");
-    const buf = Buffer.from(hash, "hex");
 
     const privateKey = Cosmos.getPrivateKey(mnemonic);
-    const signObj = secp256k1.sign(buf, privateKey);
-    const signatureBase64 = signObj.signature.toString("base64");
-
-    return {
-      pub_key: Cosmos.getPubKeyBase64(privateKey),
-      signature: signatureBase64
-    };
+    return signTx(
+      (signedMessage as unknown) as JSONValueTypeObject,
+      privateKey
+    );
   }
 } as const;
 
-const sortObject = ({
-  account_number,
-  chain_id,
-  fee: {amount, gas},
-  memo,
-  msgs,
-  sequence,
-  signatures
-}: CrossSignedMessage): CrossSignedMessage => {
+const signTx = (msg: JSONValueTypeObject, privateKey: Buffer) => {
+  const sortedSignedMessage = JSON.stringify(sortObjectByKey(msg));
+  log.debug("sortedSignedMessage", sortedSignedMessage);
+
+  const hash = crypto
+    .createHash("sha256")
+    .update(sortedSignedMessage)
+    .digest("hex");
+  const buf = Buffer.from(hash, "hex");
+
+  const signObj = secp256k1.sign(buf, privateKey);
+  const signatureBase64 = signObj.signature.toString("base64");
+
   return {
-    account_number,
-    chain_id,
-    fee: {
-      amount,
-      gas
-    },
-    memo: memo,
-    msgs: msgs.map(
-      ({
-        type,
-        value: {ChainID, ContractTransactions, Nonce, Sender, TimeoutHeight}
-      }: Msg) => {
-        return {
-          type,
-          value: {
-            ChainID,
-            ContractTransactions: ContractTransactions.map(
-              ({contract, ops, signers, source: {channel, port}}) => {
-                return {
-                  contract,
-                  ops,
-                  signers,
-                  source: {
-                    channel,
-                    port
-                  }
-                };
-              }
-            ),
-            Nonce,
-            Sender,
-            TimeoutHeight
-          }
-        };
-      }
-    ),
-    sequence,
-    signatures:
-      signatures &&
-      signatures.map(({pub_key, signature}) => {
-        return {pub_key, signature};
-      })
+    pub_key: Cosmos.getPubKeyBase64(privateKey),
+    signature: signatureBase64
   };
 };
 
-export interface CrossSignedMessage {
-  account_number: string;
-  chain_id: string;
-  fee: CrossStdTxFee;
-  memo: string;
-  msgs: Array<CrossStdMsg>;
-  sequence: string;
-  signatures?: Array<StdSignature>;
+type JSONValueType =
+  | string
+  | number
+  | boolean
+  | JSONValueTypeObject
+  | JSONValueTypeArray
+  | Function;
+
+type JSONValueTypeArray = Array<JSONValueType>;
+interface JSONValueTypeObject {
+  [key: string]: JSONValueType;
 }
 
-export interface CrossStdTxFee {
-  amount: Array<CrossStdCoin>;
-  gas: string;
-}
+export const sortObjectByKey = (jsonValue: JSONValueTypeObject) => {
+  function evil(fn: string) {
+    return new Function("return " + fn)();
+  }
 
-export interface CrossStdCoin {
-  amount: number;
-  denom?: string;
-}
+  const sort = (jsonValue: JSONValueTypeObject): JSONValueTypeObject => {
+    const tmp: JSONValueTypeObject = {};
+    Object.keys(jsonValue)
+      .sort()
+      .forEach(k => {
+        const v = jsonValue[k];
+        if (isArray(v)) {
+          const p: JSONValueTypeArray = [];
+          v.forEach((item: JSONValueType) => {
+            if (item != null && isObject(item)) {
+              p.push(sort(item));
+            } else {
+              p.push(item);
+            }
+          });
+          tmp[k] = p;
+        } else if (v != null && isObject(v)) {
+          tmp[k] = sort(v);
+        } else if (v != null && isFunction(v)) {
+          tmp[k] = evil(v.toString());
+        } else {
+          tmp[k] = String(v).toString();
+        }
+      });
+    return tmp;
+  };
+  return sort(jsonValue);
+};
 
-export interface CrossStdMsg {
-  value: CrossStdMsgInitiate;
-  type: string;
-}
-
-export interface CrossStdMsgInitiate {
-  ChainID: string;
-  ContractTransactions: Array<CrossStdMsgContractTransaction>;
-  Nonce: string;
-  Sender: string;
-  TimeoutHeight: string;
-}
-
-export interface CrossStdMsgContractTransaction {
-  contract: string;
-  ops: Array<CrossStdMsgOp>;
-  signers: Array<string>;
-  source: CrossStdMsgChannelInfo;
-}
-
-export interface CrossStdMsgOp extends Op {
-  type: string;
-  value: CrossStdMsgOpValue;
-}
-
-export interface CrossStdMsgOpValue extends OpValue {
-  K: string;
-  V?: string;
-}
-
-export interface CrossStdMsgChannelInfo extends ChannelInfo {
-  channel: string;
-  port: string;
-}
+const isArray = (a: JSONValueType): a is JSONValueTypeArray => Array.isArray(a);
+const isObject = (a: JSONValueType): a is JSONValueTypeObject =>
+  typeof a === "object";
+const isFunction = (a: JSONValueType): a is Function => typeof a === "function";

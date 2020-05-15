@@ -206,13 +206,13 @@ export class OwnedDetail extends React.Component<Props, State> {
         const {accountNumber, sequence} = await userRepo.getAuthAccount(
           address
         );
-        const sig = Cosmos.signCrossTx(
+        const sig = Cosmos.signCrossTx({
           crossTx,
-          COORDINATOR_CHAIN_ID,
+          chainId: COORDINATOR_CHAIN_ID,
           accountNumber,
           sequence,
           mnemonic
-        );
+        });
         log.debug(sig);
 
         crossTx.value.signatures?.unshift(sig);
