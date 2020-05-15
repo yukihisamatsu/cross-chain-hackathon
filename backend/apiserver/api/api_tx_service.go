@@ -11,7 +11,6 @@ package api
 
 import (
 	"encoding/binary"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -31,14 +30,94 @@ func NewTxApiService(config Config) TxApiServicer {
 	return &TxApiService{config}
 }
 
-// TODO impl or remove
-// TxDividendGet - get a CrossTx to be signed
-func (s *TxApiService) TxDividendGet(estateId string, perShare int64) (interface{}, error) {
-	return nil, fmt.Errorf("TODO not implemented")
+// GetDividend - get a CrossTx to be signed
+func (s *TxApiService) GetTxDividend(estateId string, perShare int64) (interface{}, error) {
+	tokenId, err := stringToUint64(estateId)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	db, err := rdb.InitDB()
+	if err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBConnect
+	}
+	q := `SELECT id FROM user`
+	var addrs []string
+	if err := db.Select(&addrs, q); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+	q = `SELECT issuedBy FROM estate WHERE tokenId = ?`
+	var issuer string
+	if err := db.Get(&issuer, q, estateId); err != nil {
+		log.Println(err)
+		return nil, ErrorFailedDBGet
+	}
+
+	cross := &Cross{}
+
+	/* build a cross tx */
+	indexResult, err := cross.SimulateContractCall(
+		issuer,
+		genDividendIndexOfCallInfo(s.config, tokenId),
+		s.config.Node[KEY_SECURITY],
+	)
+	if err != nil {
+		return nil, err
+	}
+	index := binary.BigEndian.Uint64(indexResult.Result.ReturnValue)
+	pay, err := cross.SimulateContractCall(
+		issuer,
+		genPayDividendCallInfo(s.config, tokenId, index),
+		s.config.Node[KEY_SECURITY],
+	)
+	if err != nil {
+		return nil, err
+	}
+	ccrs := []ContractCallResult{*pay}
+	cis := []ChannelInfo{s.config.Path[KEY_CO_SECURITY]}
+	for _, addr := range addrs {
+		dividendResult, err := cross.SimulateContractCall(
+			issuer,
+			genDividendOfCallInfo(s.config, addr, tokenId),
+			s.config.Node[KEY_SECURITY],
+		)
+		if err != nil {
+			return nil, err
+		}
+		dividend := binary.BigEndian.Uint64(dividendResult.Result.ReturnValue)
+		log.Printf("dividend of %s: %d", addr, dividend)
+		if dividend == 0 {
+			continue
+		}
+		transfer, err := cross.SimulateContractCall(
+			issuer,
+			genCoinTransferCallInfo(s.config, addr, dividend),
+			s.config.Node[KEY_COIN],
+		)
+		if err != nil {
+			return nil, err
+		}
+		ccrs = append(ccrs, *transfer)
+		cis = append(cis, s.config.Path[KEY_CO_COIN])
+	}
+	crossTx, err := cross.GenerateMsgInitiate(
+		issuer,
+		cis,
+		ccrs,
+		s.config.Node[KEY_COORDINATOR],
+	)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &crossTx, nil
 }
 
-// TxTradeRequestGet - get a CrossTx to be signed
-func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{}, error) {
+// GetTxTradeRequest - get a CrossTx to be signed
+func (s *TxApiService) GetTxTradeRequest(tradeId int64, from string) (interface{}, error) {
 	// first, get TradeRequest info from db.
 	db, err := rdb.InitDB()
 	if err != nil {
@@ -72,6 +151,7 @@ func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{
 		log.Println(err)
 		return nil, err
 	}
+
 	simSecurity, err := cross.SimulateContractCall(
 		t.Seller,
 		genEstateTransferCallInfo(s.config, tokenId, from, uint64(t.Amount)),
@@ -81,7 +161,6 @@ func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{
 		log.Println(err)
 		return nil, err
 	}
-
 	// sender is the seller
 	crossTx, err := cross.GenerateMsgInitiate(
 		t.Seller,
@@ -96,6 +175,16 @@ func (s *TxApiService) TxTradeRequestGet(tradeId int64, from string) (interface{
 	return &crossTx, nil
 }
 
+func genDividendIndexOfCallInfo(c Config, tokenId uint64) types.ContractCallInfo {
+	return types.ContractCallInfo{
+		c.Contract[KEY_SECURITY].Id,
+		"dividendIndexOf",
+		[][]byte{
+			uint64ToByte(tokenId),
+		},
+	}
+}
+
 func genCoinTransferCallInfo(c Config, to string, amount uint64) types.ContractCallInfo {
 	return types.ContractCallInfo{
 		c.Contract[KEY_COIN].Id,
@@ -107,14 +196,36 @@ func genCoinTransferCallInfo(c Config, to string, amount uint64) types.ContractC
 	}
 }
 
-func genEstateTransferCallInfo(c Config, tokenId uint64, to string, amount uint64) types.ContractCallInfo {
+func genEstateTransferCallInfo(c Config, tokenId uint64, addr string, amount uint64) types.ContractCallInfo {
 	return types.ContractCallInfo{
 		c.Contract[KEY_SECURITY].Id,
 		"transfer",
 		[][]byte{
 			uint64ToByte(tokenId),
-			[]byte(to),
+			[]byte(addr),
 			uint64ToByte(amount),
+		},
+	}
+}
+
+func genDividendOfCallInfo(c Config, addr string, tokenId uint64) types.ContractCallInfo {
+	return types.ContractCallInfo{
+		c.Contract[KEY_SECURITY].Id,
+		"dividendOf",
+		[][]byte{
+			[]byte(addr),
+			uint64ToByte(tokenId),
+		},
+	}
+}
+
+func genPayDividendCallInfo(c Config, tokenId, index uint64) types.ContractCallInfo {
+	return types.ContractCallInfo{
+		c.Contract[KEY_SECURITY].Id,
+		"payDividend",
+		[][]byte{
+			uint64ToByte(tokenId),
+			uint64ToByte(index),
 		},
 	}
 }
@@ -128,6 +239,5 @@ func stringToUint64(str string) (uint64, error) {
 func uint64ToByte(v uint64) []byte {
 	var bz [8]byte
 	binary.BigEndian.PutUint64(bz[:], v)
-	//str := base64.StdEncoding.EncodeToString(bz[:])
 	return bz[:]
 }

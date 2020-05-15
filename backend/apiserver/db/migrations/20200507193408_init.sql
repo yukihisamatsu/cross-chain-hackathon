@@ -32,7 +32,6 @@ CREATE TABLE trade(
     FOREIGN KEY(buyer) references user(id),
     FOREIGN KEY(seller) references user(id)
 );
-
 CREATE TRIGGER trigger_trade_update_at AFTER UPDATE ON trade 
 BEGIN
     UPDATE trade SET updatedAt = DATETIME(CURRENT_TIMESTAMP) WHERE rowid = OLD.rowid;
@@ -48,16 +47,30 @@ CREATE TABLE trade_request(
     FOREIGN KEY(tradeId) references trade(id),
     FOREIGN KEY("from") references user(id)
 );
-
 CREATE TRIGGER trigger_request_update_at AFTER UPDATE ON trade_request 
 BEGIN
     UPDATE trade_request SET updatedAt = datetime(CURRENT_TIMESTAMP) WHERE rowid = OLD.rowid;
+END;
+
+CREATE TABLE dividend(
+    id INTEGER PRIMARY KEY,
+    estateId TEXT NOT NULL,
+    perShare INTEGER NOT NULL,
+    crossTx BLOB NOT NULL,
+    status INTEGER NOT NULL DEFAULT 0,
+    updatedAt DATETIME NOT NULL DEFAULT (DATETIME(CURRENT_TIMESTAMP)),
+    FOREIGN KEY(estateId) references estate(tokenId)
+);
+CREATE TRIGGER trigger_dividend_update_at AFTER UPDATE ON dividend 
+BEGIN
+    UPDATE dividend SET updatedAt = datetime(CURRENT_TIMESTAMP) WHERE rowid = OLD.rowid;
 END;
 
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
+DROP TABLE dividend;
 DROP TABLE trade_request;
 DROP TABLE trade;
 DROP TABLE estate;
