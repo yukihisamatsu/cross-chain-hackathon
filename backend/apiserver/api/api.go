@@ -13,97 +13,95 @@ import (
 	"net/http"
 )
 
-
 // DividendApiRouter defines the required methods for binding the api requests to a responses for the DividendApi
-// The DividendApiRouter implementation should parse necessary information from the http request, 
+// The DividendApiRouter implementation should parse necessary information from the http request,
 // pass the data to a DividendApiServicer to perform the required actions, then write the service results to the http response.
-type DividendApiRouter interface { 
+type DividendApiRouter interface {
 	GetDividendsByEstateId(http.ResponseWriter, *http.Request)
 }
+
 // EstateApiRouter defines the required methods for binding the api requests to a responses for the EstateApi
-// The EstateApiRouter implementation should parse necessary information from the http request, 
+// The EstateApiRouter implementation should parse necessary information from the http request,
 // pass the data to a EstateApiServicer to perform the required actions, then write the service results to the http response.
-type EstateApiRouter interface { 
+type EstateApiRouter interface {
 	GetEstateById(http.ResponseWriter, *http.Request)
 	GetEstates(http.ResponseWriter, *http.Request)
 }
+
 // TradeApiRouter defines the required methods for binding the api requests to a responses for the TradeApi
-// The TradeApiRouter implementation should parse necessary information from the http request, 
+// The TradeApiRouter implementation should parse necessary information from the http request,
 // pass the data to a TradeApiServicer to perform the required actions, then write the service results to the http response.
-type TradeApiRouter interface { 
+type TradeApiRouter interface {
 	DeleteTrade(http.ResponseWriter, *http.Request)
 	DeleteTradeRequest(http.ResponseWriter, *http.Request)
 	GetTradeById(http.ResponseWriter, *http.Request)
-	GetTradeRequest(http.ResponseWriter, *http.Request)
+	GetTradeRequestById(http.ResponseWriter, *http.Request)
 	GetTradeRequestsByUserId(http.ResponseWriter, *http.Request)
 	PostTrade(http.ResponseWriter, *http.Request)
 	PostTradeRequest(http.ResponseWriter, *http.Request)
 }
+
 // TxApiRouter defines the required methods for binding the api requests to a responses for the TxApi
-// The TxApiRouter implementation should parse necessary information from the http request, 
+// The TxApiRouter implementation should parse necessary information from the http request,
 // pass the data to a TxApiServicer to perform the required actions, then write the service results to the http response.
-type TxApiRouter interface { 
+type TxApiRouter interface {
 	GetTxDividend(http.ResponseWriter, *http.Request)
 	GetTxTradeRequest(http.ResponseWriter, *http.Request)
 }
+
 // UserApiRouter defines the required methods for binding the api requests to a responses for the UserApi
-// The UserApiRouter implementation should parse necessary information from the http request, 
+// The UserApiRouter implementation should parse necessary information from the http request,
 // pass the data to a UserApiServicer to perform the required actions, then write the service results to the http response.
-type UserApiRouter interface { 
+type UserApiRouter interface {
 	GetUser(http.ResponseWriter, *http.Request)
 	GetUsers(http.ResponseWriter, *http.Request)
 }
 
-
 // DividendApiServicer defines the api actions for the DividendApi service
-// This interface intended to stay up to date with the openapi yaml used to generate it, 
-// while the service implementation can ignored with the .openapi-generator-ignore file 
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
-type DividendApiServicer interface { 
+type DividendApiServicer interface {
 	GetDividendsByEstateId(string) (interface{}, error)
 }
 
-
 // EstateApiServicer defines the api actions for the EstateApi service
-// This interface intended to stay up to date with the openapi yaml used to generate it, 
-// while the service implementation can ignored with the .openapi-generator-ignore file 
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
-type EstateApiServicer interface { 
+type EstateApiServicer interface {
 	GetEstateById(string) (interface{}, error)
 	GetEstates() (interface{}, error)
 }
 
-
 // TradeApiServicer defines the api actions for the TradeApi service
-// This interface intended to stay up to date with the openapi yaml used to generate it, 
-// while the service implementation can ignored with the .openapi-generator-ignore file 
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
-type TradeApiServicer interface { 
+type TradeApiServicer interface {
 	DeleteTrade(int64) (interface{}, error)
 	DeleteTradeRequest(int64) (interface{}, error)
 	GetTradeById(int64) (interface{}, error)
-	GetTradeRequest(int64) (interface{}, error)
+	GetTradeRequestById(int64) (interface{}, error)
 	GetTradeRequestsByUserId(string) (interface{}, error)
 	PostTrade(Trade) (interface{}, error)
 	PostTradeRequest(PostTradeRequestInput) (interface{}, error)
 }
 
-
 // TxApiServicer defines the api actions for the TxApi service
-// This interface intended to stay up to date with the openapi yaml used to generate it, 
-// while the service implementation can ignored with the .openapi-generator-ignore file 
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
-type TxApiServicer interface { 
+type TxApiServicer interface {
 	GetTxDividend(string, int64) (interface{}, error)
 	GetTxTradeRequest(int64, string) (interface{}, error)
 }
 
-
 // UserApiServicer defines the api actions for the UserApi service
-// This interface intended to stay up to date with the openapi yaml used to generate it, 
-// while the service implementation can ignored with the .openapi-generator-ignore file 
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
-type UserApiServicer interface { 
+type UserApiServicer interface {
 	GetUser(string) (interface{}, error)
 	GetUsers() (interface{}, error)
 }
