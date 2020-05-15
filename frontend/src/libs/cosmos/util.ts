@@ -1,4 +1,4 @@
-import {encodeByteSlice} from "@tendermint/amino-js";
+import {encodePubKeySecp256k1} from "@tendermint/amino-js";
 import bech32 from "bech32";
 import * as bip32 from "bip32";
 import * as bip39 from "bip39";
@@ -39,17 +39,19 @@ export const Cosmos = {
     return child.privateKey;
   },
 
-  getPubKeyBase64: (privateKey: Buffer): string => {
-    const pubKeyByte: Buffer = secp256k1.publicKeyCreate(privateKey, true);
-    const pubBuf = Buffer.from(encodeByteSlice(pubKeyByte));
-    const registeredPrefix: Uint8Array = Buffer.from(
-      Uint8Array.of(235, 90, 233, 135)
+  getPublicKey: (privateKey: Buffer): Buffer => {
+    const publicKey = secp256k1.publicKeyCreate(privateKey, true);
+    const json = JSON.stringify({
+      type: "tendermint/PubKeySecp256k1",
+      value: publicKey.toString("base64")
+    });
+    return Buffer.from(
+      encodePubKeySecp256k1(Buffer.from(json, "utf-8"), false)
     );
-    const prefixedBuf = Buffer.from([
-      ...registeredPrefix.slice(),
-      ...pubBuf.slice()
-    ]);
-    return prefixedBuf.toString("base64");
+  },
+
+  getPubKeyBase64: (privateKey: Buffer): string => {
+    return Cosmos.getPublicKey(privateKey).toString("base64");
   },
 
   signCrossTx: (
@@ -82,7 +84,7 @@ export const Cosmos = {
     const buf = Buffer.from(hash, "hex");
 
     const privateKey = Cosmos.getPrivateKey(mnemonic);
-    const signObj = secp256k1.sign(buf, Cosmos.getPrivateKey(mnemonic));
+    const signObj = secp256k1.sign(buf, privateKey);
     const signatureBase64 = signObj.signature.toString("base64");
 
     return {

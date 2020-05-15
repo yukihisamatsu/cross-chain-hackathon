@@ -1,3 +1,6 @@
+import {decodePubKeySecp256k1} from "@tendermint/amino-js";
+import * as secp256k1 from "secp256k1";
+
 import {CrossTx} from "~src/libs/api";
 import {COORDINATOR_CHAIN_ID, Cosmos} from "~src/libs/cosmos/util";
 
@@ -6,6 +9,22 @@ describe("cosmos lib", () => {
     "vague domain finger zero service door father scheme immense gravity warfare kiwi park glimpse real twist this crunch loud hello throw camera era stool";
   // const bob =
   //   "basic rotate junk scorpion orient enlist inspire tooth eight hunt loyal rain pitch chaos cart brisk fringe program zero blood electric apart lady walnut";
+
+  test("encode pubkey", () => {
+    const privateKey = Cosmos.getPrivateKey(alice);
+    const publicKeyBase64 = Cosmos.getPubKeyBase64(privateKey);
+    expect(publicKeyBase64).toEqual(
+      "61rphyEDo1Q6phBwqF0x5eqp8hJyzsCyVpee81V2r1KlP+kTDrQ="
+    );
+
+    const publicKeyBuf = Cosmos.getPublicKey(privateKey);
+    const decoded = decodePubKeySecp256k1(publicKeyBuf, false);
+    const decodedJson: {type: string; value: string} = JSON.parse(
+      Buffer.from(decoded).toString("utf-8")
+    );
+    const publicKey = secp256k1.publicKeyCreate(privateKey, true);
+    expect(decodedJson.value).toEqual(publicKey.toString("base64"));
+  });
 
   test("get getPubKeyBase64 from mnemonic phrase", () => {
     const crossTx: CrossTx = JSON.parse(noSigJson);
