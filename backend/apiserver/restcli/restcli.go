@@ -15,7 +15,6 @@ const (
 )
 
 func Post(url string, bodyJSON []byte) ([]byte, error) {
-	log.Printf("request body: %s\n", string(bodyJSON))
 	return request(METHOD_POST, url, bytes.NewBuffer(bodyJSON))
 }
 
@@ -38,11 +37,11 @@ func request(method, url string, reqBody io.Reader) ([]byte, error) {
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
-	log.Printf("response body: %s\n", string(body))
 	if err != nil {
 		return nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("response body: %s\n", string(body))
 		return nil, fmt.Errorf("response http status != 200")
 	}
 	return body, nil

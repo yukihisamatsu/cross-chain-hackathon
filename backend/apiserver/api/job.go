@@ -93,6 +93,10 @@ func (j *Job) update(ctx context.Context) {
 			tr := trs[i]
 			// for comparing
 			tx.Tx.Value.Signatures = []StdSignature{}
+			tr.CrossTx.Value.Signatures = []StdSignature{}
+			jtx, _ := json.Marshal(tx.Tx)
+			jtr, _ := json.Marshal(tr.CrossTx)
+			fmt.Printf("tx\n%s\ndb\n%s\n", jtx, jtr)
 			if cmp.Equal(tx.Tx, tr.CrossTx, cmpOpt) {
 				/* STEP4: check the coordinator status with tx.Data (= TxID of MsgInitiate) */
 				status, err := getCoordinatorStatus(url, tx.Data)
