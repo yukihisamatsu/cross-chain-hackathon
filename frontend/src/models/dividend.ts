@@ -63,6 +63,21 @@ export class DividendHistory {
 }
 
 export class DividendOwner {
-  owner: Address;
+  name: string;
+  address: Address;
   balance: number;
+
+  constructor({
+    name,
+    address,
+    balance
+  }: {
+    name: Address;
+    address: string;
+    balance: number;
+  }) {
+    this.name = name;
+    this.address = address;
+    this.balance = balance;
+  }
 }

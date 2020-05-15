@@ -1,3 +1,4 @@
+import {message} from "antd";
 import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
@@ -50,25 +51,54 @@ export class IssueDetail extends React.Component<Props, State> {
     };
   }
 
-  componentDidMount() {
+  async componentDidUpdate(
+    prevProps: Readonly<Props>,
+    prevStates: Readonly<State>
+  ) {
+    if (prevProps.user.address !== this.props.user.address) {
+      await this.getEstate();
+    }
+
+    if (
+      prevStates.estate.tokenId !== this.state.estate.tokenId ||
+      prevStates.estate.histories.length !==
+        this.state.estate.histories.length ||
+      prevStates.estate.owners.length !== this.state.estate.owners.length ||
+      prevStates.estate.issuerDividend.length !==
+        this.state.estate.issuerDividend.length
+    ) {
+      await this.getEstate();
+    }
+  }
+
+  async componentDidMount() {
+    await this.getEstate();
+  }
+
+  async getEstate() {
     const {
+      repos: {estateRepo},
+      user: {address},
       setHeaderText,
-      // match: {
-      //   params: {id}
-      // },
+      match: {
+        params: {id}
+      },
       history
     } = this.props;
-    // TODO get Estate Request & setState({estate)
-    const estate = IssuerEstate.default();
-    if (!estate) {
+
+    let estate: IssuerEstate;
+
+    try {
+      estate = await estateRepo.getIssuerEstate(id, address);
+      setHeaderText(estate.name);
+      this.setState({
+        estate
+      });
+    } catch (e) {
+      message.error(e);
       history.push(PATHS.MARKET);
       return;
     }
-    setHeaderText(estate.name);
-    this.setState({
-      estate,
-      registeredQuantity: 10000
-    });
   }
 
   handleDistributeDividendButtonClick = (history: DividendHistory) => () => {
@@ -177,7 +207,7 @@ export class IssueDetail extends React.Component<Props, State> {
     return (
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
-        {renderIssueDividendOwnerTable(estate.issuerDividend)}
+        {renderIssueDividendOwnerTable(estate.owners)}
         {renderDividendRegisterForm(
           registeredPerUnit,
           registeredQuantity,
