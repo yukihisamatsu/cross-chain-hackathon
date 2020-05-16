@@ -1,4 +1,4 @@
-import {DividendApi, EstateApi} from "~src/libs/api";
+import {CrossTx, DividendApi, EstateApi, StdTx, TxApi} from "~src/libs/api";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {
   CrossContractCallResponse,
@@ -11,42 +11,56 @@ import {Address} from "~src/types";
 export class DividendRepository extends BaseRepo {
   estateApi: EstateApi;
   dividendApi: DividendApi;
+  txApi: TxApi;
   estateContract: EstateContract;
+  coordinatorRestClient: RestClient;
   securityRestClient: RestClient;
 
   constructor({
     estateApi,
     dividendApi,
+    txApi,
     estateContract,
+    coordinatorRestClient,
     securityRestClient
   }: {
     estateApi: EstateApi;
     dividendApi: DividendApi;
+    txApi: TxApi;
     estateContract: EstateContract;
+    coordinatorRestClient: RestClient;
     securityRestClient: RestClient;
   }) {
     super();
     this.estateApi = estateApi;
     this.dividendApi = dividendApi;
+    this.txApi = txApi;
     this.estateContract = estateContract;
+    this.coordinatorRestClient = coordinatorRestClient;
     this.securityRestClient = securityRestClient;
   }
 
   static create({
     estateApi,
     dividendApi,
+    txApi,
     estateContract,
+    coordinatorRestClient,
     securityRestClient
   }: {
     estateApi: EstateApi;
     dividendApi: DividendApi;
+    txApi: TxApi;
     estateContract: EstateContract;
+    coordinatorRestClient: RestClient;
     securityRestClient: RestClient;
   }): DividendRepository {
     return new DividendRepository({
       estateApi,
       dividendApi,
+      txApi,
       estateContract,
+      coordinatorRestClient,
       securityRestClient
     });
   }
@@ -99,17 +113,32 @@ export class DividendRepository extends BaseRepo {
     });
   }
 
-  broadcastContractCallTx = async (
+  getDividendDistributedList(tokenId: string) {
+    return this.securityRestClient.txs({
+      "DividendPaid.tokenID": tokenId
+    });
+  }
+
+  getDistributedDividendTx = async (
+    tokenId: string,
+    perShare: number
+  ): Promise<CrossTx> => {
+    return await this.apiRequest(() => {
+      return this.txApi.getTxDividend(tokenId, perShare);
+    });
+  };
+
+  broadcastRegisterTx = async (
     stdTx: ContractCallStdTx,
     mode: "block" | "sync" | "async" = "block"
   ) => {
-    const response = await this.securityRestClient.txsPost({
-      tx: stdTx,
-      mode
-    });
-    if (response.error || response.code || response.codespace) {
-      throw new Error(JSON.stringify(response));
-    }
-    return response;
+    return this.broadcastTx(this.securityRestClient, stdTx, mode);
+  };
+
+  broadcastDistributeTx = async (
+    stdTx: StdTx,
+    mode: "block" | "sync" | "async" = "block"
+  ) => {
+    return this.broadcastTx(this.coordinatorRestClient, stdTx, mode);
   };
 }

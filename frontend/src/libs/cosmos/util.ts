@@ -97,13 +97,11 @@ export const Cosmos = {
 
   signCrossTx: ({
     crossTx,
-    chainId: chain_id,
     accountNumber: account_number,
     sequence,
     mnemonic
   }: {
     crossTx: CrossTx;
-    chainId: string;
     accountNumber: string;
     sequence: string;
     mnemonic: string;
@@ -114,7 +112,7 @@ export const Cosmos = {
 
     const signedMessage: CrossSignedMessage = {
       account_number,
-      chain_id,
+      chain_id: COORDINATOR_CHAIN_ID,
       fee,
       memo,
       msgs,

@@ -14,7 +14,7 @@ export const OwnedEstateStatusTagColorMap: {
   [ESTATE_STATUS.BUYING]: "blue"
 };
 
-export const IssueDividendStatusTagColorMap: {[key: string]: string} = {
+export const DividendHistoryStatusTagColorMap: {[key: string]: string} = {
   [DIVIDEND_HISTORY_STATUS.REGISTERED]: "orange",
   [DIVIDEND_HISTORY_STATUS.ONGOING]: "blue",
   [DIVIDEND_HISTORY_STATUS.DISTRIBUTED]: "green"

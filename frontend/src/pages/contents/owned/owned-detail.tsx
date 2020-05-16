@@ -16,7 +16,7 @@ import {OwnedSellOrderModal} from "~pages/contents/owned/parts/owned-sell-order-
 import {EstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
-import {COORDINATOR_CHAIN_ID, Cosmos} from "~src/libs/cosmos/util";
+import {Cosmos} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
@@ -207,9 +207,9 @@ export class OwnedDetail extends React.Component<Props, State> {
           accountNumber,
           sequence
         } = await userRepo.getAuthAccountCoordinator(address);
+
         const sig = Cosmos.signCrossTx({
           crossTx,
-          chainId: COORDINATOR_CHAIN_ID,
           accountNumber,
           sequence,
           mnemonic
@@ -218,7 +218,7 @@ export class OwnedDetail extends React.Component<Props, State> {
 
         crossTx.value.signatures?.unshift(sig);
 
-        const response = await orderRepo.broadcastCrossTx(crossTx.value);
+        const response = await orderRepo.broadcastOrderTx(crossTx.value);
         log.debug(response);
 
         const newEstate = await estateRepo.getOwnedEstate(

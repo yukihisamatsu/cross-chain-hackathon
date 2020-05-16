@@ -1,5 +1,6 @@
 import {message} from "antd";
 import log from "loglevel";
+import {DateTime} from "luxon";
 import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
@@ -76,7 +77,22 @@ export class IssueDetail extends React.Component<Props, State> {
   }
 
   async componentDidMount() {
+    const {
+      repos: {dividendRepo},
+      user: {address}
+    } = this.props;
+
     await this.getEstate();
+
+    const {
+      estate: {tokenId}
+    } = this.state;
+
+    const dividend = await dividendRepo.getDividend(address, tokenId);
+    log.debug("dividend", dividend.result.return_value.toNumber());
+
+    const dividendIndex = await dividendRepo.getDividendIndex(address, tokenId);
+    log.debug("dividendIndex", dividendIndex.result.return_value.toNumber());
   }
 
   async getEstate() {
@@ -109,47 +125,6 @@ export class IssueDetail extends React.Component<Props, State> {
     }
   }
 
-  handleDistributeDividendButtonClick = (history: DividendHistory) => () => {
-    this.setState({
-      selectedHistory: history,
-      distributedModalVisible: true
-    });
-  };
-
-  renderDistributeDividendModal = () => {
-    const {
-      selectedHistory,
-      distributedModalVisible,
-      distributedModalConfirmLoading
-    } = this.state;
-
-    const resetState = () =>
-      this.setState({
-        selectedHistory: DividendHistory.default(),
-        distributedModalVisible: false,
-        distributedModalConfirmLoading: false
-      });
-
-    return (
-      <IssueDividendDistributeModal
-        history={selectedHistory}
-        visible={distributedModalVisible}
-        confirmLoading={distributedModalConfirmLoading}
-        onOK={() => {
-          this.setState({distributedModalConfirmLoading: true}, () => {
-            // TODO sign & broadcastCrossTx
-            setTimeout(() => {
-              resetState();
-            }, 2000);
-          });
-        }}
-        onCancel={() => {
-          resetState();
-        }}
-      />
-    );
-  };
-
   handleRegisterDividendButtonClick = () => {
     this.setState({
       registerModalVisible: true
@@ -175,31 +150,6 @@ export class IssueDetail extends React.Component<Props, State> {
     const {estate, registeredPerUnit} = this.state;
 
     try {
-      const simulated = await dividendRepo.simulateRegisterDividend(
-        address,
-        estate.tokenId,
-        registeredPerUnit
-      );
-      log.debug("simulated", simulated);
-
-      const registeredDividend = await dividendRepo.getDividend(
-        address,
-        estate.tokenId
-      );
-      log.debug(
-        "registeredDividend",
-        registeredDividend.result.return_value.toNumber()
-      );
-
-      const registeredDividendIndex = await dividendRepo.getDividendIndex(
-        address,
-        estate.tokenId
-      );
-      log.debug(
-        "registeredDividendIndex",
-        registeredDividendIndex.result.return_value.toNumber()
-      );
-
       const contractCallParams = dividendRepo.getRegisterDividendParams(
         address,
         estate.tokenId,
@@ -223,6 +173,8 @@ export class IssueDetail extends React.Component<Props, State> {
       );
       const fee = {amount: [], gas: "200000"};
       const memo = "";
+      log.debug("accountNumber", accountNumber);
+      log.debug("sequence", sequence);
 
       const sig = Cosmos.signContractCallTx({
         contractCallTxs: [msg],
@@ -233,9 +185,8 @@ export class IssueDetail extends React.Component<Props, State> {
         memo,
         mnemonic
       });
-      log.debug(sig);
 
-      const response = await dividendRepo.broadcastContractCallTx({
+      const response = await dividendRepo.broadcastRegisterTx({
         msg: [msg],
         memo,
         fee,
@@ -287,6 +238,88 @@ export class IssueDetail extends React.Component<Props, State> {
     );
   };
 
+  handleDistributeDividendButtonClick = (history: DividendHistory) => () => {
+    this.setState({
+      selectedHistory: history,
+      distributedModalVisible: true
+    });
+  };
+
+  handleDistributeDividendModalOk = (resetState: () => void) => async () => {
+    const {
+      user: {address, mnemonic},
+      repos: {dividendRepo, userRepo}
+    } = this.props;
+
+    const {estate, selectedHistory} = this.state;
+
+    try {
+      const crossTx = await dividendRepo.getDistributedDividendTx(
+        estate.tokenId,
+        selectedHistory.perUnit
+      );
+
+      const nonce = DateTime.utc().toMillis();
+      crossTx.value.msg[0].value.Nonce = nonce.toString(10);
+
+      const {
+        accountNumber,
+        sequence
+      } = await userRepo.getAuthAccountCoordinator(address);
+
+      const sig = Cosmos.signCrossTx({
+        crossTx,
+        accountNumber,
+        sequence,
+        mnemonic
+      });
+      log.debug("sig", sig);
+
+      crossTx.value.signatures = [sig];
+
+      log.debug("crossTx with sign", crossTx);
+      const response = await dividendRepo.broadcastDistributeTx(crossTx.value);
+      log.debug(response);
+    } catch (e) {
+      log.error(e);
+      message.error(e);
+    } finally {
+      resetState();
+    }
+  };
+
+  renderDistributeDividendModal = () => {
+    const {
+      selectedHistory,
+      distributedModalVisible,
+      distributedModalConfirmLoading
+    } = this.state;
+
+    const resetState = () =>
+      this.setState({
+        selectedHistory: DividendHistory.default(),
+        distributedModalVisible: false,
+        distributedModalConfirmLoading: false
+      });
+
+    return (
+      <IssueDividendDistributeModal
+        history={selectedHistory}
+        visible={distributedModalVisible}
+        confirmLoading={distributedModalConfirmLoading}
+        onOK={() => {
+          this.setState(
+            {distributedModalConfirmLoading: true},
+            this.handleDistributeDividendModalOk(resetState)
+          );
+        }}
+        onCancel={() => {
+          resetState();
+        }}
+      />
+    );
+  };
+
   render() {
     const {user} = this.props;
     const {
@@ -312,8 +345,8 @@ export class IssueDetail extends React.Component<Props, State> {
           estate.histories,
           this.handleDistributeDividendButtonClick
         )}
-        {this.renderDistributeDividendModal()}
         {this.renderRegisterDividendModal()}
+        {this.renderDistributeDividendModal()}
       </EstateDetailWrap>
     );
   }

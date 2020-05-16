@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import log from "loglevel";
 
 import {
   DIVIDEND_HISTORY_STATUS,
@@ -267,6 +268,14 @@ export class EstateRepository extends BaseRepo {
       })
     ).txs;
 
+    const distributedTxs: GetTxsResponseTx[] = (
+      await this.securityRestClient.txs({
+        "DividendPaid.tokenID": estate.tokenId
+      })
+    ).txs;
+
+    log.debug("distributedTxs", distributedTxs);
+
     estate.histories = registeredTxs.flatMap(tx => {
       const events = tx.logs
         .map(log => {
@@ -278,7 +287,9 @@ export class EstateRepository extends BaseRepo {
           }
           return {
             ...ret,
-            height: tx.height
+            height: tx.height,
+            timeStamp: tx.timestamp,
+            txHash: tx.txhash
           };
         })
         .filter(event => !!event);
@@ -291,7 +302,10 @@ export class EstateRepository extends BaseRepo {
           index: event?.attributes[1]?.value
             ? Number(event.attributes[1].value)
             : 0,
-          height: event ? Number(event.height) : 0,
+          registeredHeight: event ? Number(event.height) : 0,
+          registeredTimeStamp: event ? event.timeStamp : "",
+          registeredTxHash: event?.txHash ?? "",
+          perUnit: perShare,
           total: new BN(sumBalance).muln(perShare).toNumber(),
           status: DIVIDEND_HISTORY_STATUS.REGISTERED
         });

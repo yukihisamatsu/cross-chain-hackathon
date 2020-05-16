@@ -9,23 +9,35 @@ export const DIVIDEND_HISTORY_STATUS = {
 export type DividendHistoryStatusType = Unbox<typeof DIVIDEND_HISTORY_STATUS>;
 export class DividendHistory {
   index: number;
-  height: number;
+  registeredHeight: number;
+  registeredTimeStamp: string;
+  registeredTxHash: string;
+  perUnit: number;
   total: number;
   status: DividendHistoryStatusType;
 
   constructor({
     index,
-    height,
+    registeredHeight,
+    registeredTimeStamp,
+    registeredTxHash,
+    perUnit,
     total,
     status
   }: {
     index: number;
-    height: number;
+    registeredHeight: number;
+    registeredTimeStamp: string;
+    registeredTxHash: string;
+    perUnit: number;
     total: number;
     status: DividendHistoryStatusType;
   }) {
     this.index = index;
-    this.height = height;
+    this.registeredHeight = registeredHeight;
+    this.registeredTimeStamp = registeredTimeStamp;
+    this.registeredTxHash = registeredTxHash;
+    this.perUnit = perUnit;
     this.total = total;
     this.status = status;
   }
@@ -33,7 +45,10 @@ export class DividendHistory {
   static default = (): DividendHistory => {
     return new DividendHistory({
       index: 0,
-      height: 0,
+      registeredHeight: 0,
+      registeredTimeStamp: "",
+      registeredTxHash: "",
+      perUnit: 0,
       total: 0,
       status: DIVIDEND_HISTORY_STATUS.REGISTERED
     });

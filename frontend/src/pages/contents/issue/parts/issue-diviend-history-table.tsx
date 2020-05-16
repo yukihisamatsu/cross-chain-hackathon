@@ -7,7 +7,7 @@ import {
   DividendHistory,
   DividendHistoryStatusType
 } from "~models/dividend";
-import {IssueDividendStatusTagColorMap} from "~pages/consts";
+import {DividendHistoryStatusTagColorMap} from "~pages/consts";
 
 const {Column} = Table;
 
@@ -21,7 +21,7 @@ export const renderIssueDividendHistoryTable = (
         <HistoryInformationText>History</HistoryInformationText>
       </HistoryInformation>
       <Table<DividendHistory>
-        rowKey={(o: DividendHistory) => o.height}
+        rowKey={(o: DividendHistory) => o.registeredHeight}
         dataSource={histories}
         pagination={false}
         bordered
@@ -29,19 +29,20 @@ export const renderIssueDividendHistoryTable = (
         size={"small"}
       >
         <Column
-          title="Block Height"
-          dataIndex="height"
-          key="height"
-          width={120}
+          title="Registered Date"
+          dataIndex="registeredTimeStamp"
+          key="registeredTimeStamp"
+          width={200}
         />
         <Column title="Total" dataIndex="total" key="total" />
         <Column
           title="Status"
           dataIndex="status"
           key="status"
-          width={150}
+          align="center"
+          width={100}
           render={(status: DividendHistoryStatusType) => (
-            <Tag color={IssueDividendStatusTagColorMap[status] ?? "green"}>
+            <Tag color={DividendHistoryStatusTagColorMap[status] ?? "green"}>
               {status}
             </Tag>
           )}

@@ -106,17 +106,10 @@ export class OrderRepository extends BaseRepo {
     });
   };
 
-  broadcastCrossTx = async (
+  broadcastOrderTx = async (
     stdTx: StdTx,
     mode: "block" | "sync" | "async" = "block"
   ) => {
-    const response = await this.coordinatorRestClient.txsPost({
-      tx: stdTx,
-      mode
-    });
-    if (response.error || response.code || response.codespace) {
-      throw new Error(JSON.stringify(response));
-    }
-    return response;
+    return this.broadcastTx(this.coordinatorRestClient, stdTx, mode);
   };
 }

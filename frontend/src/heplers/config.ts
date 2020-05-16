@@ -15,7 +15,7 @@ const productionBaseURL =
   "http://cch-alb-prod-295901909.us-east-1.elb.amazonaws.com";
 const localBaseURL = "http://localhost";
 
-export const parseEnv = (): Config => {
+export const createConfig = (): Config => {
   let env: Env;
   if (process.env.NODE_ENV === "production") {
     env = "production";
