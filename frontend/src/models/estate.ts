@@ -163,19 +163,22 @@ export class OwnedEstate extends Estate {
     );
   };
 
-  findOwnedBuyOffer = (offerer: Address): BuyOffer[] => {
-    const activeSellOrderBuyOffers = SellOrder.sortDateDesc(this.sellOrders)
+  findAllOwnedSellOrdersBuyOffers = (owner: Address): BuyOffer[] => {
+    const ret = SellOrder.sortDateDesc(this.sellOrders)
+      .filter(order => order.isOwner(owner))
+      .flatMap(order => order.buyOffers);
+
+    return BuyOffer.sortDateDesc(ret);
+  };
+
+  findOpenedBuyOffers = (offerer: Address): BuyOffer[] => {
+    const ret = SellOrder.sortDateDesc(this.sellOrders)
       .filter(
         order =>
           order.status === ORDER_STATUS.OPENED &&
           order.buyOffers.find(offer => offer.offerer === offerer)
       )
-      .map(order => order.buyOffers);
-
-    const ret: BuyOffer[] = [];
-    activeSellOrderBuyOffers.forEach(offers =>
-      offers.forEach(offer => ret.push(offer))
-    );
+      .flatMap(order => order.buyOffers);
 
     return BuyOffer.sortDateDesc(ret);
   };

@@ -215,4 +215,15 @@ export class BuyOffer {
       this.status === OFFER_STATUS.ONGOING
     );
   }
+
+  isOnGoing(): boolean {
+    return this.status === OFFER_STATUS.ONGOING;
+  }
+
+  isFinished(): boolean {
+    return (
+      this.status === OFFER_STATUS.COMPLETED ||
+      this.status === OFFER_STATUS.FAILED
+    );
+  }
 }

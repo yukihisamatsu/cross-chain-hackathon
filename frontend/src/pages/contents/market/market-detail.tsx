@@ -82,7 +82,7 @@ export class MarketDetail extends React.Component<Props, State> {
         estate
       });
     } catch (e) {
-      message.error(e);
+      message.error(JSON.stringify(e));
       history.push(PATHS.MARKET);
       return;
     }
