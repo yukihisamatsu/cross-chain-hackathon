@@ -42,7 +42,11 @@ export const renderDividendRegisterForm = (
           <Button
             type={"default"}
             onClick={onClick}
-            disabled={registeredPerUnit <= 0 || registeredTotal > user.balance}
+            disabled={
+              registeredPerUnit <= 0 ||
+              registeredTotal === 0 ||
+              registeredTotal > user.balance
+            }
           >
             REGISTER NOW
           </Button>

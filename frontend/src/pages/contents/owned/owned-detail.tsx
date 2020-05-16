@@ -217,7 +217,7 @@ export class OwnedDetail extends React.Component<Props, State> {
 
         crossTx.value.signatures?.unshift(sig);
 
-        const response = await orderRepo.broadcastTx(crossTx.value);
+        const response = await orderRepo.broadcastCrossTx(crossTx.value);
         log.debug(response);
 
         const newEstate = await estateRepo.getOwnedEstate(

@@ -95,7 +95,8 @@ const plugins: Plugin[] = [
 ];
 
 const stats: Options.Stats = {
-  colors: true
+  colors: true,
+  warningsFilter: ["Amino.js"]
 };
 
 const devServerConfig: DevServer.Configuration = {

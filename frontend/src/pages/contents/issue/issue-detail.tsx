@@ -1,4 +1,5 @@
 import {message} from "antd";
+import log from "loglevel";
 import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
@@ -14,6 +15,7 @@ import {renderDividendRegisterForm} from "~pages/contents/issue/parts/issue-divi
 import {IssueDividendRegisterModal} from "~pages/contents/issue/parts/issue-diviend-register-modal";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
+import {encodeContractCallInfo} from "~src/libs/cosmos/Amino";
 import {Repositories} from "~src/repos/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
@@ -133,7 +135,7 @@ export class IssueDetail extends React.Component<Props, State> {
         confirmLoading={distributedModalConfirmLoading}
         onOK={() => {
           this.setState({distributedModalConfirmLoading: true}, () => {
-            // TODO sign & broadcastTx
+            // TODO sign & broadcastCrossTx
             setTimeout(() => {
               resetState();
             }, 2000);
@@ -162,6 +164,68 @@ export class IssueDetail extends React.Component<Props, State> {
     }
   };
 
+  handleRegisterDividendModalOk = (resetState: () => void) => async () => {
+    const {
+      user: {address},
+      repos: {dividendRepo}
+    } = this.props;
+
+    const {estate, registeredPerUnit} = this.state;
+
+    try {
+      // const simulated = await dividendRepo.simulateRegisterDividend(
+      //   address,
+      //   estate.tokenId,
+      //   registeredPerUnit
+      // );
+      // log.debug(simulated);
+
+      const callContractParams = dividendRepo.getRegisterDividendParams(
+        address,
+        estate.tokenId,
+        registeredPerUnit
+      );
+      const buf = Buffer.from(
+        JSON.stringify({
+          type: "contract/ContractCallInfo",
+          value: callContractParams.call_info
+        }),
+        "utf8"
+      );
+
+      const contractBuf = encodeContractCallInfo(buf, true);
+      log.debug(Buffer.from(contractBuf).toString("base64"));
+
+      const registeredDividend = await dividendRepo.getDividend(
+        address,
+        estate.tokenId
+      );
+      log.debug(
+        "registeredDividend",
+        registeredDividend.result.return_value.toNumber()
+      );
+
+      const registeredDividendIndex = await dividendRepo.getDividendIndex(
+        address,
+        estate.tokenId
+      );
+      log.debug(
+        "registeredDividendIndex",
+        registeredDividendIndex.result.return_value.toNumber()
+      );
+
+      const events = await dividendRepo.getDividendRegisteredList(
+        estate.tokenId
+      );
+      log.debug(events);
+    } catch (e) {
+      log.error(e);
+      message.error(e);
+    } finally {
+      resetState();
+    }
+  };
+
   renderRegisterDividendModal = () => {
     const {
       estate,
@@ -187,12 +251,10 @@ export class IssueDetail extends React.Component<Props, State> {
         visible={registerModalVisible}
         confirmLoading={registerModalConfirmLoading}
         onOK={() => {
-          this.setState({registerModalConfirmLoading: true}, () => {
-            // TODO sign & broadcastTx
-            setTimeout(() => {
-              resetState();
-            }, 2000);
-          });
+          this.setState(
+            {registerModalConfirmLoading: true},
+            this.handleRegisterDividendModalOk(resetState)
+          );
         }}
         onCancel={() => {
           resetState();

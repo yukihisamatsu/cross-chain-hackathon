@@ -7,20 +7,33 @@ import log from "loglevel";
 import * as secp256k1 from "secp256k1";
 
 import {CrossTx, Msg, StdFee, StdSignature} from "~src/libs/api";
+import {Address, Base64EncodedString} from "~src/types";
 
 const path = "m/44'/118'/0'/0/0";
 const bech32MainPrefix = "cosmos";
 
 export const COORDINATOR_CHAIN_ID = "coordinatorz";
 
-interface CrossSignedMessage {
+interface SignedMessage<T> {
   account_number: string;
   chain_id: string;
   fee: StdFee;
   memo: string;
-  msgs: Array<Msg>;
+  msgs: T[];
   sequence: string;
   signatures?: Array<StdSignature>;
+}
+
+type CrossSignedMessage = SignedMessage<Msg>;
+type ContractCallSignedMessage = SignedMessage<ContractCallMsg>;
+
+export interface ContractCallMsg {
+  type: "contract/MsgContractCall";
+  value: {
+    sender: Address;
+    signers: Address[] | null;
+    contract: Base64EncodedString;
+  };
 }
 
 export const Cosmos = {
@@ -71,7 +84,7 @@ export const Cosmos = {
     mnemonic: string;
   }) => {
     const {
-      value: {msg, fee, memo}
+      value: {msg: msgs, fee, memo}
     } = crossTx;
 
     const signedMessage: CrossSignedMessage = {
@@ -79,7 +92,40 @@ export const Cosmos = {
       chain_id,
       fee,
       memo,
-      msgs: msg,
+      msgs,
+      sequence
+    };
+
+    const privateKey = Cosmos.getPrivateKey(mnemonic);
+    return signTx(
+      (signedMessage as unknown) as JSONValueTypeObject,
+      privateKey
+    );
+  },
+
+  signContractCallTx: ({
+    contractCallTxs: msgs,
+    chainId: chain_id,
+    accountNumber: account_number,
+    sequence,
+    fee,
+    memo,
+    mnemonic
+  }: {
+    contractCallTxs: ContractCallMsg[];
+    chainId: string;
+    accountNumber: string;
+    sequence: string;
+    fee: StdFee;
+    memo: string;
+    mnemonic: string;
+  }) => {
+    const signedMessage: ContractCallSignedMessage = {
+      account_number,
+      chain_id,
+      fee,
+      memo,
+      msgs,
       sequence
     };
 

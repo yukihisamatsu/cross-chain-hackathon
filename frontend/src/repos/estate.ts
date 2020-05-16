@@ -246,7 +246,7 @@ export class EstateRepository extends BaseRepo {
     return estate;
   };
 
-  private toIssuerEstate(dao: EstateDAO): IssuerEstate {
+  private toIssuerEstate = (dao: EstateDAO): IssuerEstate => {
     const {
       tokenId,
       name,
@@ -271,5 +271,5 @@ export class EstateRepository extends BaseRepo {
       issuerDividend: [],
       histories: []
     });
-  }
+  };
 }

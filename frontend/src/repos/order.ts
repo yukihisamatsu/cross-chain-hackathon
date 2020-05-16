@@ -94,7 +94,7 @@ export class OrderRepository extends BaseRepo {
 
   postBuyOffer = async (
     sellOrder: SellOrder,
-    from: string,
+    from: Address,
     crossTx: CrossTx
   ): Promise<TradeRequest> => {
     return await this.apiRequest(() => {
@@ -106,7 +106,7 @@ export class OrderRepository extends BaseRepo {
     });
   };
 
-  broadcastTx = async (
+  broadcastCrossTx = async (
     stdTx: StdTx,
     mode: "block" | "sync" | "async" = "block"
   ) => {

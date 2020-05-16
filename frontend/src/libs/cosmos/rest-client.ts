@@ -75,7 +75,7 @@ export class RestClient {
 
     if (!response.ok) {
       if (response.status > 400) {
-        throw Error(`response error. ${response.toString()}`);
+        throw Error(`${JSON.stringify(response)}`);
       }
     }
     const rawData = await response.text();
@@ -110,7 +110,10 @@ type Base64EncodedString = string;
 type DecimalString = string;
 
 export interface GetTxsParams {
-  [key: string]: string;
+  "message.sender"?: Address;
+  page?: number;
+  limit?: number;
+  [key: string]: string | number | undefined;
 }
 
 interface GetTxsResponse {
@@ -157,22 +160,22 @@ export interface CrossContractCallParams {
   call_info: ContractCallInfo;
 }
 
-interface CrossContractCallResponse {
+export interface CrossContractCallResponse {
   height: DecimalString;
   result: ContractCallResponse;
 }
 
-interface CrossCoordinatorStatusParams {
+export interface CrossCoordinatorStatusParams {
   tx_id: string;
 }
 
-interface CrossCoordinatorStatusResponse {
+export interface CrossCoordinatorStatusResponse {
   tx_id: string;
   coordinator_info: CoordinatorInfo;
   completed: boolean;
 }
 
-interface CoordinatorInfo {
+export interface CoordinatorInfo {
   transactions: string[]; // {TransactionID => ConnectionID}
   channels: ChannelInfo[]; // {TransactionID => Channel}
   status: number;
@@ -181,27 +184,27 @@ interface CoordinatorInfo {
   acks: number[]; // [TransactionID]
 }
 
-interface ChannelInfo {
+export interface ChannelInfo {
   port: string;
   channel: string;
 }
 
-interface ContractCallResponse {
+export interface ContractCallResponse {
   return_value: Base64EncodedString;
   ops: Op[];
 }
 
-interface Op {
-  type: "store/lock/Read";
+export interface Op {
+  type: "store/lock/Read" | "store/lock/Write";
   value: KV;
 }
 
-interface KV {
+export interface KV {
   K: Base64EncodedString;
   V?: Base64EncodedString;
 }
 
-interface ContractCallInfo {
+export interface ContractCallInfo {
   id: ContractIdType;
   method: string;
   args: Base64EncodedString[];

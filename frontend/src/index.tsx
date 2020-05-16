@@ -10,6 +10,7 @@ import {parseEnv} from "~src/heplers/config";
 import {CoinContract} from "~src/libs/cosmos/contract/coin";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {RestClient} from "~src/libs/cosmos/rest-client";
+import {DividendRepository} from "~src/repos/dividend";
 import {EstateRepository} from "~src/repos/estate";
 import {OrderRepository} from "~src/repos/order";
 import {Repositories} from "~src/repos/types";
@@ -19,7 +20,7 @@ import {UserRepository} from "~src/repos/user";
   const config = parseEnv();
   const logLevel: LogLevelDesc = config.env === "production" ? "warn" : "debug";
   log.setLevel(logLevel);
-  const {estateApi, tradeApi, txApi, userApi} = createApiClient({
+  const {dividendApi, estateApi, tradeApi, txApi, userApi} = createApiClient({
     basePath: config.apiEndPoint
   });
 
@@ -31,10 +32,11 @@ import {UserRepository} from "~src/repos/user";
   const coinContract = new CoinContract({coinRestClient});
 
   const repos: Repositories = {
-    userRepo: UserRepository.create({
-      userApi,
-      coinContract,
-      coordinatorRestClient
+    dividendRepo: DividendRepository.create({
+      dividendApi,
+      estateApi,
+      estateContract,
+      securityRestClient
     }),
     estateRepo: EstateRepository.create({
       estateApi,
@@ -45,6 +47,11 @@ import {UserRepository} from "~src/repos/user";
     orderRepo: OrderRepository.create({
       tradeApi,
       txApi,
+      coordinatorRestClient
+    }),
+    userRepo: UserRepository.create({
+      userApi,
+      coinContract,
       coordinatorRestClient
     })
   };

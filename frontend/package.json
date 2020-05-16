@@ -26,7 +26,8 @@
     "lint": "tslint --project .",
     "lint:fix": "tslint --fix --project .",
     "test:unit": "NODE_ENV=test jest -u --silent=false",
-    "test:unit:watch": "yarn test:unit --watch --verbose"
+    "test:unit:watch": "yarn test:unit --watch --verbose",
+    "gopherjs": "cd gopherjs && gopherjs build -v -o ../src/libs/cosmos/Amino.js ."
   },
   "dependencies": {
     "@tendermint/amino-js": "^0.6.2",
