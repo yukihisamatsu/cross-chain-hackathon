@@ -95,7 +95,8 @@ const plugins: Plugin[] = [
 ];
 
 const stats: Options.Stats = {
-  colors: true
+  colors: true,
+  warningsFilter: ["Amino.js"]
 };
 
 const devServerConfig: DevServer.Configuration = {
@@ -112,6 +113,7 @@ const devServerConfig: DevServer.Configuration = {
 
 const Config: Configuration = {
   watch: ENV !== "production",
+  mode: ENV,
   devtool: ENV === "production" ? false : "inline-source-map",
   entry: {
     index: PATH.app
@@ -123,8 +125,14 @@ const Config: Configuration = {
   },
   optimization: {
     splitChunks: {
-      name: "vendor",
-      chunks: "initial"
+      cacheGroups: {
+        vendor: {
+          test: /node_modules/,
+          name: "vendor",
+          chunks: "initial",
+          enforce: true
+        }
+      }
     }
   },
   plugins: plugins,

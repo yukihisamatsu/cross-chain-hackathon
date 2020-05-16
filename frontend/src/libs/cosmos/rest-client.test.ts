@@ -76,7 +76,7 @@ describe("cosmos rest client test suites", () => {
     expect(actual.toNumber()).toEqual(1000000);
   });
 
-  test("sell request status", async () => {
+  test.skip("sell request status", async () => {
     const params = {
       tx_id: "1D025CB54F3B863EBECF4D8E85BC2352C45DB88A411755C2FC6D19F735B7734B"
     };

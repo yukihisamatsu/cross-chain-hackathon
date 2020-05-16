@@ -1,4 +1,5 @@
 import {message} from "antd";
+import log from "loglevel";
 import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
@@ -14,6 +15,11 @@ import {renderDividendRegisterForm} from "~pages/contents/issue/parts/issue-divi
 import {IssueDividendRegisterModal} from "~pages/contents/issue/parts/issue-diviend-register-modal";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
+import {
+  ContractCallMsg,
+  Cosmos,
+  SECURITY_CHAIN_ID
+} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
@@ -63,9 +69,7 @@ export class IssueDetail extends React.Component<Props, State> {
       prevStates.estate.tokenId !== this.state.estate.tokenId ||
       prevStates.estate.histories.length !==
         this.state.estate.histories.length ||
-      prevStates.estate.owners.length !== this.state.estate.owners.length ||
-      prevStates.estate.issuerDividend.length !==
-        this.state.estate.issuerDividend.length
+      prevStates.estate.owners.length !== this.state.estate.owners.length
     ) {
       await this.getEstate();
     }
@@ -92,7 +96,11 @@ export class IssueDetail extends React.Component<Props, State> {
       estate = await estateRepo.getIssuerEstate(id, address);
       setHeaderText(estate.name);
       this.setState({
-        estate
+        estate,
+        registeredQuantity: estate.owners.reduce(
+          (acc, owner) => acc + owner.balance,
+          0
+        )
       });
     } catch (e) {
       message.error(e);
@@ -129,7 +137,7 @@ export class IssueDetail extends React.Component<Props, State> {
         confirmLoading={distributedModalConfirmLoading}
         onOK={() => {
           this.setState({distributedModalConfirmLoading: true}, () => {
-            // TODO sign & broadcastTx
+            // TODO sign & broadcastCrossTx
             setTimeout(() => {
               resetState();
             }, 2000);
@@ -158,6 +166,90 @@ export class IssueDetail extends React.Component<Props, State> {
     }
   };
 
+  handleRegisterDividendModalOk = (resetState: () => void) => async () => {
+    const {
+      user: {address, mnemonic},
+      repos: {dividendRepo, userRepo}
+    } = this.props;
+
+    const {estate, registeredPerUnit} = this.state;
+
+    try {
+      const simulated = await dividendRepo.simulateRegisterDividend(
+        address,
+        estate.tokenId,
+        registeredPerUnit
+      );
+      log.debug("simulated", simulated);
+
+      const registeredDividend = await dividendRepo.getDividend(
+        address,
+        estate.tokenId
+      );
+      log.debug(
+        "registeredDividend",
+        registeredDividend.result.return_value.toNumber()
+      );
+
+      const registeredDividendIndex = await dividendRepo.getDividendIndex(
+        address,
+        estate.tokenId
+      );
+      log.debug(
+        "registeredDividendIndex",
+        registeredDividendIndex.result.return_value.toNumber()
+      );
+
+      const contractCallParams = dividendRepo.getRegisterDividendParams(
+        address,
+        estate.tokenId,
+        registeredPerUnit
+      );
+      const contractCallInfoBase64 = Cosmos.createContractCallInfoBase64(
+        contractCallParams.call_info
+      );
+
+      const msg: ContractCallMsg = {
+        type: "contract/MsgContractCall",
+        value: {
+          sender: address,
+          signers: null,
+          contract: contractCallInfoBase64
+        }
+      };
+
+      const {accountNumber, sequence} = await userRepo.getAuthAccountSecurity(
+        address
+      );
+      const fee = {amount: [], gas: "200000"};
+      const memo = "";
+
+      const sig = Cosmos.signContractCallTx({
+        contractCallTxs: [msg],
+        chainId: SECURITY_CHAIN_ID,
+        accountNumber,
+        sequence,
+        fee,
+        memo,
+        mnemonic
+      });
+      log.debug(sig);
+
+      const response = await dividendRepo.broadcastContractCallTx({
+        msg: [msg],
+        memo,
+        fee,
+        signatures: [sig]
+      });
+      log.debug("txResult", response);
+    } catch (e) {
+      log.error(e);
+      message.error(e);
+    } finally {
+      resetState();
+    }
+  };
+
   renderRegisterDividendModal = () => {
     const {
       estate,
@@ -183,12 +275,10 @@ export class IssueDetail extends React.Component<Props, State> {
         visible={registerModalVisible}
         confirmLoading={registerModalConfirmLoading}
         onOK={() => {
-          this.setState({registerModalConfirmLoading: true}, () => {
-            // TODO sign & broadcastTx
-            setTimeout(() => {
-              resetState();
-            }, 2000);
-          });
+          this.setState(
+            {registerModalConfirmLoading: true},
+            this.handleRegisterDividendModalOk(resetState)
+          );
         }}
         onCancel={() => {
           resetState();
@@ -198,6 +288,7 @@ export class IssueDetail extends React.Component<Props, State> {
   };
 
   render() {
+    const {user} = this.props;
     const {
       estate,
       registeredPerUnit,
@@ -208,13 +299,15 @@ export class IssueDetail extends React.Component<Props, State> {
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
         {renderIssueDividendOwnerTable(estate.owners)}
-        {renderDividendRegisterForm(
-          registeredPerUnit,
-          registeredQuantity,
-          registeredTotal,
-          this.handleOnChangeRegisterPerUnit,
-          this.handleRegisterDividendButtonClick
-        )}
+        {!estate.isRegistering() &&
+          renderDividendRegisterForm(
+            user,
+            registeredPerUnit,
+            registeredQuantity,
+            registeredTotal,
+            this.handleOnChangeRegisterPerUnit,
+            this.handleRegisterDividendButtonClick
+          )}
         {renderIssueDividendHistoryTable(
           estate.histories,
           this.handleDistributeDividendButtonClick

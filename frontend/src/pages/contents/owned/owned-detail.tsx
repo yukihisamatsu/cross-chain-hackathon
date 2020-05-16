@@ -203,21 +203,22 @@ export class OwnedDetail extends React.Component<Props, State> {
         const crossTx = selectedBuyOffer.crossTx;
         log.debug(crossTx);
 
-        const {accountNumber, sequence} = await userRepo.getAuthAccount(
-          address
-        );
-        const sig = Cosmos.signCrossTx(
+        const {
+          accountNumber,
+          sequence
+        } = await userRepo.getAuthAccountCoordinator(address);
+        const sig = Cosmos.signCrossTx({
           crossTx,
-          COORDINATOR_CHAIN_ID,
+          chainId: COORDINATOR_CHAIN_ID,
           accountNumber,
           sequence,
           mnemonic
-        );
+        });
         log.debug(sig);
 
         crossTx.value.signatures?.unshift(sig);
 
-        const response = await orderRepo.broadcastTx(crossTx.value);
+        const response = await orderRepo.broadcastCrossTx(crossTx.value);
         log.debug(response);
 
         const newEstate = await estateRepo.getOwnedEstate(

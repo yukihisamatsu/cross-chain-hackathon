@@ -110,6 +110,61 @@ export interface CrossTx {
 /**
  * 
  * @export
+ * @interface Dividend
+ */
+export interface Dividend {
+    /**
+     * for primary key
+     * @type {number}
+     * @memberof Dividend
+     */
+    id: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Dividend
+     */
+    estateId: string;
+    /**
+     * this is determined by the contract
+     * @type {number}
+     * @memberof Dividend
+     */
+    index?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof Dividend
+     */
+    perShare: number;
+    /**
+     * 
+     * @type {CrossTx}
+     * @memberof Dividend
+     */
+    crossTx: CrossTx;
+    /**
+     * 
+     * @type {DividendStatus}
+     * @memberof Dividend
+     */
+    status: DividendStatus;
+}
+/**
+ * 
+ * @export
+ * @enum {string}
+ */
+export enum DividendStatus {
+    DIVIDEND_REGISTERED = 0,
+    DIVIDEND_ONGOING = 1,
+    DIVIDEND_COMPLETED = 2,
+    DIVIDEND_FAILED = 3
+}
+
+/**
+ * 
+ * @export
  * @interface Estate
  */
 export interface Estate {
@@ -527,6 +582,115 @@ export interface User {
 }
 
 /**
+ * DividendApi - axios parameter creator
+ * @export
+ */
+export const DividendApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary get the dividends of an estate token
+         * @param {string} estateId query target estate id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getDividendsByEstateId: async (estateId: string, options: any = {}): Promise<RequestArgs> => {
+            // verify required parameter 'estateId' is not null or undefined
+            if (estateId === null || estateId === undefined) {
+                throw new RequiredError('estateId','Required parameter estateId was null or undefined when calling getDividendsByEstateId.');
+            }
+            const localVarPath = `/dividends/{estateId}`
+                .replace(`{${"estateId"}}`, encodeURIComponent(String(estateId)));
+            const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
+            delete localVarUrlObj.search;
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: globalImportUrl.format(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * DividendApi - functional programming interface
+ * @export
+ */
+export const DividendApiFp = function(configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary get the dividends of an estate token
+         * @param {string} estateId query target estate id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getDividendsByEstateId(estateId: string, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Dividend>>> {
+            const localVarAxiosArgs = await DividendApiAxiosParamCreator(configuration).getDividendsByEstateId(estateId, options);
+            return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
+                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                return axios.request(axiosRequestArgs);
+            };
+        },
+    }
+};
+
+/**
+ * DividendApi - factory interface
+ * @export
+ */
+export const DividendApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    return {
+        /**
+         * 
+         * @summary get the dividends of an estate token
+         * @param {string} estateId query target estate id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getDividendsByEstateId(estateId: string, options?: any): AxiosPromise<Array<Dividend>> {
+            return DividendApiFp(configuration).getDividendsByEstateId(estateId, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * DividendApi - object-oriented interface
+ * @export
+ * @class DividendApi
+ * @extends {BaseAPI}
+ */
+export class DividendApi extends BaseAPI {
+    /**
+     * 
+     * @summary get the dividends of an estate token
+     * @param {string} estateId query target estate id
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DividendApi
+     */
+    public getDividendsByEstateId(estateId: string, options?: any) {
+        return DividendApiFp(this.configuration).getDividendsByEstateId(estateId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+}
+
+
+/**
  * EstateApi - axios parameter creator
  * @export
  */
@@ -570,7 +734,7 @@ export const EstateApiAxiosParamCreator = function (configuration?: Configuratio
         },
         /**
          * 
-         * @summary get all estates and their associated trades, but trade requests are not included
+         * @summary get all estates and their associated trades and requests
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -623,7 +787,7 @@ export const EstateApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary get all estates and their associated trades, but trade requests are not included
+         * @summary get all estates and their associated trades and requests
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -655,7 +819,7 @@ export const EstateApiFactory = function (configuration?: Configuration, basePat
         },
         /**
          * 
-         * @summary get all estates and their associated trades, but trade requests are not included
+         * @summary get all estates and their associated trades and requests
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -686,7 +850,7 @@ export class EstateApi extends BaseAPI {
 
     /**
      * 
-     * @summary get all estates and their associated trades, but trade requests are not included
+     * @summary get all estates and their associated trades and requests
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof EstateApi
@@ -752,7 +916,7 @@ export const TradeApiAxiosParamCreator = function (configuration?: Configuration
             if (id === null || id === undefined) {
                 throw new RequiredError('id','Required parameter id was null or undefined when calling deleteTradeRequest.');
             }
-            const localVarPath = `/trade/request/{id}`
+            const localVarPath = `/trade_request/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
             const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
             let baseOptions;
@@ -762,6 +926,117 @@ export const TradeApiAxiosParamCreator = function (configuration?: Configuration
             const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+
+    
+            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
+            delete localVarUrlObj.search;
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: globalImportUrl.format(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary get a trade with requests
+         * @param {number} id trade id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getTradeById: async (id: number, options: any = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            if (id === null || id === undefined) {
+                throw new RequiredError('id','Required parameter id was null or undefined when calling getTradeById.');
+            }
+            const localVarPath = `/trade/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
+            delete localVarUrlObj.search;
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: globalImportUrl.format(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary get a trade request
+         * @param {number} id trade request id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getTradeRequestById: async (id: number, options: any = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            if (id === null || id === undefined) {
+                throw new RequiredError('id','Required parameter id was null or undefined when calling getTradeRequestById.');
+            }
+            const localVarPath = `/trade_request/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
+            delete localVarUrlObj.search;
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: globalImportUrl.format(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary get requests by user id
+         * @param {string} userId user id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getTradeRequestsByUserId: async (userId: string, options: any = {}): Promise<RequestArgs> => {
+            // verify required parameter 'userId' is not null or undefined
+            if (userId === null || userId === undefined) {
+                throw new RequiredError('userId','Required parameter userId was null or undefined when calling getTradeRequestsByUserId.');
+            }
+            const localVarPath = `/trade_requests`;
+            const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            if (userId !== undefined) {
+                localVarQueryParameter['userId'] = userId;
+            }
 
 
     
@@ -819,7 +1094,7 @@ export const TradeApiAxiosParamCreator = function (configuration?: Configuration
          * @throws {RequiredError}
          */
         postTradeRequest: async (postTradeRequestInput?: PostTradeRequestInput, options: any = {}): Promise<RequestArgs> => {
-            const localVarPath = `/trade/requests`;
+            const localVarPath = `/trade_requests`;
             const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
             let baseOptions;
             if (configuration) {
@@ -840,76 +1115,6 @@ export const TradeApiAxiosParamCreator = function (configuration?: Configuration
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             const needsSerialization = (typeof postTradeRequestInput !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
             localVarRequestOptions.data =  needsSerialization ? JSON.stringify(postTradeRequestInput !== undefined ? postTradeRequestInput : {}) : (postTradeRequestInput || "");
-
-            return {
-                url: globalImportUrl.format(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary update a trade request (mainly for updating status)
-         * @param {Trade} [trade] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        putTrade: async (trade?: Trade, options: any = {}): Promise<RequestArgs> => {
-            const localVarPath = `/trades`;
-            const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
-            // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
-            delete localVarUrlObj.search;
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            const needsSerialization = (typeof trade !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(trade !== undefined ? trade : {}) : (trade || "");
-
-            return {
-                url: globalImportUrl.format(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @summary update a trade request (mainly for updating status)
-         * @param {TradeRequest} [tradeRequest] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        putTradeRequest: async (tradeRequest?: TradeRequest, options: any = {}): Promise<RequestArgs> => {
-            const localVarPath = `/trade/requests`;
-            const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
-            // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
-            delete localVarUrlObj.search;
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            const needsSerialization = (typeof tradeRequest !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(tradeRequest !== undefined ? tradeRequest : {}) : (tradeRequest || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -955,6 +1160,48 @@ export const TradeApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary get a trade with requests
+         * @param {number} id trade id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getTradeById(id: number, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Trade>> {
+            const localVarAxiosArgs = await TradeApiAxiosParamCreator(configuration).getTradeById(id, options);
+            return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
+                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                return axios.request(axiosRequestArgs);
+            };
+        },
+        /**
+         * 
+         * @summary get a trade request
+         * @param {number} id trade request id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getTradeRequestById(id: number, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TradeRequest>> {
+            const localVarAxiosArgs = await TradeApiAxiosParamCreator(configuration).getTradeRequestById(id, options);
+            return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
+                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                return axios.request(axiosRequestArgs);
+            };
+        },
+        /**
+         * 
+         * @summary get requests by user id
+         * @param {string} userId user id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getTradeRequestsByUserId(userId: string, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TradeRequest>>> {
+            const localVarAxiosArgs = await TradeApiAxiosParamCreator(configuration).getTradeRequestsByUserId(userId, options);
+            return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
+                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                return axios.request(axiosRequestArgs);
+            };
+        },
+        /**
+         * 
          * @summary post a new sell offer
          * @param {Trade} [trade] 
          * @param {*} [options] Override http request option.
@@ -976,34 +1223,6 @@ export const TradeApiFp = function(configuration?: Configuration) {
          */
         async postTradeRequest(postTradeRequestInput?: PostTradeRequestInput, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TradeRequest>> {
             const localVarAxiosArgs = await TradeApiAxiosParamCreator(configuration).postTradeRequest(postTradeRequestInput, options);
-            return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
-                return axios.request(axiosRequestArgs);
-            };
-        },
-        /**
-         * 
-         * @summary update a trade request (mainly for updating status)
-         * @param {Trade} [trade] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async putTrade(trade?: Trade, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Trade>> {
-            const localVarAxiosArgs = await TradeApiAxiosParamCreator(configuration).putTrade(trade, options);
-            return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
-                return axios.request(axiosRequestArgs);
-            };
-        },
-        /**
-         * 
-         * @summary update a trade request (mainly for updating status)
-         * @param {TradeRequest} [tradeRequest] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async putTradeRequest(tradeRequest?: TradeRequest, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TradeRequest>> {
-            const localVarAxiosArgs = await TradeApiAxiosParamCreator(configuration).putTradeRequest(tradeRequest, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
                 const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
                 return axios.request(axiosRequestArgs);
@@ -1040,6 +1259,36 @@ export const TradeApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * 
+         * @summary get a trade with requests
+         * @param {number} id trade id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getTradeById(id: number, options?: any): AxiosPromise<Trade> {
+            return TradeApiFp(configuration).getTradeById(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary get a trade request
+         * @param {number} id trade request id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getTradeRequestById(id: number, options?: any): AxiosPromise<TradeRequest> {
+            return TradeApiFp(configuration).getTradeRequestById(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary get requests by user id
+         * @param {string} userId user id
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getTradeRequestsByUserId(userId: string, options?: any): AxiosPromise<Array<TradeRequest>> {
+            return TradeApiFp(configuration).getTradeRequestsByUserId(userId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary post a new sell offer
          * @param {Trade} [trade] 
          * @param {*} [options] Override http request option.
@@ -1057,26 +1306,6 @@ export const TradeApiFactory = function (configuration?: Configuration, basePath
          */
         postTradeRequest(postTradeRequestInput?: PostTradeRequestInput, options?: any): AxiosPromise<TradeRequest> {
             return TradeApiFp(configuration).postTradeRequest(postTradeRequestInput, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary update a trade request (mainly for updating status)
-         * @param {Trade} [trade] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        putTrade(trade?: Trade, options?: any): AxiosPromise<Trade> {
-            return TradeApiFp(configuration).putTrade(trade, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @summary update a trade request (mainly for updating status)
-         * @param {TradeRequest} [tradeRequest] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        putTradeRequest(tradeRequest?: TradeRequest, options?: any): AxiosPromise<TradeRequest> {
-            return TradeApiFp(configuration).putTradeRequest(tradeRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1114,6 +1343,42 @@ export class TradeApi extends BaseAPI {
 
     /**
      * 
+     * @summary get a trade with requests
+     * @param {number} id trade id
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TradeApi
+     */
+    public getTradeById(id: number, options?: any) {
+        return TradeApiFp(this.configuration).getTradeById(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary get a trade request
+     * @param {number} id trade request id
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TradeApi
+     */
+    public getTradeRequestById(id: number, options?: any) {
+        return TradeApiFp(this.configuration).getTradeRequestById(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary get requests by user id
+     * @param {string} userId user id
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TradeApi
+     */
+    public getTradeRequestsByUserId(userId: string, options?: any) {
+        return TradeApiFp(this.configuration).getTradeRequestsByUserId(userId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary post a new sell offer
      * @param {Trade} [trade] 
      * @param {*} [options] Override http request option.
@@ -1136,30 +1401,6 @@ export class TradeApi extends BaseAPI {
         return TradeApiFp(this.configuration).postTradeRequest(postTradeRequestInput, options).then((request) => request(this.axios, this.basePath));
     }
 
-    /**
-     * 
-     * @summary update a trade request (mainly for updating status)
-     * @param {Trade} [trade] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TradeApi
-     */
-    public putTrade(trade?: Trade, options?: any) {
-        return TradeApiFp(this.configuration).putTrade(trade, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary update a trade request (mainly for updating status)
-     * @param {TradeRequest} [tradeRequest] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof TradeApi
-     */
-    public putTradeRequest(tradeRequest?: TradeRequest, options?: any) {
-        return TradeApiFp(this.configuration).putTradeRequest(tradeRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
 }
 
 
@@ -1177,14 +1418,14 @@ export const TxApiAxiosParamCreator = function (configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        txDividendGet: async (estateId: string, perShare: number, options: any = {}): Promise<RequestArgs> => {
+        getTxDividend: async (estateId: string, perShare: number, options: any = {}): Promise<RequestArgs> => {
             // verify required parameter 'estateId' is not null or undefined
             if (estateId === null || estateId === undefined) {
-                throw new RequiredError('estateId','Required parameter estateId was null or undefined when calling txDividendGet.');
+                throw new RequiredError('estateId','Required parameter estateId was null or undefined when calling getTxDividend.');
             }
             // verify required parameter 'perShare' is not null or undefined
             if (perShare === null || perShare === undefined) {
-                throw new RequiredError('perShare','Required parameter perShare was null or undefined when calling txDividendGet.');
+                throw new RequiredError('perShare','Required parameter perShare was null or undefined when calling getTxDividend.');
             }
             const localVarPath = `/tx/dividend`;
             const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
@@ -1225,16 +1466,16 @@ export const TxApiAxiosParamCreator = function (configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        txTradeRequestGet: async (tradeId: number, from: string, options: any = {}): Promise<RequestArgs> => {
+        getTxTradeRequest: async (tradeId: number, from: string, options: any = {}): Promise<RequestArgs> => {
             // verify required parameter 'tradeId' is not null or undefined
             if (tradeId === null || tradeId === undefined) {
-                throw new RequiredError('tradeId','Required parameter tradeId was null or undefined when calling txTradeRequestGet.');
+                throw new RequiredError('tradeId','Required parameter tradeId was null or undefined when calling getTxTradeRequest.');
             }
             // verify required parameter 'from' is not null or undefined
             if (from === null || from === undefined) {
-                throw new RequiredError('from','Required parameter from was null or undefined when calling txTradeRequestGet.');
+                throw new RequiredError('from','Required parameter from was null or undefined when calling getTxTradeRequest.');
             }
-            const localVarPath = `/tx/trade/request`;
+            const localVarPath = `/tx/trade_request`;
             const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
             let baseOptions;
             if (configuration) {
@@ -1282,8 +1523,8 @@ export const TxApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async txDividendGet(estateId: string, perShare: number, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CrossTx>> {
-            const localVarAxiosArgs = await TxApiAxiosParamCreator(configuration).txDividendGet(estateId, perShare, options);
+        async getTxDividend(estateId: string, perShare: number, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CrossTx>> {
+            const localVarAxiosArgs = await TxApiAxiosParamCreator(configuration).getTxDividend(estateId, perShare, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
                 const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
                 return axios.request(axiosRequestArgs);
@@ -1297,8 +1538,8 @@ export const TxApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async txTradeRequestGet(tradeId: number, from: string, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CrossTx>> {
-            const localVarAxiosArgs = await TxApiAxiosParamCreator(configuration).txTradeRequestGet(tradeId, from, options);
+        async getTxTradeRequest(tradeId: number, from: string, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CrossTx>> {
+            const localVarAxiosArgs = await TxApiAxiosParamCreator(configuration).getTxTradeRequest(tradeId, from, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
                 const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
                 return axios.request(axiosRequestArgs);
@@ -1321,8 +1562,8 @@ export const TxApiFactory = function (configuration?: Configuration, basePath?: 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        txDividendGet(estateId: string, perShare: number, options?: any): AxiosPromise<CrossTx> {
-            return TxApiFp(configuration).txDividendGet(estateId, perShare, options).then((request) => request(axios, basePath));
+        getTxDividend(estateId: string, perShare: number, options?: any): AxiosPromise<CrossTx> {
+            return TxApiFp(configuration).getTxDividend(estateId, perShare, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1332,8 +1573,8 @@ export const TxApiFactory = function (configuration?: Configuration, basePath?: 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        txTradeRequestGet(tradeId: number, from: string, options?: any): AxiosPromise<CrossTx> {
-            return TxApiFp(configuration).txTradeRequestGet(tradeId, from, options).then((request) => request(axios, basePath));
+        getTxTradeRequest(tradeId: number, from: string, options?: any): AxiosPromise<CrossTx> {
+            return TxApiFp(configuration).getTxTradeRequest(tradeId, from, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -1354,8 +1595,8 @@ export class TxApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof TxApi
      */
-    public txDividendGet(estateId: string, perShare: number, options?: any) {
-        return TxApiFp(this.configuration).txDividendGet(estateId, perShare, options).then((request) => request(this.axios, this.basePath));
+    public getTxDividend(estateId: string, perShare: number, options?: any) {
+        return TxApiFp(this.configuration).getTxDividend(estateId, perShare, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1367,8 +1608,8 @@ export class TxApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof TxApi
      */
-    public txTradeRequestGet(tradeId: number, from: string, options?: any) {
-        return TxApiFp(this.configuration).txTradeRequestGet(tradeId, from, options).then((request) => request(this.axios, this.basePath));
+    public getTxTradeRequest(tradeId: number, from: string, options?: any) {
+        return TxApiFp(this.configuration).getTxTradeRequest(tradeId, from, options).then((request) => request(this.axios, this.basePath));
     }
 
 }

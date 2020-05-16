@@ -1,4 +1,4 @@
-import {ISSUER_DIVIDEND_HISTORY_STATUS} from "~models/dividend";
+import {DIVIDEND_HISTORY_STATUS} from "~models/dividend";
 import {ESTATE_STATUS} from "~models/estate";
 import {OFFER_STATUS, ORDER_STATUS} from "~models/order";
 
@@ -15,9 +15,9 @@ export const OwnedEstateStatusTagColorMap: {
 };
 
 export const IssueDividendStatusTagColorMap: {[key: string]: string} = {
-  [ISSUER_DIVIDEND_HISTORY_STATUS.NOT_DISTRIBUTED]: "orange",
-  [ISSUER_DIVIDEND_HISTORY_STATUS.ONGOING]: "blue",
-  [ISSUER_DIVIDEND_HISTORY_STATUS.DISTRIBUTED]: "green"
+  [DIVIDEND_HISTORY_STATUS.REGISTERED]: "orange",
+  [DIVIDEND_HISTORY_STATUS.ONGOING]: "blue",
+  [DIVIDEND_HISTORY_STATUS.DISTRIBUTED]: "green"
 };
 
 export const OrderStatusTagColorMap: {[key: string]: string} = {

@@ -30,12 +30,4 @@ describe("cosmos rpc client test suites", () => {
     });
     expect(result).not.toBeUndefined();
   });
-
-  test("event type Test", async () => {
-    // const address = "cosmos1yk0x4pqcwyuxtrsd8nqz2x0xd3ucafed96wd02";
-    const result = await securityClient.txSearch({
-      query: `"TRANSFER.tokenID='1'"`
-    });
-    expect(result.result.total_count).not.toEqual("0");
-  });
 });

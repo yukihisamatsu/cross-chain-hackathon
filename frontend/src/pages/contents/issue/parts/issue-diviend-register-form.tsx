@@ -2,7 +2,10 @@ import {Button, InputNumber} from "antd";
 import React from "react";
 import styled from "styled-components";
 
+import {User} from "~models/user";
+
 export const renderDividendRegisterForm = (
+  user: User,
   registeredPerUnit: number,
   registeredQuantity: number,
   registeredTotal: number,
@@ -39,7 +42,11 @@ export const renderDividendRegisterForm = (
           <Button
             type={"default"}
             onClick={onClick}
-            disabled={registeredPerUnit <= 0}
+            disabled={
+              registeredPerUnit <= 0 ||
+              registeredTotal === 0 ||
+              registeredTotal > user.balance
+            }
           >
             REGISTER NOW
           </Button>
