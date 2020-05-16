@@ -1,9 +1,10 @@
-import {DividendApi, EstateApi, StdTx} from "~src/libs/api";
+import {DividendApi, EstateApi} from "~src/libs/api";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {
   CrossContractCallResponse,
   RestClient
 } from "~src/libs/cosmos/rest-client";
+import {ContractCallStdTx} from "~src/libs/cosmos/util";
 import {BaseRepo} from "~src/repos/base";
 import {Address} from "~src/types";
 
@@ -99,7 +100,7 @@ export class DividendRepository extends BaseRepo {
   }
 
   broadcastContractCallTx = async (
-    stdTx: StdTx,
+    stdTx: ContractCallStdTx,
     mode: "block" | "sync" | "async" = "block"
   ) => {
     const response = await this.securityRestClient.txsPost({

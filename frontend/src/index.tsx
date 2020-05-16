@@ -42,7 +42,8 @@ import {UserRepository} from "~src/repos/user";
       estateApi,
       tradeApi,
       userApi,
-      estateContract
+      estateContract,
+      securityRestClient
     }),
     orderRepo: OrderRepository.create({
       tradeApi,
@@ -52,7 +53,8 @@ import {UserRepository} from "~src/repos/user";
     userRepo: UserRepository.create({
       userApi,
       coinContract,
-      coordinatorRestClient
+      coordinatorRestClient,
+      securityRestClient
     })
   };
 

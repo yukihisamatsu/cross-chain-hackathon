@@ -1,4 +1,8 @@
-import {DividendHistory, DividendOwner, IssuerDividend} from "~models/dividend";
+import {
+  DIVIDEND_HISTORY_STATUS,
+  DividendHistory,
+  DividendOwner
+} from "~models/dividend";
 import {User} from "~models/user";
 import {Unbox} from "~src/heplers/util-types";
 import {
@@ -245,7 +249,6 @@ export class MarketEstate extends Estate {
 
 export class IssuerEstate extends Estate {
   owners: DividendOwner[];
-  issuerDividend: IssuerDividend[];
   histories: DividendHistory[];
 
   constructor({
@@ -258,7 +261,6 @@ export class IssuerEstate extends Estate {
     offerPrice,
     issuedBy,
     owners,
-    issuerDividend,
     histories
   }: {
     tokenId: string;
@@ -270,7 +272,6 @@ export class IssuerEstate extends Estate {
     offerPrice: number;
     issuedBy: Address;
     owners: DividendOwner[];
-    issuerDividend: IssuerDividend[];
     histories: DividendHistory[];
   }) {
     super({
@@ -285,7 +286,6 @@ export class IssuerEstate extends Estate {
     });
 
     this.owners = owners;
-    this.issuerDividend = issuerDividend;
     this.histories = histories;
   }
 
@@ -300,8 +300,15 @@ export class IssuerEstate extends Estate {
       offerPrice: 0,
       issuedBy: "",
       owners: [],
-      issuerDividend: [],
       histories: []
     });
   };
+
+  isRegistering(): boolean {
+    return !!this.histories.find(
+      history =>
+        history.status === DIVIDEND_HISTORY_STATUS.REGISTERED ||
+        history.status === DIVIDEND_HISTORY_STATUS.ONGOING
+    );
+  }
 }

@@ -1,4 +1,10 @@
-import {DividendOwner} from "~models/dividend";
+import BN from "bn.js";
+
+import {
+  DIVIDEND_HISTORY_STATUS,
+  DividendHistory,
+  DividendOwner
+} from "~models/dividend";
 import {
   ESTATE_STATUS,
   IssuerEstate,
@@ -14,6 +20,7 @@ import {
   UserApi
 } from "~src/libs/api";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
+import {GetTxsResponseTx, RestClient} from "~src/libs/cosmos/rest-client";
 import {BaseRepo} from "~src/repos/base";
 import {Address} from "~src/types";
 
@@ -22,41 +29,48 @@ export class EstateRepository extends BaseRepo {
   tradeApi: TradeApi;
   userApi: UserApi;
   estateContract: EstateContract;
+  securityRestClient: RestClient;
 
   constructor({
     estateApi,
     tradeApi,
     userApi,
-    estateContract
+    estateContract,
+    securityRestClient
   }: {
     estateApi: EstateApi;
     tradeApi: TradeApi;
     userApi: UserApi;
     estateContract: EstateContract;
+    securityRestClient: RestClient;
   }) {
     super();
     this.estateApi = estateApi;
     this.tradeApi = tradeApi;
     this.userApi = userApi;
     this.estateContract = estateContract;
+    this.securityRestClient = securityRestClient;
   }
 
   static create({
     estateApi,
     tradeApi,
     userApi,
-    estateContract
+    estateContract,
+    securityRestClient
   }: {
     estateApi: EstateApi;
     tradeApi: TradeApi;
     userApi: UserApi;
     estateContract: EstateContract;
+    securityRestClient: RestClient;
   }): EstateRepository {
     return new EstateRepository({
       estateApi,
       tradeApi,
       userApi,
-      estateContract
+      estateContract,
+      securityRestClient
     });
   }
 
@@ -231,17 +245,58 @@ export class EstateRepository extends BaseRepo {
       users
         .filter(user => user.id !== owner)
         .map(async user => {
-          const balance = await this.estateContract.balanceOf(
-            user.id,
-            estateId
-          );
+          const balance = (
+            await this.estateContract.balanceOf(user.id, estateId)
+          ).toNumber();
           return new DividendOwner({
             name: user.name,
             address: user.id,
-            balance: balance.toNumber()
+            balance
           });
         })
     );
+
+    const sumBalance = estate.owners.reduce(
+      (acc, user) => acc + user.balance,
+      0
+    );
+
+    const registeredTxs: GetTxsResponseTx[] = (
+      await this.securityRestClient.txs({
+        "DividendRegistered.tokenID": estate.tokenId
+      })
+    ).txs;
+
+    estate.histories = registeredTxs.flatMap(tx => {
+      const events = tx.logs
+        .map(log => {
+          const ret = log.events.find(
+            event => event.type === "DividendRegistered"
+          );
+          if (!ret) {
+            return undefined;
+          }
+          return {
+            ...ret,
+            height: tx.height
+          };
+        })
+        .filter(event => !!event);
+
+      return events.map(event => {
+        const perShare = event?.attributes[2]?.value
+          ? Number(event.attributes[2].value)
+          : 0;
+        return new DividendHistory({
+          index: event?.attributes[1]?.value
+            ? Number(event.attributes[1].value)
+            : 0,
+          height: event ? Number(event.height) : 0,
+          total: new BN(sumBalance).muln(perShare).toNumber(),
+          status: DIVIDEND_HISTORY_STATUS.REGISTERED
+        });
+      });
+    });
 
     return estate;
   };
@@ -268,7 +323,6 @@ export class EstateRepository extends BaseRepo {
       offerPrice,
       expectedYield,
       owners: [],
-      issuerDividend: [],
       histories: []
     });
   };

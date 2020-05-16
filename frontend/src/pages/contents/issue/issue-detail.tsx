@@ -15,7 +15,11 @@ import {renderDividendRegisterForm} from "~pages/contents/issue/parts/issue-divi
 import {IssueDividendRegisterModal} from "~pages/contents/issue/parts/issue-diviend-register-modal";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
-import {encodeContractCallInfo} from "~src/libs/cosmos/Amino";
+import {
+  ContractCallMsg,
+  Cosmos,
+  SECURITY_CHAIN_ID
+} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
@@ -65,9 +69,7 @@ export class IssueDetail extends React.Component<Props, State> {
       prevStates.estate.tokenId !== this.state.estate.tokenId ||
       prevStates.estate.histories.length !==
         this.state.estate.histories.length ||
-      prevStates.estate.owners.length !== this.state.estate.owners.length ||
-      prevStates.estate.issuerDividend.length !==
-        this.state.estate.issuerDividend.length
+      prevStates.estate.owners.length !== this.state.estate.owners.length
     ) {
       await this.getEstate();
     }
@@ -166,35 +168,19 @@ export class IssueDetail extends React.Component<Props, State> {
 
   handleRegisterDividendModalOk = (resetState: () => void) => async () => {
     const {
-      user: {address},
-      repos: {dividendRepo}
+      user: {address, mnemonic},
+      repos: {dividendRepo, userRepo}
     } = this.props;
 
     const {estate, registeredPerUnit} = this.state;
 
     try {
-      // const simulated = await dividendRepo.simulateRegisterDividend(
-      //   address,
-      //   estate.tokenId,
-      //   registeredPerUnit
-      // );
-      // log.debug(simulated);
-
-      const callContractParams = dividendRepo.getRegisterDividendParams(
+      const simulated = await dividendRepo.simulateRegisterDividend(
         address,
         estate.tokenId,
         registeredPerUnit
       );
-      const buf = Buffer.from(
-        JSON.stringify({
-          type: "contract/ContractCallInfo",
-          value: callContractParams.call_info
-        }),
-        "utf8"
-      );
-
-      const contractBuf = encodeContractCallInfo(buf, true);
-      log.debug(Buffer.from(contractBuf).toString("base64"));
+      log.debug("simulated", simulated);
 
       const registeredDividend = await dividendRepo.getDividend(
         address,
@@ -214,10 +200,48 @@ export class IssueDetail extends React.Component<Props, State> {
         registeredDividendIndex.result.return_value.toNumber()
       );
 
-      const events = await dividendRepo.getDividendRegisteredList(
-        estate.tokenId
+      const contractCallParams = dividendRepo.getRegisterDividendParams(
+        address,
+        estate.tokenId,
+        registeredPerUnit
       );
-      log.debug(events);
+      const contractCallInfoBase64 = Cosmos.createContractCallInfoBase64(
+        contractCallParams.call_info
+      );
+
+      const msg: ContractCallMsg = {
+        type: "contract/MsgContractCall",
+        value: {
+          sender: address,
+          signers: null,
+          contract: contractCallInfoBase64
+        }
+      };
+
+      const {accountNumber, sequence} = await userRepo.getAuthAccountSecurity(
+        address
+      );
+      const fee = {amount: [], gas: "200000"};
+      const memo = "";
+
+      const sig = Cosmos.signContractCallTx({
+        contractCallTxs: [msg],
+        chainId: SECURITY_CHAIN_ID,
+        accountNumber,
+        sequence,
+        fee,
+        memo,
+        mnemonic
+      });
+      log.debug(sig);
+
+      const response = await dividendRepo.broadcastContractCallTx({
+        msg: [msg],
+        memo,
+        fee,
+        signatures: [sig]
+      });
+      log.debug("txResult", response);
     } catch (e) {
       log.error(e);
       message.error(e);
@@ -275,14 +299,15 @@ export class IssueDetail extends React.Component<Props, State> {
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
         {renderIssueDividendOwnerTable(estate.owners)}
-        {renderDividendRegisterForm(
-          user,
-          registeredPerUnit,
-          registeredQuantity,
-          registeredTotal,
-          this.handleOnChangeRegisterPerUnit,
-          this.handleRegisterDividendButtonClick
-        )}
+        {!estate.isRegistering() &&
+          renderDividendRegisterForm(
+            user,
+            registeredPerUnit,
+            registeredQuantity,
+            registeredTotal,
+            this.handleOnChangeRegisterPerUnit,
+            this.handleRegisterDividendButtonClick
+          )}
         {renderIssueDividendHistoryTable(
           estate.histories,
           this.handleDistributeDividendButtonClick

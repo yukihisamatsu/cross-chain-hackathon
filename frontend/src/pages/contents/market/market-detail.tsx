@@ -133,9 +133,10 @@ export class MarketDetail extends React.Component<Props, State> {
                 const nonce = DateTime.utc().toMillis();
                 crossTx.value.msg[0].value.Nonce = nonce.toString(10);
 
-                const {accountNumber, sequence} = await userRepo.getAuthAccount(
-                  address
-                );
+                const {
+                  accountNumber,
+                  sequence
+                } = await userRepo.getAuthAccountCoordinator(address);
                 const sig = Cosmos.signCrossTx({
                   crossTx,
                   chainId: COORDINATOR_CHAIN_ID,

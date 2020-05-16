@@ -7,12 +7,15 @@ import log from "loglevel";
 import * as secp256k1 from "secp256k1";
 
 import {CrossTx, Msg, StdFee, StdSignature} from "~src/libs/api";
+import {encodeContractCallInfo} from "~src/libs/cosmos/Amino";
+import {ContractCallInfo} from "~src/libs/cosmos/rest-client";
 import {Address, Base64EncodedString} from "~src/types";
 
 const path = "m/44'/118'/0'/0/0";
 const bech32MainPrefix = "cosmos";
 
 export const COORDINATOR_CHAIN_ID = "coordinatorz";
+export const SECURITY_CHAIN_ID = "securityz";
 
 interface SignedMessage<T> {
   account_number: string;
@@ -26,6 +29,13 @@ interface SignedMessage<T> {
 
 type CrossSignedMessage = SignedMessage<Msg>;
 type ContractCallSignedMessage = SignedMessage<ContractCallMsg>;
+
+export interface ContractCallStdTx {
+  msg: Array<ContractCallMsg>;
+  fee: StdFee;
+  signatures?: Array<StdSignature>;
+  memo: string;
+}
 
 export interface ContractCallMsg {
   type: "contract/MsgContractCall";
@@ -68,6 +78,21 @@ export const Cosmos = {
 
   getPubKeyBase64: (privateKey: Buffer): string => {
     return Cosmos.getPublicKey(privateKey).toString("base64");
+  },
+
+  createContractCallInfoBase64: (
+    value: ContractCallInfo
+  ): Base64EncodedString => {
+    const buf = Buffer.from(
+      JSON.stringify({
+        type: "contract/ContractCallInfo",
+        value
+      }),
+      "utf8"
+    );
+
+    const contractBuf = encodeContractCallInfo(buf, true);
+    return Buffer.from(contractBuf).toString("base64");
   },
 
   signCrossTx: ({
@@ -114,14 +139,14 @@ export const Cosmos = {
   }: {
     contractCallTxs: ContractCallMsg[];
     chainId: string;
-    accountNumber: string;
+    accountNumber?: string;
     sequence: string;
     fee: StdFee;
     memo: string;
     mnemonic: string;
   }) => {
     const signedMessage: ContractCallSignedMessage = {
-      account_number,
+      account_number: account_number ?? "0",
       chain_id,
       fee,
       memo,
@@ -162,7 +187,8 @@ type JSONValueType =
   | boolean
   | JSONValueTypeObject
   | JSONValueTypeArray
-  | Function;
+  | Function
+  | null;
 
 type JSONValueTypeArray = Array<JSONValueType>;
 interface JSONValueTypeObject {
@@ -194,6 +220,8 @@ export const sortObjectByKey = (jsonValue: JSONValueTypeObject) => {
           tmp[k] = sort(v);
         } else if (v != null && isFunction(v)) {
           tmp[k] = evil(v.toString());
+        } else if (v === null) {
+          tmp[k] = null;
         } else {
           tmp[k] = String(v).toString();
         }

@@ -203,9 +203,10 @@ export class OwnedDetail extends React.Component<Props, State> {
         const crossTx = selectedBuyOffer.crossTx;
         log.debug(crossTx);
 
-        const {accountNumber, sequence} = await userRepo.getAuthAccount(
-          address
-        );
+        const {
+          accountNumber,
+          sequence
+        } = await userRepo.getAuthAccountCoordinator(address);
         const sig = Cosmos.signCrossTx({
           crossTx,
           chainId: COORDINATOR_CHAIN_ID,

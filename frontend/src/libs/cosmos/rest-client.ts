@@ -2,6 +2,7 @@ import fetch from "cross-fetch";
 import {stringify} from "query-string";
 
 import {StdTx} from "~src/libs/api";
+import {ContractCallStdTx} from "~src/libs/cosmos/util";
 
 type ContractIdType = "dcc" | "estate";
 type RestGetParamTypes =
@@ -106,6 +107,7 @@ export class RestClient {
 }
 
 type Address = string;
+type HexEncodedString = string;
 type Base64EncodedString = string;
 type DecimalString = string;
 
@@ -122,11 +124,30 @@ interface GetTxsResponse {
   page_number: DecimalString;
   page_total: DecimalString;
   limit: DecimalString;
-  txs: boolean[];
+  txs: GetTxsResponseTx[];
+}
+
+export interface GetTxsResponseTx {
+  data: HexEncodedString;
+  gas_used: DecimalString;
+  gas_wanted: DecimalString;
+  height: DecimalString;
+  logs: {
+    events: {attributes: {key: string; value: string}[]; type: string}[];
+    log: string;
+    msg_index: number;
+  }[];
+  row_log: string;
+  timestamp: string;
+  tx: {
+    type: "cosmos-sdk/StdTx";
+    value: StdTx | ContractCallStdTx;
+  };
+  txhash: HexEncodedString;
 }
 
 interface BroadcastTxParams {
-  tx: StdTx;
+  tx: StdTx | ContractCallStdTx;
   mode: "block" | "sync" | "async";
 }
 

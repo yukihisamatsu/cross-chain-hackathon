@@ -1,63 +1,41 @@
 import {Unbox} from "~src/heplers/util-types";
 import {Address} from "~src/types";
 
-export class IssuerDividend {
-  userName: string;
-  userAddress: Address;
-  purchaseDate: string;
-
-  constructor({
-    userName,
-    userAddress,
-    purchaseDate
-  }: {
-    userName: string;
-    userAddress: Address;
-    purchaseDate: string;
-  }) {
-    this.userName = userName;
-    this.userAddress = userAddress;
-    this.purchaseDate = purchaseDate;
-  }
-}
-
-export const ISSUER_DIVIDEND_HISTORY_STATUS = {
-  NOT_DISTRIBUTED: "not_distributed",
+export const DIVIDEND_HISTORY_STATUS = {
+  REGISTERED: "registered",
   ONGOING: "ongoing",
   DISTRIBUTED: "distributed"
 } as const;
-export type IssuerDividendHistoryStatusType = Unbox<
-  typeof ISSUER_DIVIDEND_HISTORY_STATUS
->;
+export type DividendHistoryStatusType = Unbox<typeof DIVIDEND_HISTORY_STATUS>;
 export class DividendHistory {
-  id: string;
-  dividendDate: Address;
+  index: number;
+  height: number;
   total: number;
-  status: IssuerDividendHistoryStatusType;
+  status: DividendHistoryStatusType;
 
   constructor({
-    id,
-    dividendDate,
+    index,
+    height,
     total,
     status
   }: {
-    id: string;
-    dividendDate: string;
+    index: number;
+    height: number;
     total: number;
-    status: IssuerDividendHistoryStatusType;
+    status: DividendHistoryStatusType;
   }) {
-    this.id = id;
-    this.dividendDate = dividendDate;
+    this.index = index;
+    this.height = height;
     this.total = total;
     this.status = status;
   }
 
   static default = (): DividendHistory => {
     return new DividendHistory({
-      id: "",
-      dividendDate: "",
+      index: 0,
+      height: 0,
       total: 0,
-      status: ISSUER_DIVIDEND_HISTORY_STATUS.NOT_DISTRIBUTED
+      status: DIVIDEND_HISTORY_STATUS.REGISTERED
     });
   };
 }

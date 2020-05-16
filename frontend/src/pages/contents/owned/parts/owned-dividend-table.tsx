@@ -8,10 +8,10 @@ const {Panel} = Collapse;
 
 const columns = [
   {
-    title: "Date",
-    dataIndex: "dividendDate",
-    key: "dividendDate",
-    width: 220
+    title: "BlockHeight",
+    dataIndex: "height",
+    key: "height",
+    width: 120
   },
   {
     title: "Quantity",
@@ -39,7 +39,7 @@ export const renderOwnedDividendTable = (dividends: DividendHistory[]) => {
         key="1"
       >
         <Table<DividendHistory>
-          rowKey={(d: DividendHistory) => d.dividendDate}
+          rowKey={(d: DividendHistory) => d.height}
           dataSource={dividends}
           columns={columns}
           pagination={false}

@@ -29,8 +29,8 @@ export class IssueDividendDistributeModal extends React.PureComponent<Props> {
         okText={"CONFIRM"}
         cancelText={"CANCEL"}
       >
-        <div>id: {history.id}</div>
-        <div>dividendDate: {history.dividendDate}</div>
+        <div>height: {history.height}</div>
+        <div>index: {history.index}</div>
         <div>total: {history.total}</div>
         <div>status: {history.status}</div>
       </Modal>

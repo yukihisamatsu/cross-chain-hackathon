@@ -9,31 +9,42 @@ export class UserRepository {
   userApi: UserApi;
   coinContract: CoinContract;
   coordinatorRestClient: RestClient;
+  securityRestClient: RestClient;
 
   constructor({
     userApi,
     coinContract,
-    coordinatorRestClient
+    coordinatorRestClient,
+    securityRestClient
   }: {
     userApi: UserApi;
     coinContract: CoinContract;
     coordinatorRestClient: RestClient;
+    securityRestClient: RestClient;
   }) {
     this.userApi = userApi;
     this.coinContract = coinContract;
     this.coordinatorRestClient = coordinatorRestClient;
+    this.securityRestClient = securityRestClient;
   }
 
   static create({
     userApi,
     coinContract,
-    coordinatorRestClient
+    coordinatorRestClient,
+    securityRestClient
   }: {
     userApi: UserApi;
     coinContract: CoinContract;
     coordinatorRestClient: RestClient;
+    securityRestClient: RestClient;
   }): UserRepository {
-    return new UserRepository({userApi, coinContract, coordinatorRestClient});
+    return new UserRepository({
+      userApi,
+      coinContract,
+      coordinatorRestClient,
+      securityRestClient
+    });
   }
 
   getUsers = async (): Promise<User[]> => {
@@ -72,7 +83,7 @@ export class UserRepository {
     return balance.toNumber();
   };
 
-  getAuthAccount = async (
+  getAuthAccountCoordinator = async (
     address: Address
   ): Promise<{accountNumber: string; sequence: string}> => {
     const {
@@ -81,7 +92,21 @@ export class UserRepository {
       }
     } = await this.coordinatorRestClient.authAccounts(address)();
     return {
-      accountNumber: account_number,
+      accountNumber: account_number ?? "0",
+      sequence: sequence ?? "0"
+    };
+  };
+
+  getAuthAccountSecurity = async (
+    address: Address
+  ): Promise<{accountNumber: string; sequence: string}> => {
+    const {
+      result: {
+        value: {account_number, sequence}
+      }
+    } = await this.securityRestClient.authAccounts(address)();
+    return {
+      accountNumber: account_number ?? "0",
       sequence: sequence ?? "0"
     };
   };

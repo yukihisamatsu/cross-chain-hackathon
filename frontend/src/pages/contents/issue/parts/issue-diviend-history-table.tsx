@@ -3,9 +3,9 @@ import React from "react";
 import styled from "styled-components";
 
 import {
+  DIVIDEND_HISTORY_STATUS,
   DividendHistory,
-  ISSUER_DIVIDEND_HISTORY_STATUS,
-  IssuerDividendHistoryStatusType
+  DividendHistoryStatusType
 } from "~models/dividend";
 import {IssueDividendStatusTagColorMap} from "~pages/consts";
 
@@ -21,7 +21,7 @@ export const renderIssueDividendHistoryTable = (
         <HistoryInformationText>History</HistoryInformationText>
       </HistoryInformation>
       <Table<DividendHistory>
-        rowKey={(o: DividendHistory) => o.dividendDate}
+        rowKey={(o: DividendHistory) => o.height}
         dataSource={histories}
         pagination={false}
         bordered
@@ -29,10 +29,10 @@ export const renderIssueDividendHistoryTable = (
         size={"small"}
       >
         <Column
-          title="Date"
-          dataIndex="dividendDate"
-          key="dividendDate"
-          width={220}
+          title="Block Height"
+          dataIndex="height"
+          key="height"
+          width={120}
         />
         <Column title="Total" dataIndex="total" key="total" />
         <Column
@@ -40,7 +40,7 @@ export const renderIssueDividendHistoryTable = (
           dataIndex="status"
           key="status"
           width={150}
-          render={(status: IssuerDividendHistoryStatusType) => (
+          render={(status: DividendHistoryStatusType) => (
             <Tag color={IssueDividendStatusTagColorMap[status] ?? "green"}>
               {status}
             </Tag>
@@ -53,8 +53,7 @@ export const renderIssueDividendHistoryTable = (
           align="center"
           width={200}
           render={(_: string, history: DividendHistory) =>
-            history.status ===
-              ISSUER_DIVIDEND_HISTORY_STATUS.NOT_DISTRIBUTED && (
+            history.status === DIVIDEND_HISTORY_STATUS.REGISTERED && (
               <Button type={"default"} onClick={onClick(history)}>
                 DISTRIBUTE NOW
               </Button>
