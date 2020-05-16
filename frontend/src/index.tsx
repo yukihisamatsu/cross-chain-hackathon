@@ -6,7 +6,7 @@ import ReactDOM from "react-dom";
 
 import {Root} from "~pages/root";
 import {createApiClient} from "~src/heplers/api-client";
-import {parseEnv} from "~src/heplers/config";
+import {createConfig} from "~src/heplers/config";
 import {CoinContract} from "~src/libs/cosmos/contract/coin";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {RestClient} from "~src/libs/cosmos/rest-client";
@@ -17,7 +17,7 @@ import {Repositories} from "~src/repos/types";
 import {UserRepository} from "~src/repos/user";
 
 (async () => {
-  const config = parseEnv();
+  const config = createConfig();
   const logLevel: LogLevelDesc = config.env === "production" ? "warn" : "debug";
   log.setLevel(logLevel);
   const {dividendApi, estateApi, tradeApi, txApi, userApi} = createApiClient({
@@ -35,7 +35,9 @@ import {UserRepository} from "~src/repos/user";
     dividendRepo: DividendRepository.create({
       dividendApi,
       estateApi,
+      txApi,
       estateContract,
+      coordinatorRestClient,
       securityRestClient
     }),
     estateRepo: EstateRepository.create({

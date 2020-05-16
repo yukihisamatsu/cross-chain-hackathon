@@ -39,7 +39,7 @@ export const renderOwnedDividendTable = (dividends: DividendHistory[]) => {
         key="1"
       >
         <Table<DividendHistory>
-          rowKey={(d: DividendHistory) => d.height}
+          rowKey={(d: DividendHistory) => d.registeredHeight}
           dataSource={dividends}
           columns={columns}
           pagination={false}

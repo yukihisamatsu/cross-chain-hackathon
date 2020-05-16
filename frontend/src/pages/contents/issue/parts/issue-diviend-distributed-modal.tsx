@@ -29,7 +29,7 @@ export class IssueDividendDistributeModal extends React.PureComponent<Props> {
         okText={"CONFIRM"}
         cancelText={"CANCEL"}
       >
-        <div>height: {history.height}</div>
+        <div>height: {history.registeredHeight}</div>
         <div>index: {history.index}</div>
         <div>total: {history.total}</div>
         <div>status: {history.status}</div>
