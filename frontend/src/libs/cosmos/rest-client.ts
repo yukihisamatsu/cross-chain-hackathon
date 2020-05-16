@@ -5,10 +5,7 @@ import {StdTx} from "~src/libs/api";
 import {ContractCallStdTx} from "~src/libs/cosmos/util";
 
 type ContractIdType = "dcc" | "estate";
-type RestGetParamTypes =
-  | GetTxsParams
-  | CrossCoordinatorStatusParams
-  | undefined;
+type RestGetParamTypes = GetTxsParams | undefined;
 
 const initGet = (): RequestInit => {
   return {
@@ -95,10 +92,8 @@ export class RestClient {
   authAccounts = (address: Address) =>
     this.get<AuthAccountResponse>(`auth/accounts/${address}`);
 
-  crossCoordinatorStatus = this.get<
-    CrossCoordinatorStatusResponse,
-    CrossCoordinatorStatusParams
-  >("cross/coordinator");
+  crossCoordinatorStatus = (txHash: string) =>
+    this.get<CrossCoordinatorStatusResponse>(`cross/coordinator/${txHash}`);
 
   crossContractCall = this.post<
     CrossContractCallResponse,
@@ -151,7 +146,7 @@ interface BroadcastTxParams {
   mode: "block" | "sync" | "async";
 }
 
-interface BroadcastTxCommitResponse {
+export interface BroadcastTxCommitResponse {
   height: string;
   txhash: string;
   code?: number;
@@ -186,14 +181,11 @@ export interface CrossContractCallResponse {
   result: ContractCallResponse;
 }
 
-export interface CrossCoordinatorStatusParams {
-  tx_id: string;
-}
-
 export interface CrossCoordinatorStatusResponse {
   tx_id: string;
   coordinator_info: CoordinatorInfo;
   completed: boolean;
+  error?: string;
 }
 
 export interface CoordinatorInfo {

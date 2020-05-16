@@ -61,10 +61,12 @@ export class Root extends React.Component<Props, State> {
     this.balanceOfCoinTimer(user).catch(log.error);
   };
 
-  balanceOfCoinTimer = async (user: User) => {
+  balanceOfCoinTimer = async (_: User) => {
     const {
       repos: {userRepo}
     } = this.props;
+    const {user} = this.state;
+
     this.timeOutId !== 0 && clearTimeout(this.timeOutId);
     if (!user.address) {
       return;
@@ -83,7 +85,7 @@ export class Root extends React.Component<Props, State> {
       } finally {
         await this.balanceOfCoinTimer(user);
       }
-    }, 3000);
+    }, 15000);
   };
 
   setHeaderTitle = (headerTitle: string) => {

@@ -71,33 +71,30 @@ export class OrderRepository extends BaseRepo {
     );
   };
 
-  cancelSellOrder = async (sellOrder: SellOrder) => {
-    return await this.apiRequest(() => {
+  cancelSellOrder = (sellOrder: SellOrder) => {
+    return this.apiRequest(() => {
       return this.tradeApi.deleteTrade(sellOrder.tradeId);
     });
   };
 
-  cancelBuyOffer = async (offer: BuyOffer) => {
-    return await this.apiRequest(() => {
+  cancelBuyOffer = (offer: BuyOffer) => {
+    return this.apiRequest(() => {
       return this.tradeApi.deleteTradeRequest(offer.offerId);
     });
   };
 
-  getBuyRequestTx = async (
-    sellOrder: SellOrder,
-    from: Address
-  ): Promise<CrossTx> => {
-    return await this.apiRequest(() => {
+  getBuyRequestTx = (sellOrder: SellOrder, from: Address): Promise<CrossTx> => {
+    return this.apiRequest(() => {
       return this.txApi.getTxTradeRequest(sellOrder.tradeId, from);
     });
   };
 
-  postBuyOffer = async (
+  postBuyOffer = (
     sellOrder: SellOrder,
     from: Address,
     crossTx: CrossTx
   ): Promise<TradeRequest> => {
-    return await this.apiRequest(() => {
+    return this.apiRequest(() => {
       return this.tradeApi.postTradeRequest({
         tradeId: sellOrder.tradeId,
         from,
@@ -106,10 +103,26 @@ export class OrderRepository extends BaseRepo {
     });
   };
 
-  broadcastOrderTx = async (
+  getBuyOffer = async (
+    offer: BuyOffer,
+    quantity: number,
+    perUnitPrice: number
+  ): Promise<BuyOffer> => {
+    const response = await this.apiRequest(() => {
+      return this.tradeApi.getTradeRequestById(offer.offerId);
+    });
+
+    return BuyOffer.from(response, quantity, perUnitPrice);
+  };
+
+  broadcastOrderTx = (
     stdTx: StdTx,
     mode: "block" | "sync" | "async" = "block"
   ) => {
     return this.broadcastTx(this.coordinatorRestClient, stdTx, mode);
+  };
+
+  getOfferStatus = (txHash: string) => {
+    return this.getCrossCoordinatorStatus(this.coordinatorRestClient, txHash);
   };
 }

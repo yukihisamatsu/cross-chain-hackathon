@@ -1,3 +1,5 @@
+import log from "loglevel";
+
 import {User} from "~models/user";
 import {UserApi} from "~src/libs/api";
 import {CoinContract} from "~src/libs/cosmos/contract/coin";
@@ -67,7 +69,12 @@ export class UserRepository {
     mnemonic: string;
   }) => {
     const address = Cosmos.getAddress(mnemonic);
-    const balance = (await this.coinContract.balanceOf(address)).toNumber();
+    let balance = -1;
+    try {
+      balance = (await this.coinContract.balanceOf(address)).toNumber();
+    } catch (e) {
+      log.error(e);
+    }
 
     return {
       id,

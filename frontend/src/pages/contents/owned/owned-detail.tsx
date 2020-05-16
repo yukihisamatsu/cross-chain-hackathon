@@ -1,4 +1,4 @@
-import {message} from "antd";
+import {message, Spin} from "antd";
 import log from "loglevel";
 import React from "react";
 import {RouteComponentProps} from "react-router-dom";
@@ -23,6 +23,7 @@ interface Props extends RouteComponentProps<{id: string}> {
   config: Config;
   repos: Repositories;
   user: User;
+  setUser: (user: User) => Promise<void>;
   setHeaderText: (headerText: string) => void;
 }
 
@@ -41,6 +42,8 @@ interface State {
   canceledBuyersBuyOffer?: BuyOffer;
   cancelBuyersBuyOfferModalVisible: boolean;
   cancelBuyersBuyOfferModalConfirmLoading: boolean;
+  txStatusRetryCount: number;
+  isTxBroadcasting: boolean;
 }
 
 export class OwnedDetail extends React.Component<Props, State> {
@@ -57,8 +60,15 @@ export class OwnedDetail extends React.Component<Props, State> {
       unit: 0,
       perUnit: 0,
       buyOfferModalVisible: false,
-      buyOfferModalConfirmLoading: false
+      buyOfferModalConfirmLoading: false,
+      txStatusRetryCount: 0,
+      isTxBroadcasting: false
     };
+  }
+
+  timeOutId = 0;
+  componentWillUnmount() {
+    this.timeOutId !== 0 && clearTimeout(this.timeOutId);
   }
 
   async componentDidMount() {
@@ -102,7 +112,7 @@ export class OwnedDetail extends React.Component<Props, State> {
         estate
       });
     } catch (e) {
-      message.error(e);
+      message.error(JSON.stringify(e));
       history.push(PATHS.OWNED);
     }
   }
@@ -192,47 +202,116 @@ export class OwnedDetail extends React.Component<Props, State> {
 
     const {estate, selectedBuyOffer} = this.state;
 
-    this.setState({buyOfferModalConfirmLoading: true}, async () => {
-      if (!selectedBuyOffer) {
-        message.error("please select buy order.");
-        resetState();
-        return;
+    this.setState(
+      {buyOfferModalConfirmLoading: true, isTxBroadcasting: true},
+      async () => {
+        if (!selectedBuyOffer) {
+          message.error("please select buy order.");
+          resetState();
+          return;
+        }
+
+        try {
+          const crossTx = selectedBuyOffer.crossTx;
+          log.debug(crossTx);
+
+          const {
+            accountNumber,
+            sequence
+          } = await userRepo.getAuthAccountCoordinator(address);
+
+          const sig = Cosmos.signCrossTx({
+            crossTx,
+            accountNumber,
+            sequence,
+            mnemonic
+          });
+          log.debug(sig);
+
+          crossTx.value.signatures?.unshift(sig);
+
+          const response = await orderRepo.broadcastOrderTx(crossTx.value);
+          log.debug("response", response);
+
+          if (response.error || response.code || response.codespace) {
+            throw new Error(JSON.stringify(response));
+          }
+
+          await this.txStatusTimer(selectedBuyOffer, async () => {
+            const newEstate = await estateRepo.getOwnedEstate(
+              estate.tokenId,
+              address
+            );
+            const {user, setUser} = this.props;
+            await setUser(user);
+            this.setState({
+              estate: newEstate,
+              isTxBroadcasting: false,
+              selectedBuyOffer: undefined
+            });
+          });
+        } catch (e) {
+          log.error(e);
+          message.error(JSON.stringify(e));
+        } finally {
+          resetState();
+        }
       }
+    );
+  };
 
+  txStatusTimer = async (
+    selectedBuyOffer: BuyOffer,
+    onSuccess: () => Promise<void>
+  ) => {
+    this.timeOutId !== 0 && clearTimeout(this.timeOutId);
+
+    const {txStatusRetryCount} = this.state;
+    log.debug("txStatusRetryCount", txStatusRetryCount);
+
+    if (txStatusRetryCount === 10) {
+      this.setState({txStatusRetryCount: 0});
+      throw new Error("retry count exceeded.");
+    }
+
+    this.timeOutId = window.setTimeout(async () => {
       try {
-        const crossTx = selectedBuyOffer.crossTx;
-        log.debug(crossTx);
-
         const {
-          accountNumber,
-          sequence
-        } = await userRepo.getAuthAccountCoordinator(address);
+          user: {address},
+          repos: {estateRepo, orderRepo}
+        } = this.props;
 
-        const sig = Cosmos.signCrossTx({
-          crossTx,
-          accountNumber,
-          sequence,
-          mnemonic
-        });
-        log.debug(sig);
-
-        crossTx.value.signatures?.unshift(sig);
-
-        const response = await orderRepo.broadcastOrderTx(crossTx.value);
-        log.debug(response);
-
-        const newEstate = await estateRepo.getOwnedEstate(
-          estate.tokenId,
-          address
+        const newBuyOffer = await orderRepo.getBuyOffer(
+          selectedBuyOffer,
+          selectedBuyOffer.quantity,
+          selectedBuyOffer.perUnitPrice
         );
-        this.setState({estate: newEstate});
+
+        if (newBuyOffer.isFinished()) {
+          await onSuccess();
+          this.setState({txStatusRetryCount: 0});
+          return;
+        }
+
+        if (
+          selectedBuyOffer.status !== newBuyOffer.status &&
+          newBuyOffer.isOnGoing()
+        ) {
+          const newEstate = await estateRepo.getOwnedEstate(
+            this.state.estate.tokenId,
+            address
+          );
+          this.setState({estate: newEstate, txStatusRetryCount: 0});
+        }
+
+        this.setState({txStatusRetryCount: txStatusRetryCount + 1});
+        await this.txStatusTimer(newBuyOffer, onSuccess);
       } catch (e) {
         log.error(e);
-        message.error(e.toString());
-      } finally {
-        resetState();
+        this.setState({txStatusRetryCount: txStatusRetryCount + 1});
+        await this.txStatusTimer(selectedBuyOffer, onSuccess);
       }
-    });
+    }, 3000);
   };
 
   renderBuyOfferModal = () => {
@@ -245,7 +324,6 @@ export class OwnedDetail extends React.Component<Props, State> {
 
     const resetState = () =>
       this.setState({
-        selectedBuyOffer: undefined,
         buyOfferModalVisible: false,
         buyOfferModalConfirmLoading: false
       });
@@ -384,25 +462,27 @@ export class OwnedDetail extends React.Component<Props, State> {
 
   render() {
     const {user} = this.props;
-    const {estate} = this.state;
+    const {estate, isTxBroadcasting} = this.state;
     return (
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
         {renderOwnedDividendTable(estate.dividend)}
-        <EstateOrderTab
-          user={user}
-          estate={estate}
-          handleSellersBuyOfferClick={this.handleBuyOfferButtonClick}
-          handleSellOrderFormSubmit={this.handleSellOrderButtonClick}
-          handleChancelSellOrder={this.handleCancelSellOrderButtonClick}
-          handleChancelBuyersBuyOffer={
-            this.handleCancelBuyersBuyOfferButtonClick
-          }
-        />
-        {this.renderSellOrderModal()}
-        {this.renderBuyOfferModal()}
-        {this.renderCancelSellOrderModal()}
-        {this.renderCancelBuyersBuyOfferModal()}
+        <Spin spinning={isTxBroadcasting} tip="Broadcasting...">
+          <EstateOrderTab
+            user={user}
+            estate={estate}
+            handleSellersBuyOfferClick={this.handleBuyOfferButtonClick}
+            handleSellOrderFormSubmit={this.handleSellOrderButtonClick}
+            handleChancelSellOrder={this.handleCancelSellOrderButtonClick}
+            handleChancelBuyersBuyOffer={
+              this.handleCancelBuyersBuyOfferButtonClick
+            }
+          />
+          {this.renderSellOrderModal()}
+          {this.renderBuyOfferModal()}
+          {this.renderCancelSellOrderModal()}
+          {this.renderCancelBuyersBuyOfferModal()}
+        </Spin>
       </EstateDetailWrap>
     );
   }
