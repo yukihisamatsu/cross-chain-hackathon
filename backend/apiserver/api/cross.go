@@ -15,7 +15,7 @@ const (
 	TX_TYPE  = "cosmos-sdk/StdTx"
 	MSG_TYPE = "cross/MsgInitiate"
 
-	GAS = "200000"
+	GAS = "1000000"
 	// about 1h when block is commited per 1s
 	TIMEOUT_HEIGHT = 3600
 )
