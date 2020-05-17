@@ -105,8 +105,21 @@ export class SellOrder extends Order {
     });
   };
 
-  isOwner(owner: Address) {
+  isOwned(owner: Address) {
     return this.owner === owner;
+  }
+
+  isOpened() {
+    return this.status === ORDER_STATUS.OPENED;
+  }
+
+  isOffering(owner: Address) {
+    return (
+      !this.isOwned(owner) &&
+      this.buyOffers.find(
+        offer => offer.isOwned(owner) && offer.status === OFFER_STATUS.OPENED
+      )
+    );
   }
 }
 
@@ -225,5 +238,9 @@ export class BuyOffer {
       this.status === OFFER_STATUS.COMPLETED ||
       this.status === OFFER_STATUS.FAILED
     );
+  }
+
+  isOwned(owner: Address): boolean {
+    return this.offerer === owner;
   }
 }

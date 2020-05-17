@@ -47,7 +47,7 @@ export class EstateOrderTab extends React.Component<Props> {
           )}
         {estate.status === ESTATE_STATUS.SELLING &&
           activeSellOrder &&
-          activeSellOrder.isOwner(user.address) &&
+          activeSellOrder.isOwned(user.address) &&
           renderOwnedSellOrderInfo(
             activeSellOrder,
             handleChancelSellOrder(activeSellOrder)
@@ -69,7 +69,7 @@ export class EstateOrderTab extends React.Component<Props> {
       estate.status === ESTATE_STATUS.BUYING &&
       activeSellOrder &&
       renderOwnedBuyersBuyOfferTable(
-        estate.findOpenedBuyOffers(user.address),
+        estate.findOwnedBuyOffers(user.address),
         handleChancelBuyersBuyOffer
       )
     );

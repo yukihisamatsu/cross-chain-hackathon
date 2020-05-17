@@ -26,6 +26,24 @@ export const renderOwnedSellersBuyOfferTable = (
       >
         <Column title="Offerer" dataIndex="offerer" key="offerer" />
         <Column
+          title="Quantity"
+          dataIndex="quantity"
+          key="quantity"
+          width={100}
+        />
+        <Column
+          title="PerUnitPrice"
+          dataIndex="perUnitPrice"
+          key="perUnitPrice"
+          width={100}
+        />
+        <Column
+          title="Total"
+          key="perUnitPrice"
+          width={100}
+          render={(_: string, offer: BuyOffer) => offer.getTotal()}
+        />
+        <Column
           title="Date"
           dataIndex="updatedAt"
           key="updatedAt"

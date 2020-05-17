@@ -49,7 +49,7 @@ dockerize -wait http://coordinatorz:26657 \
           -wait http://coinz:26657 \
           -wait http://securityz:26657
 
-sleep 10s
+sleep 20s
 
 # mint DCC to everyone
 AMOUNT=$(hex64 1000000)
