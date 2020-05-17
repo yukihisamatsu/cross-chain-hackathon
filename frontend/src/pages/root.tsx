@@ -142,7 +142,7 @@ const MainLayout = styled(Layout)`
 `;
 
 const ContentLayout = styled(Layout)`
-  max-width: 1280px;
+  max-width: 1440px;
   padding: 10px 24px 0;
 `;
 

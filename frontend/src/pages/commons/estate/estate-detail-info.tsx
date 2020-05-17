@@ -4,7 +4,12 @@ import React from "react";
 import styled from "styled-components";
 
 import {OwnedEstateStatusTagColorMap} from "~pages/consts";
-import {ESTATE_STATUS, EstateExtend, OwnedEstate} from "~src/models/estate";
+import {
+  ESTATE_STATUS,
+  EstateExtend,
+  IssuerEstate,
+  OwnedEstate
+} from "~src/models/estate";
 
 export const renderEstateDetailInfo = (estate: EstateExtend) => {
   return (
@@ -46,11 +51,16 @@ export const renderEstateDetailInfo = (estate: EstateExtend) => {
           </EstateInfoDetailUnits>
         )}
         <EstateInfoDetailPlaneDividend>
-          Planned dividend: {estate.dividendDate}
+          ・Planned dividend: {estate.dividendDate}
         </EstateInfoDetailPlaneDividend>
         <EstateInfoDetailExpectedYield>
-          Expected dividend per unit: {estate.expectedYield}
+          ・Expected dividend per unit: {estate.expectedYield}
         </EstateInfoDetailExpectedYield>
+        {isIssuerEstate(estate) && (
+          <EstateMaxNumberOfPeople>
+            ・Max number of people: 3
+          </EstateMaxNumberOfPeople>
+        )}
         <EstateInfoDetailDescription>
           {estate.description}
         </EstateInfoDetailDescription>
@@ -61,6 +71,10 @@ export const renderEstateDetailInfo = (estate: EstateExtend) => {
 
 function isOwnedEstate(e: EstateExtend): e is OwnedEstate {
   return !!e.status;
+}
+
+function isIssuerEstate(e: EstateExtend): e is IssuerEstate {
+  return !!e.owners;
 }
 
 const EstateInfoWrap = styled.div`
@@ -122,6 +136,14 @@ const EstateInfoDetailIssuedByAddress = styled.span`
   color: cornflowerblue;
 `;
 
+const EstateInfoDetailUnits = styled.div`
+  font-size: 0.9rem;
+  font-weight: 200;
+  color: black;
+
+  padding-bottom: 20px;
+`;
+
 const EstateInfoDetailPlaneDividend = styled.div`
   font-size: 0.9rem;
   font-weight: 200;
@@ -135,15 +157,15 @@ const EstateInfoDetailExpectedYield = styled.div`
   font-weight: 200;
   color: #777777;
 
-  padding-bottom: 20px;
+  padding-bottom: 5px;
 `;
 
-const EstateInfoDetailUnits = styled.div`
+const EstateMaxNumberOfPeople = styled.div`
   font-size: 0.9rem;
   font-weight: 200;
-  color: black;
+  color: #777777;
 
-  padding-bottom: 20px;
+  padding-bottom: 5px;
 `;
 
 const EstateInfoDetailDescription = styled.div`
@@ -152,5 +174,5 @@ const EstateInfoDetailDescription = styled.div`
   color: darkgray;
   line-height: 1.3rem;
 
-  padding-bottom: 20px;
+  padding: 20px 0;
 `;
