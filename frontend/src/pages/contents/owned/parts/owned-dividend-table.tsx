@@ -8,15 +8,15 @@ const {Panel} = Collapse;
 
 const columns = [
   {
-    title: "BlockHeight",
-    dataIndex: "height",
-    key: "height",
+    title: "Timestamp",
+    dataIndex: "distributedTimeStamp",
+    key: "distributedTimeStamp",
     width: 120
   },
   {
     title: "Quantity",
-    dataIndex: "totalAmount",
-    key: "totalAmount"
+    dataIndex: "total",
+    key: "total"
   }
 ];
 

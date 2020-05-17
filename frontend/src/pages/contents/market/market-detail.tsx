@@ -130,8 +130,18 @@ export class MarketDetail extends React.Component<Props, State> {
                 );
                 log.debug(crossTx);
 
-                const nonce = DateTime.utc().toMillis();
-                crossTx.value.msg[0].value.Nonce = nonce.toString(10);
+                crossTx.value.msg = await Promise.all(
+                  crossTx.value.msg.map(async m => {
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                    return {
+                      ...m,
+                      value: {
+                        ...m.value,
+                        Nonce: DateTime.utc().toMillis().toString()
+                      }
+                    };
+                  })
+                );
 
                 const {
                   accountNumber,

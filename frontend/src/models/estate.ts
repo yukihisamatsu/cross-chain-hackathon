@@ -1,8 +1,4 @@
-import {
-  DIVIDEND_HISTORY_STATUS,
-  DividendHistory,
-  DividendOwner
-} from "~models/dividend";
+import {DividendHistory, DividendOwner} from "~models/dividend";
 import {User} from "~models/user";
 import {Unbox} from "~src/heplers/util-types";
 import {
@@ -69,7 +65,7 @@ export class Estate {
 export class OwnedEstate extends Estate {
   units: number;
   status: EstateStatusType;
-  dividend: DividendHistory[];
+  dividendHistories: DividendHistory[];
   sellOrders: SellOrder[];
 
   constructor({
@@ -83,7 +79,7 @@ export class OwnedEstate extends Estate {
     issuedBy,
     units,
     status,
-    dividend,
+    dividendHistories,
     sellOrders
   }: {
     tokenId: string;
@@ -96,7 +92,7 @@ export class OwnedEstate extends Estate {
     issuedBy: Address;
     units: number;
     status: EstateStatusType;
-    dividend: DividendHistory[];
+    dividendHistories: DividendHistory[];
     sellOrders: SellOrder[];
   }) {
     super({
@@ -112,7 +108,7 @@ export class OwnedEstate extends Estate {
 
     this.units = units;
     this.status = status;
-    this.dividend = dividend;
+    this.dividendHistories = dividendHistories;
     this.sellOrders = sellOrders;
   }
 
@@ -128,7 +124,7 @@ export class OwnedEstate extends Estate {
       issuedBy: "",
       units: 0,
       status: ESTATE_STATUS.OWNED,
-      dividend: [],
+      dividendHistories: [],
       sellOrders: []
     });
   };
@@ -159,7 +155,7 @@ export class OwnedEstate extends Estate {
     );
   };
 
-  findAllOwnedSellOrdersBuyOffers = (owner: Address): BuyOffer[] => {
+  filterAllOwnedSellOrdersBuyOffers = (owner: Address): BuyOffer[] => {
     const ret = SellOrder.sortDateDesc(this.sellOrders)
       .filter(order => order.isOwned(owner) && !order.isCancelled())
       .flatMap(order => order.buyOffers);
@@ -167,12 +163,16 @@ export class OwnedEstate extends Estate {
     return BuyOffer.sortDateDesc(ret);
   };
 
-  findOwnedBuyOffers = (offerer: Address): BuyOffer[] => {
+  filterOwnedBuyOffers = (offerer: Address): BuyOffer[] => {
     const ret = SellOrder.sortDateDesc(this.sellOrders)
       .flatMap(order => order.buyOffers)
       .filter(buyOffer => buyOffer.isOwned(offerer));
 
     return BuyOffer.sortDateDesc(ret);
+  };
+
+  filterDistributedDividendHistories = (): DividendHistory[] => {
+    return this.dividendHistories.filter(history => history.isDistributed());
   };
 }
 
@@ -300,10 +300,6 @@ export class IssuerEstate extends Estate {
   };
 
   isRegistering(): boolean {
-    return !!this.histories.find(
-      history =>
-        history.status === DIVIDEND_HISTORY_STATUS.REGISTERED ||
-        history.status === DIVIDEND_HISTORY_STATUS.ONGOING
-    );
+    return !!this.histories.find(history => history.isRegistering());
   }
 }

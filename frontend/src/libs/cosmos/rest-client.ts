@@ -128,7 +128,7 @@ export interface GetTxsResponseTx {
   gas_wanted: DecimalString;
   height: DecimalString;
   logs: {
-    events: {attributes: {key: string; value: string}[]; type: string}[];
+    events: GetTxsResponseTxEvent[];
     log: string;
     msg_index: number;
   }[];
@@ -139,6 +139,11 @@ export interface GetTxsResponseTx {
     value: StdTx | ContractCallStdTx;
   };
   txhash: HexEncodedString;
+}
+
+export interface GetTxsResponseTxEvent {
+  attributes: {key: string; value: string}[];
+  type: string;
 }
 
 interface BroadcastTxParams {

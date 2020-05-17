@@ -7,11 +7,19 @@ export const DIVIDEND_HISTORY_STATUS = {
   DISTRIBUTED: "distributed"
 } as const;
 export type DividendHistoryStatusType = Unbox<typeof DIVIDEND_HISTORY_STATUS>;
+export type PaidOnlyDividendHistory = Pick<
+  DividendHistory,
+  "distributedHeight" | "distributedTimeStamp" | "distributedTxHash" | "status"
+>;
+
 export class DividendHistory {
   index: number;
   registeredHeight: number;
   registeredTimeStamp: string;
   registeredTxHash: string;
+  distributedHeight?: number;
+  distributedTimeStamp?: string;
+  distributedTxHash?: string;
   perUnit: number;
   total: number;
   status: DividendHistoryStatusType;
@@ -21,6 +29,9 @@ export class DividendHistory {
     registeredHeight,
     registeredTimeStamp,
     registeredTxHash,
+    distributedHeight,
+    distributedTimeStamp,
+    distributedTxHash,
     perUnit,
     total,
     status
@@ -29,6 +40,9 @@ export class DividendHistory {
     registeredHeight: number;
     registeredTimeStamp: string;
     registeredTxHash: string;
+    distributedHeight?: number;
+    distributedTimeStamp?: string;
+    distributedTxHash?: string;
     perUnit: number;
     total: number;
     status: DividendHistoryStatusType;
@@ -37,6 +51,9 @@ export class DividendHistory {
     this.registeredHeight = registeredHeight;
     this.registeredTimeStamp = registeredTimeStamp;
     this.registeredTxHash = registeredTxHash;
+    this.distributedHeight = distributedHeight;
+    this.distributedTimeStamp = distributedTimeStamp;
+    this.distributedTxHash = distributedTxHash;
     this.perUnit = perUnit;
     this.total = total;
     this.status = status;
@@ -48,11 +65,32 @@ export class DividendHistory {
       registeredHeight: 0,
       registeredTimeStamp: "",
       registeredTxHash: "",
+      distributedHeight: undefined,
+      distributedTimeStamp: undefined,
+      distributedTxHash: undefined,
       perUnit: 0,
       total: 0,
       status: DIVIDEND_HISTORY_STATUS.REGISTERED
     });
   };
+
+  merge(paidHistory: PaidOnlyDividendHistory): DividendHistory {
+    return {
+      ...this,
+      ...paidHistory
+    };
+  }
+
+  isRegistering(): boolean {
+    return (
+      this.status === DIVIDEND_HISTORY_STATUS.REGISTERED ||
+      this.status === DIVIDEND_HISTORY_STATUS.ONGOING
+    );
+  }
+
+  isDistributed(): boolean {
+    return this.status === DIVIDEND_HISTORY_STATUS.DISTRIBUTED;
+  }
 }
 
 export class DividendOwner {
