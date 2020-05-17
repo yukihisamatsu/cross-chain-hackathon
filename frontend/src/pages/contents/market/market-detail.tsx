@@ -14,7 +14,7 @@ import {renderMarketSellOrderTable} from "~pages/contents/market/parts/market-se
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
 import {CrossTx} from "~src/libs/api";
-import {Cosmos} from "~src/libs/cosmos/util";
+import {Cross} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
@@ -137,7 +137,7 @@ export class MarketDetail extends React.Component<Props, State> {
                   accountNumber,
                   sequence
                 } = await userRepo.getAuthAccountCoordinator(address);
-                const sig = Cosmos.signCrossTx({
+                const sig = Cross.signCrossTx({
                   crossTx,
                   accountNumber,
                   sequence,

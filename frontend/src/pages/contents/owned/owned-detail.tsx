@@ -16,8 +16,9 @@ import {OwnedSellOrderModal} from "~pages/contents/owned/parts/owned-sell-order-
 import {EstateOrderTab} from "~pages/contents/owned/parts/owned-tab";
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
-import {Cosmos} from "~src/libs/cosmos/util";
+import {Cross} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
+import {HexEncodedString} from "~src/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
   config: Config;
@@ -42,7 +43,6 @@ interface State {
   canceledBuyersBuyOffer?: BuyOffer;
   cancelBuyersBuyOfferModalVisible: boolean;
   cancelBuyersBuyOfferModalConfirmLoading: boolean;
-  txStatusRetryCount: number;
   isTxBroadcasting: boolean;
 }
 
@@ -61,7 +61,6 @@ export class OwnedDetail extends React.Component<Props, State> {
       perUnit: 0,
       buyOfferModalVisible: false,
       buyOfferModalConfirmLoading: false,
-      txStatusRetryCount: 0,
       isTxBroadcasting: false
     };
   }
@@ -203,7 +202,10 @@ export class OwnedDetail extends React.Component<Props, State> {
     const {estate, selectedBuyOffer} = this.state;
 
     this.setState(
-      {buyOfferModalConfirmLoading: true, isTxBroadcasting: true},
+      {
+        buyOfferModalConfirmLoading: true,
+        isTxBroadcasting: true
+      },
       async () => {
         if (!selectedBuyOffer) {
           message.error("please select buy order.");
@@ -220,7 +222,7 @@ export class OwnedDetail extends React.Component<Props, State> {
             sequence
           } = await userRepo.getAuthAccountCoordinator(address);
 
-          const sig = Cosmos.signCrossTx({
+          const sig = Cross.signCrossTx({
             crossTx,
             accountNumber,
             sequence,
@@ -237,19 +239,24 @@ export class OwnedDetail extends React.Component<Props, State> {
             throw new Error(JSON.stringify(response));
           }
 
-          await this.txStatusTimer(selectedBuyOffer, async () => {
-            const newEstate = await estateRepo.getOwnedEstate(
-              estate.tokenId,
-              address
-            );
-            const {user, setUser} = this.props;
-            await setUser(user);
-            this.setState({
-              estate: newEstate,
-              isTxBroadcasting: false,
-              selectedBuyOffer: undefined
-            });
-          });
+          response.data &&
+            (await this.txStatusTimer(
+              response.data,
+              selectedBuyOffer,
+              async () => {
+                const newEstate = await estateRepo.getOwnedEstate(
+                  estate.tokenId,
+                  address
+                );
+                const {user, setUser} = this.props;
+                await setUser(user);
+                this.setState({
+                  estate: newEstate,
+                  isTxBroadcasting: false,
+                  selectedBuyOffer: undefined
+                });
+              }
+            ));
         } catch (e) {
           log.error(e);
           message.error(JSON.stringify(e));
@@ -261,25 +268,19 @@ export class OwnedDetail extends React.Component<Props, State> {
   };
 
   txStatusTimer = async (
+    txId: HexEncodedString,
     selectedBuyOffer: BuyOffer,
     onSuccess: () => Promise<void>
   ) => {
     this.timeOutId !== 0 && clearTimeout(this.timeOutId);
-
-    const {txStatusRetryCount} = this.state;
-    log.debug("txStatusRetryCount", txStatusRetryCount);
-
-    if (txStatusRetryCount === 10) {
-      this.setState({txStatusRetryCount: 0});
-      throw new Error("retry count exceeded.");
-    }
-
     this.timeOutId = window.setTimeout(async () => {
       try {
         const {
           user: {address},
           repos: {estateRepo, orderRepo}
         } = this.props;
+
+        await orderRepo.getTradeTxStatus(txId);
 
         const newBuyOffer = await orderRepo.getBuyOffer(
           selectedBuyOffer,
@@ -289,7 +290,6 @@ export class OwnedDetail extends React.Component<Props, State> {
 
         if (newBuyOffer.isFinished()) {
           await onSuccess();
-          this.setState({txStatusRetryCount: 0});
           return;
         }
 
@@ -301,15 +301,13 @@ export class OwnedDetail extends React.Component<Props, State> {
             this.state.estate.tokenId,
             address
           );
-          this.setState({estate: newEstate, txStatusRetryCount: 0});
+          this.setState({estate: newEstate});
         }
 
-        this.setState({txStatusRetryCount: txStatusRetryCount + 1});
-        await this.txStatusTimer(newBuyOffer, onSuccess);
+        await this.txStatusTimer(txId, newBuyOffer, onSuccess);
       } catch (e) {
         log.error(e);
-        this.setState({txStatusRetryCount: txStatusRetryCount + 1});
-        await this.txStatusTimer(selectedBuyOffer, onSuccess);
+        await this.txStatusTimer(txId, selectedBuyOffer, onSuccess);
       }
     }, 3000);
   };

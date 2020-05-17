@@ -147,8 +147,9 @@ interface BroadcastTxParams {
 }
 
 export interface BroadcastTxCommitResponse {
-  height: string;
-  txhash: string;
+  height: DecimalString;
+  txhash: HexEncodedString;
+  data?: HexEncodedString;
   code?: number;
   codespace?: string;
   gas_wanted?: string;
@@ -182,19 +183,22 @@ export interface CrossContractCallResponse {
 }
 
 export interface CrossCoordinatorStatusResponse {
-  tx_id: string;
-  coordinator_info: CoordinatorInfo;
-  completed: boolean;
+  height: DecimalString;
+  result: {
+    tx_id: string;
+    completed: boolean;
+    coordinator_info: CoordinatorInfo;
+  };
   error?: string;
 }
 
 export interface CoordinatorInfo {
-  transactions: string[]; // {TransactionID => ConnectionID}
-  channels: ChannelInfo[]; // {TransactionID => Channel}
-  status: number;
-  decision: number;
-  confirmedTransactions: number[]; // [TransactionID]
-  acks: number[]; // [TransactionID]
+  Transactions: string[]; // {TransactionID => ConnectionID}
+  Channels: ChannelInfo[]; // {TransactionID => Channel}
+  Status: number;
+  Decision: number;
+  ConfirmedTransactions: number[]; // [TransactionID]
+  Acks: number[]; // [TransactionID]
 }
 
 export interface ChannelInfo {

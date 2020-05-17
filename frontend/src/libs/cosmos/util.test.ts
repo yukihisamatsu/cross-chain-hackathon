@@ -5,6 +5,7 @@ import {CrossTx} from "~src/libs/api";
 import {
   COORDINATOR_CHAIN_ID,
   Cosmos,
+  Cross,
   sortObjectByKey
 } from "~src/libs/cosmos/util";
 
@@ -32,9 +33,8 @@ describe("cosmos lib", () => {
 
   test("get getPubKeyBase64 from mnemonic phrase", () => {
     const crossTx: CrossTx = JSON.parse(noSigJson);
-    const sig = Cosmos.signCrossTx({
+    const sig = Cross.signCrossTx({
       crossTx,
-      chainId: COORDINATOR_CHAIN_ID,
       accountNumber: "8",
       sequence: "0",
       mnemonic: alice

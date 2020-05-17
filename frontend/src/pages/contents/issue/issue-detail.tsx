@@ -17,11 +17,12 @@ import {IssueDividendRegisterModal} from "~pages/contents/issue/parts/issue-divi
 import {PATHS} from "~pages/routes";
 import {Config} from "~src/heplers/config";
 import {
-  ContractCallMsg,
-  Cosmos,
+  CROSS_COORDINATOR_RESULT,
   SECURITY_CHAIN_ID
-} from "~src/libs/cosmos/util";
+} from "~src/libs/cosmos/consts";
+import {ContractCallMsg, Cosmos, Cross} from "~src/libs/cosmos/util";
 import {Repositories} from "~src/repos/types";
+import {HexEncodedString} from "~src/types";
 
 interface Props extends RouteComponentProps<{id: string}> {
   config: Config;
@@ -160,7 +161,11 @@ export class IssueDetail extends React.Component<Props, State> {
     const {estate, registeredPerUnit, selectedHistory} = this.state;
 
     this.setState(
-      {registerModalConfirmLoading: true, isTxBroadcasting: true},
+      {
+        registerModalConfirmLoading: true,
+        isTxBroadcasting: true,
+        txStatusRetryCount: 0
+      },
       async () => {
         try {
           const contractCallParams = dividendRepo.getRegisterDividendParams(
@@ -210,15 +215,17 @@ export class IssueDetail extends React.Component<Props, State> {
           if (response.error || response.code || response.codespace) {
             throw new Error(JSON.stringify(response));
           }
-          await this.txStatusTimer(selectedHistory, async () => {
+
+          await this.registerTxStatusTimer(selectedHistory, async () => {
             const newEstate = await estateRepo.getIssuerEstate(
               estate.tokenId,
               address
             );
             this.setState({
               estate: newEstate,
+              selectedHistory: DividendHistory.default(),
               isTxBroadcasting: false,
-              selectedHistory: DividendHistory.default()
+              txStatusRetryCount: 0
             });
           });
         } catch (e) {
@@ -231,7 +238,7 @@ export class IssueDetail extends React.Component<Props, State> {
     );
   };
 
-  txStatusTimer = async (
+  registerTxStatusTimer = async (
     history: DividendHistory,
     onSuccess: () => Promise<void> | void
   ) => {
@@ -260,16 +267,15 @@ export class IssueDetail extends React.Component<Props, State> {
 
         if (dividendIndex.result.return_value.gtn(0)) {
           await onSuccess();
-          this.setState({txStatusRetryCount: 0});
           return;
         }
 
         this.setState({txStatusRetryCount: txStatusRetryCount + 1});
-        await this.txStatusTimer(history, onSuccess);
+        await this.registerTxStatusTimer(history, onSuccess);
       } catch (e) {
         log.error(e);
         this.setState({txStatusRetryCount: txStatusRetryCount + 1});
-        await this.txStatusTimer(history, onSuccess);
+        await this.registerTxStatusTimer(history, onSuccess);
       }
     }, 3000);
   };
@@ -316,13 +322,17 @@ export class IssueDetail extends React.Component<Props, State> {
   handleDistributeDividendModalOk = (resetState: () => void) => async () => {
     const {
       user: {address, mnemonic},
-      repos: {dividendRepo, userRepo}
+      repos: {dividendRepo, estateRepo, userRepo}
     } = this.props;
 
     const {estate, selectedHistory} = this.state;
 
     this.setState(
-      {distributedModalConfirmLoading: true, isTxBroadcasting: true},
+      {
+        distributedModalConfirmLoading: true,
+        isTxBroadcasting: true,
+        txStatusRetryCount: 0
+      },
       async () => {
         try {
           const crossTx = await dividendRepo.getDistributedDividendTx(
@@ -338,7 +348,7 @@ export class IssueDetail extends React.Component<Props, State> {
             sequence
           } = await userRepo.getAuthAccountCoordinator(address);
 
-          const sig = Cosmos.signCrossTx({
+          const sig = Cross.signCrossTx({
             crossTx,
             accountNumber,
             sequence,
@@ -353,6 +363,31 @@ export class IssueDetail extends React.Component<Props, State> {
             crossTx.value
           );
           log.debug(response);
+
+          response.data &&
+            (await this.distributeTxStatusTimer(
+              response.data,
+              async () => {
+                const newEstate = await estateRepo.getIssuerEstate(
+                  estate.tokenId,
+                  address
+                );
+                this.setState({
+                  estate: newEstate,
+                  selectedHistory: DividendHistory.default(),
+                  isTxBroadcasting: false,
+                  txStatusRetryCount: 0
+                });
+              },
+              errorMessage => {
+                log.error(errorMessage);
+                message.error("failed to broadcast tx");
+                this.setState({
+                  isTxBroadcasting: false,
+                  txStatusRetryCount: 0
+                });
+              }
+            ));
         } catch (e) {
           log.error(e);
           message.error(JSON.stringify(e));
@@ -361,6 +396,37 @@ export class IssueDetail extends React.Component<Props, State> {
         }
       }
     );
+  };
+
+  distributeTxStatusTimer = async (
+    txId: HexEncodedString,
+    onSuccess: () => Promise<void>,
+    onFailure: (errorMessage: string) => void
+  ) => {
+    this.timeOutId !== 0 && clearTimeout(this.timeOutId);
+    this.timeOutId = window.setTimeout(async () => {
+      try {
+        const {
+          repos: {dividendRepo}
+        } = this.props;
+
+        const status = await dividendRepo.getDistributeTxStatus(txId);
+        const result = Cross.getCoordinatorStatus(status);
+
+        if (result === CROSS_COORDINATOR_RESULT.OK) {
+          await onSuccess();
+          return;
+        } else if (result === CROSS_COORDINATOR_RESULT.FAILED) {
+          onFailure(JSON.stringify(status));
+          return;
+        }
+
+        await this.distributeTxStatusTimer(txId, onSuccess, onFailure);
+      } catch (e) {
+        log.error(e);
+        await this.distributeTxStatusTimer(txId, onSuccess, onFailure);
+      }
+    }, 3000);
   };
 
   renderDistributeDividendModal = () => {

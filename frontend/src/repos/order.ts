@@ -122,7 +122,7 @@ export class OrderRepository extends BaseRepo {
     return this.broadcastTx(this.coordinatorRestClient, stdTx, mode);
   };
 
-  getOfferStatus = (txHash: string) => {
-    return this.getCrossCoordinatorStatus(this.coordinatorRestClient, txHash);
+  getTradeTxStatus = (txId: string) => {
+    return this.getCrossCoordinatorStatus(this.coordinatorRestClient, txId);
   };
 }
