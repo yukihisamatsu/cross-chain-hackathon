@@ -8,14 +8,21 @@ import * as secp256k1 from "secp256k1";
 
 import {CrossTx, Msg, StdFee, StdSignature} from "~src/libs/api";
 import {encodeContractCallInfo} from "~src/libs/cosmos/Amino";
-import {ContractCallInfo} from "~src/libs/cosmos/rest-client";
+import {
+  COORDINATOR_CHAIN_ID,
+  CROSS_COORDINATOR_DECISION,
+  CROSS_COORDINATOR_RESULT,
+  CROSS_COORDINATOR_STATUS,
+  CrossCoordinatorResultType
+} from "~src/libs/cosmos/consts";
+import {
+  ContractCallInfo,
+  CrossCoordinatorStatusResponse
+} from "~src/libs/cosmos/rest-client";
 import {Address, Base64EncodedString} from "~src/types";
 
 const path = "m/44'/118'/0'/0/0";
 const bech32MainPrefix = "cosmos";
-
-export const COORDINATOR_CHAIN_ID = "coordinatorz";
-export const SECURITY_CHAIN_ID = "securityz";
 
 interface SignedMessage<T> {
   account_number: string;
@@ -95,37 +102,6 @@ export const Cosmos = {
     return Buffer.from(contractBuf).toString("base64");
   },
 
-  signCrossTx: ({
-    crossTx,
-    accountNumber: account_number,
-    sequence,
-    mnemonic
-  }: {
-    crossTx: CrossTx;
-    accountNumber: string;
-    sequence: string;
-    mnemonic: string;
-  }) => {
-    const {
-      value: {msg: msgs, fee, memo}
-    } = crossTx;
-
-    const signedMessage: CrossSignedMessage = {
-      account_number,
-      chain_id: COORDINATOR_CHAIN_ID,
-      fee,
-      memo,
-      msgs,
-      sequence
-    };
-
-    const privateKey = Cosmos.getPrivateKey(mnemonic);
-    return signTx(
-      (signedMessage as unknown) as JSONValueTypeObject,
-      privateKey
-    );
-  },
-
   signContractCallTx: ({
     contractCallTxs: msgs,
     chainId: chain_id,
@@ -157,6 +133,61 @@ export const Cosmos = {
       (signedMessage as unknown) as JSONValueTypeObject,
       privateKey
     );
+  }
+} as const;
+
+export const Cross = {
+  signCrossTx: ({
+    crossTx,
+    accountNumber: account_number,
+    sequence,
+    mnemonic
+  }: {
+    crossTx: CrossTx;
+    accountNumber: string;
+    sequence: string;
+    mnemonic: string;
+  }) => {
+    const {
+      value: {msg: msgs, fee, memo}
+    } = crossTx;
+
+    const signedMessage: CrossSignedMessage = {
+      account_number,
+      chain_id: COORDINATOR_CHAIN_ID,
+      fee,
+      memo,
+      msgs,
+      sequence
+    };
+
+    const privateKey = Cosmos.getPrivateKey(mnemonic);
+    return signTx(
+      (signedMessage as unknown) as JSONValueTypeObject,
+      privateKey
+    );
+  },
+
+  getCoordinatorStatus({
+    result: {
+      completed,
+      coordinator_info: {Status, Decision}
+    }
+  }: CrossCoordinatorStatusResponse): CrossCoordinatorResultType {
+    if (
+      Status === CROSS_COORDINATOR_STATUS.DECIDED &&
+      Decision === CROSS_COORDINATOR_DECISION.COMMIT &&
+      completed
+    ) {
+      return CROSS_COORDINATOR_RESULT.OK;
+    } else if (
+      Status === CROSS_COORDINATOR_STATUS.DECIDED &&
+      Decision === CROSS_COORDINATOR_DECISION.ABORT
+    ) {
+      return CROSS_COORDINATOR_RESULT.FAILED;
+    } else {
+      return CROSS_COORDINATOR_RESULT.PREPARE;
+    }
   }
 } as const;
 

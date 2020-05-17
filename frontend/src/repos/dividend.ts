@@ -2,11 +2,12 @@ import {CrossTx, DividendApi, EstateApi, StdTx, TxApi} from "~src/libs/api";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {
   CrossContractCallResponse,
+  CrossCoordinatorStatusResponse,
   RestClient
 } from "~src/libs/cosmos/rest-client";
 import {ContractCallStdTx} from "~src/libs/cosmos/util";
 import {BaseRepo} from "~src/repos/base";
-import {Address} from "~src/types";
+import {Address, HexEncodedString} from "~src/types";
 
 export class DividendRepository extends BaseRepo {
   estateApi: EstateApi;
@@ -119,23 +120,29 @@ export class DividendRepository extends BaseRepo {
     });
   }
 
-  getDistributedDividendTx = async (
+  getDistributedDividendTx = (
     tokenId: string,
     perShare: number
   ): Promise<CrossTx> => {
-    return await this.apiRequest(() => {
+    return this.apiRequest(() => {
       return this.txApi.getTxDividend(tokenId, perShare);
     });
   };
 
-  broadcastRegisterTx = async (
+  getDistributeTxStatus = (
+    txId: HexEncodedString
+  ): Promise<CrossCoordinatorStatusResponse> => {
+    return this.getCrossCoordinatorStatus(this.coordinatorRestClient, txId);
+  };
+
+  broadcastRegisterTx = (
     stdTx: ContractCallStdTx,
     mode: "block" | "sync" | "async" = "block"
   ) => {
     return this.broadcastTx(this.securityRestClient, stdTx, mode);
   };
 
-  broadcastDistributeTx = async (
+  broadcastDistributeTx = (
     stdTx: StdTx,
     mode: "block" | "sync" | "async" = "block"
   ) => {

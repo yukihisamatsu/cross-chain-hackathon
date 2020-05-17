@@ -312,6 +312,7 @@ export class EstateRepository extends BaseRepo {
 
     log.debug("distributedTxs", distributedTxs);
 
+    // TODO Distributed
     return registeredTxs.flatMap(tx => {
       const events = tx.logs
         .map(log => {

@@ -18,8 +18,11 @@ import {UserRepository} from "~src/repos/user";
 
 (async () => {
   const config = createConfig();
-  const logLevel: LogLevelDesc = config.env === "production" ? "warn" : "debug";
+
+  const logLevel: LogLevelDesc =
+    config.env === "production" ? "debug" : "debug";
   log.setLevel(logLevel);
+
   const {dividendApi, estateApi, tradeApi, txApi, userApi} = createApiClient({
     basePath: config.apiEndPoint
   });
