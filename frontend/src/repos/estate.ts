@@ -4,11 +4,11 @@ import log from "loglevel";
 import {
   DIVIDEND_HISTORY_STATUS,
   DividendHistory,
-  DividendOwner
+  DividendOwner,
+  PaidOnlyDividendHistory
 } from "~models/dividend";
 import {
   ESTATE_STATUS,
-  EstateExtend,
   IssuerEstate,
   MarketEstate,
   OwnedEstate
@@ -156,7 +156,10 @@ export class EstateRepository extends BaseRepo {
     owner: Address
   ): Promise<OwnedEstate> => {
     const {data: dao} = await this.estateApi.getEstateById(estateId);
-    return this.toOwnedEstate(dao, owner);
+    const estate = await this.toOwnedEstate(dao, owner);
+    estate.dividendHistories = await this.getDividendHistories(estate.tokenId);
+
+    return estate;
   };
 
   private toOwnedEstate = async (
@@ -224,7 +227,7 @@ export class EstateRepository extends BaseRepo {
       units: units.toNumber(),
       status: OwnedEstate.getStatus(sellOrders, owner),
       sellOrders,
-      dividend: [] // TODO
+      dividendHistories: []
     });
   };
 
@@ -261,7 +264,10 @@ export class EstateRepository extends BaseRepo {
       0
     );
 
-    estate.histories = await this.getDividendHistory(estate, sumBalance);
+    estate.histories = await this.getDividendHistories(
+      estate.tokenId,
+      sumBalance
+    );
 
     return estate;
   };
@@ -292,65 +298,83 @@ export class EstateRepository extends BaseRepo {
     });
   };
 
-  private getDividendHistory = async (
-    estate: EstateExtend,
-    sumBalance: number
-  ) => {
+  private getDividendHistories = async (
+    tokenId: string,
+    sumBalance = 0
+  ): Promise<DividendHistory[]> => {
     const registeredTxs: GetTxsResponseTx[] = (
       await this.securityRestClient.txs({
-        "DividendRegistered.tokenID": estate.tokenId
+        "DividendRegistered.tokenID": tokenId
       })
     ).txs;
-
     log.debug("registeredTxs", registeredTxs);
+
+    const registeredHistories: DividendHistory[] = registeredTxs
+      .flatMap(tx => {
+        return tx.logs.flatMap(log =>
+          log.events
+            .filter(event => event.type === "DividendRegistered")
+            .map(event => {
+              // DividendRegistered event struct
+              // attributes[0] = tokenID
+              // attributes[1] = index
+              // attributes[2] = perShare
+              const perShare = event.attributes[2]?.value
+                ? Number(event.attributes[2].value)
+                : 0;
+              return new DividendHistory({
+                index: event.attributes[1]?.value
+                  ? Number(event.attributes[1].value)
+                  : -1,
+                registeredHeight: Number(tx.height),
+                registeredTimeStamp: tx.timestamp,
+                registeredTxHash: tx.txhash,
+                perUnit: perShare,
+                total: new BN(sumBalance).muln(perShare).toNumber(),
+                status: DIVIDEND_HISTORY_STATUS.REGISTERED
+              });
+            })
+        );
+      })
+      .sort((a, b) => (a.index < b.index ? 1 : -1));
 
     const distributedTxs: GetTxsResponseTx[] = (
       await this.securityRestClient.txs({
-        "DividendPaid.tokenID": estate.tokenId
+        "DividendPaid.tokenID": tokenId
       })
     ).txs;
-
     log.debug("distributedTxs", distributedTxs);
 
-    // TODO Distributed
-    return registeredTxs.flatMap(tx => {
-      const events = tx.logs
-        .map(log => {
-          const ret = log.events.find(
-            event => event.type === "DividendRegistered"
-          );
-          if (!ret) {
-            return undefined;
-          }
-          return {
-            ...ret,
-            height: tx.height,
-            timeStamp: tx.timestamp,
-            txHash: tx.txhash
-          };
-        })
-        .filter(event => !!event);
+    const paidHistoryIndexMap: {
+      [index: number]: PaidOnlyDividendHistory;
+    } = {};
+    distributedTxs.flatMap(tx => {
+      return tx.logs.flatMap(log =>
+        log.events
+          .filter(event => event.type === "DividendPaid")
+          .forEach(event => {
+            // DividendPaid event struct
+            // attributes[0] = tokenID
+            // attributes[1] = index
+            const index = event.attributes[1]?.value
+              ? Number(event.attributes[1].value)
+              : -1;
+            paidHistoryIndexMap[index] = {
+              distributedHeight: Number(tx.height),
+              distributedTimeStamp: tx.timestamp,
+              distributedTxHash: tx.txhash,
+              status: DIVIDEND_HISTORY_STATUS.DISTRIBUTED
+            };
+          })
+      );
+    });
 
-      return events.map(event => {
-        // DividendRegistered event struct
-        // attributes[0] = tokenID
-        // attributes[1] = index
-        // attributes[2] = perShare
-        const perShare = event?.attributes[2]?.value
-          ? Number(event.attributes[2].value)
-          : 0;
-        return new DividendHistory({
-          index: event?.attributes[1]?.value
-            ? Number(event.attributes[1].value)
-            : 0,
-          registeredHeight: event ? Number(event.height) : 0,
-          registeredTimeStamp: event ? event.timeStamp : "",
-          registeredTxHash: event?.txHash ?? "",
-          perUnit: perShare,
-          total: new BN(sumBalance).muln(perShare).toNumber(),
-          status: DIVIDEND_HISTORY_STATUS.REGISTERED
-        });
-      });
+    return registeredHistories.map(registered => {
+      if (!paidHistoryIndexMap[registered.index]) {
+        return registered;
+      }
+      const paidHistory = paidHistoryIndexMap[registered.index];
+      return registered.merge(paidHistory);
     });
   };
 }

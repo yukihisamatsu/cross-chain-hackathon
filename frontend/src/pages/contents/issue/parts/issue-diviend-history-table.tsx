@@ -34,6 +34,12 @@ export const renderIssueDividendHistoryTable = (
           key="registeredTimeStamp"
           width={200}
         />
+        <Column
+          title="Dividend Date"
+          dataIndex="distributedTimeStamp"
+          key="registeredTimeStamp"
+          width={200}
+        />
         <Column title="Total" dataIndex="total" key="total" />
         <Column
           title="Status"

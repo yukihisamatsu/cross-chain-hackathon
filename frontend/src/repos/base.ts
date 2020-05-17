@@ -17,15 +17,20 @@ export abstract class BaseRepo {
     return response.data;
   };
 
-  broadcastTx = (
+  broadcastTx = async (
     restClient: RestClient,
     stdTx: ContractCallStdTx | StdTx,
     mode: "block" | "sync" | "async" = "block"
   ) => {
-    return restClient.txsPost({
+    const response = await restClient.txsPost({
       tx: stdTx,
       mode
     });
+
+    if (response.error || response.code || response.codespace) {
+      throw new Error(JSON.stringify(response));
+    }
+    return response;
   };
 
   getCrossCoordinatorStatus = async (restClient: RestClient, txId: string) => {

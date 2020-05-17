@@ -5,7 +5,7 @@ import React from "react";
 import {RouteComponentProps} from "react-router";
 import styled from "styled-components";
 
-import {DividendHistory} from "~models/dividend";
+import {DIVIDEND_HISTORY_STATUS, DividendHistory} from "~models/dividend";
 import {IssuerEstate} from "~models/estate";
 import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
@@ -212,9 +212,6 @@ export class IssueDetail extends React.Component<Props, State> {
             signatures: [sig]
           });
           log.debug("response", response);
-          if (response.error || response.code || response.codespace) {
-            throw new Error(JSON.stringify(response));
-          }
 
           await this.registerTxStatusTimer(selectedHistory, async () => {
             const newEstate = await estateRepo.getIssuerEstate(
@@ -265,7 +262,7 @@ export class IssueDetail extends React.Component<Props, State> {
         );
         log.debug("dividendIndex", dividendIndex);
 
-        if (dividendIndex.result.return_value.gtn(0)) {
+        if (dividendIndex.result.return_value.gtn(history.index)) {
           await onSuccess();
           return;
         }
@@ -340,8 +337,18 @@ export class IssueDetail extends React.Component<Props, State> {
             selectedHistory.perUnit
           );
 
-          const nonce = DateTime.utc().toMillis();
-          crossTx.value.msg[0].value.Nonce = nonce.toString(10);
+          crossTx.value.msg = await Promise.all(
+            crossTx.value.msg.map(async m => {
+              await new Promise(resolve => setTimeout(resolve, 1));
+              return {
+                ...m,
+                value: {
+                  ...m.value,
+                  Nonce: DateTime.utc().toMillis().toString()
+                }
+              };
+            })
+          );
 
           const {
             accountNumber,
@@ -363,6 +370,15 @@ export class IssueDetail extends React.Component<Props, State> {
             crossTx.value
           );
           log.debug(response);
+          estate.histories = estate.histories.map(history => {
+            if (history.isRegistering()) {
+              history.status = DIVIDEND_HISTORY_STATUS.ONGOING;
+            }
+            return history;
+          });
+          this.setState({
+            estate
+          });
 
           response.data &&
             (await this.distributeTxStatusTimer(
@@ -382,7 +398,14 @@ export class IssueDetail extends React.Component<Props, State> {
               errorMessage => {
                 log.error(errorMessage);
                 message.error("failed to broadcast tx");
+                estate.histories = estate.histories.map(history => {
+                  if (history.isRegistering()) {
+                    history.status = DIVIDEND_HISTORY_STATUS.REGISTERED;
+                  }
+                  return history;
+                });
                 this.setState({
+                  estate,
                   isTxBroadcasting: false,
                   txStatusRetryCount: 0
                 });

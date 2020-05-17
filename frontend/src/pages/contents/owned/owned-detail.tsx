@@ -84,7 +84,8 @@ export class OwnedDetail extends React.Component<Props, State> {
 
     if (
       prevStates.estate.tokenId !== this.state.estate.tokenId ||
-      prevStates.estate.dividend.length !== this.state.estate.dividend.length ||
+      prevStates.estate.dividendHistories.length !==
+        this.state.estate.dividendHistories.length ||
       prevStates.estate.sellOrders.length !==
         this.state.estate.sellOrders.length ||
       prevStates.estate.status !== this.state.estate.status
@@ -234,10 +235,6 @@ export class OwnedDetail extends React.Component<Props, State> {
 
           const response = await orderRepo.broadcastOrderTx(crossTx.value);
           log.debug("response", response);
-
-          if (response.error || response.code || response.codespace) {
-            throw new Error(JSON.stringify(response));
-          }
 
           response.data &&
             (await this.txStatusTimer(
@@ -464,7 +461,7 @@ export class OwnedDetail extends React.Component<Props, State> {
     return (
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
-        {renderOwnedDividendTable(estate.dividend)}
+        {renderOwnedDividendTable(estate.filterDistributedDividendHistories())}
         <Spin spinning={isTxBroadcasting} tip="Broadcasting...">
           <EstateOrderTab
             user={user}
