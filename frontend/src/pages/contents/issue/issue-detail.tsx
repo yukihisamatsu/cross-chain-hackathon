@@ -185,7 +185,7 @@ export class IssueDetail extends React.Component<Props, State> {
             accountNumber,
             sequence
           } = await userRepo.getAuthAccountSecurity(address);
-          const fee = {amount: [], gas: "200000"};
+          const fee = {amount: [], gas: "1000000"};
           const memo = "";
           log.debug("accountNumber", accountNumber);
           log.debug("sequence", sequence);
@@ -256,8 +256,9 @@ export class IssueDetail extends React.Component<Props, State> {
           address,
           estate.tokenId
         );
+        log.debug("dividendIndex", dividendIndex);
 
-        if (dividendIndex.result.return_value.eqn(0)) {
+        if (dividendIndex.result.return_value.gtn(0)) {
           await onSuccess();
           this.setState({txStatusRetryCount: 0});
           return;

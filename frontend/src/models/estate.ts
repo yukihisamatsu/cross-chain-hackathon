@@ -133,26 +133,21 @@ export class OwnedEstate extends Estate {
   };
 
   static getStatus(sellOrders: SellOrder[], owner: Address): EstateStatusType {
-    const openedOrder = sellOrders.find(
-      order =>
-        (order.owner === owner ||
-          order.buyOffers.find(offer => offer.offerer === owner)) &&
-        order.status === ORDER_STATUS.OPENED
-    );
+    const openedOrder = sellOrders.find(order => order.isOpened());
 
     if (!openedOrder) {
       return ESTATE_STATUS.OWNED;
     }
 
-    if (
-      openedOrder.buyOffers.find(
-        offer => offer.isActive() && offer.offerer === owner
-      )
-    ) {
+    if (openedOrder.isOffering(owner)) {
       return ESTATE_STATUS.BUYING;
     }
 
-    return ESTATE_STATUS.SELLING;
+    if (openedOrder.isOwned(owner)) {
+      return ESTATE_STATUS.SELLING;
+    }
+
+    return ESTATE_STATUS.OWNED;
   }
 
   findActiveSellOrder = (): SellOrder | null => {
@@ -165,20 +160,16 @@ export class OwnedEstate extends Estate {
 
   findAllOwnedSellOrdersBuyOffers = (owner: Address): BuyOffer[] => {
     const ret = SellOrder.sortDateDesc(this.sellOrders)
-      .filter(order => order.isOwner(owner))
+      .filter(order => order.isOwned(owner))
       .flatMap(order => order.buyOffers);
 
     return BuyOffer.sortDateDesc(ret);
   };
 
-  findOpenedBuyOffers = (offerer: Address): BuyOffer[] => {
+  findOwnedBuyOffers = (offerer: Address): BuyOffer[] => {
     const ret = SellOrder.sortDateDesc(this.sellOrders)
-      .filter(
-        order =>
-          order.status === ORDER_STATUS.OPENED &&
-          order.buyOffers.find(offer => offer.offerer === offerer)
-      )
-      .flatMap(order => order.buyOffers);
+      .flatMap(order => order.buyOffers)
+      .filter(buyOffer => buyOffer.isOwned(offerer));
 
     return BuyOffer.sortDateDesc(ret);
   };
