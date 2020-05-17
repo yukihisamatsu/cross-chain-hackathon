@@ -55,6 +55,7 @@ import {UserRepository} from "~src/repos/user";
     userRepo: UserRepository.create({
       userApi,
       coinContract,
+      estateContract,
       coordinatorRestClient,
       securityRestClient
     })

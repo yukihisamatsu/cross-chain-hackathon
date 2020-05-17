@@ -57,7 +57,10 @@ export class Root extends React.Component<Props, State> {
       repos: {userRepo}
     } = this.props;
     const balance = user.address ? await userRepo.balanceOf(user.address) : 0;
-    this.setState({user: {...user, balance}});
+    const isWhitelisted = user.address
+      ? await userRepo.isWhitelisted(user.address)
+      : false;
+    this.setState({user: {...user, balance, isWhitelisted}});
     this.balanceOfCoinTimer(user).catch(log.error);
   };
 
@@ -85,7 +88,7 @@ export class Root extends React.Component<Props, State> {
       } finally {
         await this.balanceOfCoinTimer(user);
       }
-    }, 15000);
+    }, 10000);
   };
 
   setHeaderTitle = (headerTitle: string) => {

@@ -1,3 +1,4 @@
+import {CheckCircleTwoTone, CloseCircleTwoTone} from "@ant-design/icons";
 import {Button, Layout} from "antd";
 import React from "react";
 import {RouteComponentProps} from "react-router";
@@ -33,6 +34,13 @@ export class HeaderComponent extends React.PureComponent<Props> {
               <span>{user.address}</span>
             </UserText>
             <UserText>
+              <span style={{paddingRight: "5px"}}>
+                {user.isWhitelisted ? (
+                  <CheckCircleTwoTone twoToneColor="#52c41a" />
+                ) : (
+                  <CloseCircleTwoTone twoToneColor="#dd1111" />
+                )}
+              </span>
               <span>{user.name}</span>
             </UserText>
             <UserText>
