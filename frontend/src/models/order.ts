@@ -113,6 +113,10 @@ export class SellOrder extends Order {
     return this.status === ORDER_STATUS.OPENED;
   }
 
+  isCancelled() {
+    return this.status === ORDER_STATUS.CANCELED;
+  }
+
   isOffering(owner: Address) {
     return (
       !this.isOwned(owner) &&

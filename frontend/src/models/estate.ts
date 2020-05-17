@@ -160,7 +160,7 @@ export class OwnedEstate extends Estate {
 
   findAllOwnedSellOrdersBuyOffers = (owner: Address): BuyOffer[] => {
     const ret = SellOrder.sortDateDesc(this.sellOrders)
-      .filter(order => order.isOwned(owner))
+      .filter(order => order.isOwned(owner) && !order.isCancelled())
       .flatMap(order => order.buyOffers);
 
     return BuyOffer.sortDateDesc(ret);

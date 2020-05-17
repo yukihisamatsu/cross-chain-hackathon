@@ -237,25 +237,23 @@ export class EstateRepository extends BaseRepo {
 
   getIssuerEstate = async (
     estateId: string,
-    owner: Address
+    _: Address
   ): Promise<IssuerEstate> => {
     const {data: dao} = await this.estateApi.getEstateById(estateId);
     const estate = await this.toIssuerEstate(dao);
     const {data: users} = await this.userApi.getUsers();
 
     estate.owners = await Promise.all(
-      users
-        .filter(user => user.id !== owner)
-        .map(async user => {
-          const balance = (
-            await this.estateContract.balanceOf(user.id, estateId)
-          ).toNumber();
-          return new DividendOwner({
-            name: user.name,
-            address: user.id,
-            balance
-          });
-        })
+      users.map(async user => {
+        const balance = (
+          await this.estateContract.balanceOf(user.id, estateId)
+        ).toNumber();
+        return new DividendOwner({
+          name: user.name,
+          address: user.id,
+          balance
+        });
+      })
     );
 
     const sumBalance = estate.owners.reduce(
