@@ -34,6 +34,7 @@ export class Estate {
 
   units?: number;
   status?: EstateStatusType;
+  owners?: DividendOwner[];
 
   constructor({
     tokenId,

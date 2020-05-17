@@ -6,25 +6,29 @@ export class User {
   address: Address;
   mnemonic: string;
   balance: number;
+  isWhitelisted: boolean;
 
   constructor({
     id,
     name,
     address,
     mnemonic,
-    balance
+    balance,
+    isWhitelisted
   }: {
     id: string;
     name: string;
     address: Address;
     mnemonic: string;
     balance: number;
+    isWhitelisted: boolean;
   }) {
     this.id = id;
     this.name = name;
     this.address = address;
     this.mnemonic = mnemonic;
     this.balance = balance;
+    this.isWhitelisted = isWhitelisted;
   }
 
   static create(jsonStr: string) {
@@ -36,7 +40,8 @@ export class User {
       name: json["name"],
       address: json["address"],
       mnemonic: json["mnemonic"],
-      balance: 0
+      balance: 0,
+      isWhitelisted: false
     });
   }
 
@@ -46,7 +51,8 @@ export class User {
       name: "",
       address: "",
       mnemonic: "",
-      balance: 0
+      balance: 0,
+      isWhitelisted: false
     });
   }
 }

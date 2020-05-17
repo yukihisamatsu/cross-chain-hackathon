@@ -36,6 +36,25 @@ export class EstateContract {
     return new BN(Buffer.from(response.result.return_value, "base64"));
   }
 
+  async isWhitelisted(self: Address, by: Address): Promise<boolean> {
+    const selfBase64 = fromUTF8ToBase64(self);
+    const byBase64 = fromUTF8ToBase64(by);
+    const params: CrossContractCallParams = {
+      from: self,
+      signers: [],
+      call_info: {
+        id: "estate",
+        method: "isWhitelisted",
+        args: [selfBase64, byBase64]
+      }
+    };
+    const response = await this.securityRestClient.crossContractCall(params);
+    const num = Buffer.from(response.result.return_value, "base64").readUInt8(
+      0
+    );
+    return num === 1;
+  }
+
   registerDividendParams(
     from: Address,
     tokenId: number | string | number[] | Uint8Array | Buffer | BN,

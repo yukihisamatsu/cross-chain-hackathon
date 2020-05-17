@@ -3,29 +3,36 @@ import log from "loglevel";
 import {User} from "~models/user";
 import {UserApi} from "~src/libs/api";
 import {CoinContract} from "~src/libs/cosmos/contract/coin";
+import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {RestClient} from "~src/libs/cosmos/rest-client";
 import {Cosmos} from "~src/libs/cosmos/util";
 import {Address} from "~src/types";
 
+const ISSUER_ADDRESS = "cosmos1yk0x4pqcwyuxtrsd8nqz2x0xd3ucafed96wd02";
+
 export class UserRepository {
   userApi: UserApi;
   coinContract: CoinContract;
+  estateContract: EstateContract;
   coordinatorRestClient: RestClient;
   securityRestClient: RestClient;
 
   constructor({
     userApi,
     coinContract,
+    estateContract,
     coordinatorRestClient,
     securityRestClient
   }: {
     userApi: UserApi;
     coinContract: CoinContract;
+    estateContract: EstateContract;
     coordinatorRestClient: RestClient;
     securityRestClient: RestClient;
   }) {
     this.userApi = userApi;
     this.coinContract = coinContract;
+    this.estateContract = estateContract;
     this.coordinatorRestClient = coordinatorRestClient;
     this.securityRestClient = securityRestClient;
   }
@@ -33,17 +40,20 @@ export class UserRepository {
   static create({
     userApi,
     coinContract,
+    estateContract,
     coordinatorRestClient,
     securityRestClient
   }: {
     userApi: UserApi;
     coinContract: CoinContract;
+    estateContract: EstateContract;
     coordinatorRestClient: RestClient;
     securityRestClient: RestClient;
   }): UserRepository {
     return new UserRepository({
       userApi,
       coinContract,
+      estateContract,
       coordinatorRestClient,
       securityRestClient
     });
@@ -71,9 +81,17 @@ export class UserRepository {
     const address = Cosmos.getAddress(mnemonic);
     let balance = -1;
     try {
-      balance = (await this.coinContract.balanceOf(address)).toNumber();
+      balance = await this.balanceOf(address);
     } catch (e) {
       log.error(e);
+    }
+
+    let isWhitelisted: boolean;
+    try {
+      isWhitelisted = await this.isWhitelisted(address);
+    } catch (e) {
+      log.error(e);
+      isWhitelisted = false;
     }
 
     return {
@@ -81,13 +99,33 @@ export class UserRepository {
       name,
       address,
       mnemonic,
-      balance
+      balance,
+      isWhitelisted
     };
   };
 
   balanceOf = async (address: Address): Promise<number> => {
-    const balance = await this.coinContract.balanceOf(address);
-    return balance.toNumber();
+    let balance = -1;
+    try {
+      balance = (await this.coinContract.balanceOf(address)).toNumber();
+    } catch (e) {
+      log.error(e);
+    }
+    return balance;
+  };
+
+  isWhitelisted = async (self: Address): Promise<boolean> => {
+    let isWhitelisted: boolean;
+    try {
+      isWhitelisted = await this.estateContract.isWhitelisted(
+        self,
+        ISSUER_ADDRESS
+      );
+    } catch (e) {
+      log.error(e);
+      isWhitelisted = false;
+    }
+    return isWhitelisted;
   };
 
   getAuthAccountCoordinator = async (
