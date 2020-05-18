@@ -290,6 +290,14 @@ export class BuyOffer {
     });
   };
 
+  getAnotherOpenedOffer(offerer: Address, tradeId: number): boolean {
+    return (
+      this.tradeId != tradeId &&
+      this.offerer === offerer &&
+      this.status === OFFER_STATUS.OPENED
+    );
+  }
+
   getOwnedOpenedOffers(owner: Address) {
     return this.isOwned(owner) && this.status === OFFER_STATUS.OPENED;
   }
@@ -306,10 +314,11 @@ export class BuyOffer {
   }
 
   isFinished(): boolean {
-    return (
-      this.status === OFFER_STATUS.COMPLETED ||
-      this.status === OFFER_STATUS.FAILED
-    );
+    return this.isCompleted() || this.status === OFFER_STATUS.FAILED;
+  }
+
+  isCompleted(): boolean {
+    return this.status === OFFER_STATUS.COMPLETED;
   }
 
   isOwned(owner: Address): boolean {

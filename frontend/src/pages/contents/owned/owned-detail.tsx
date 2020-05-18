@@ -224,7 +224,8 @@ export class OwnedDetail extends React.Component<Props, State> {
   handleBuyOfferOKClick = (resetState: () => void) => () => {
     const {
       repos: {estateRepo, orderRepo, userRepo},
-      user: {address, mnemonic}
+      user: {address, mnemonic},
+      history
     } = this.props;
 
     const {estate, selectedBuyOffer} = this.state;
@@ -256,9 +257,9 @@ export class OwnedDetail extends React.Component<Props, State> {
             sequence,
             mnemonic
           });
-          log.debug(sig);
 
           crossTx.value.signatures?.unshift(sig);
+          log.debug("crossTx with sign", crossTx);
 
           const response = await orderRepo.broadcastOrderTx(crossTx.value);
           log.debug("response", response);
@@ -274,6 +275,12 @@ export class OwnedDetail extends React.Component<Props, State> {
                 );
                 const {user, setUser} = this.props;
                 await setUser(user);
+
+                if (newEstate.units === 0) {
+                  history.push(PATHS.OWNED);
+                  return;
+                }
+
                 this.setState({
                   estate: newEstate,
                   isTxBroadcasting: false,
@@ -294,7 +301,7 @@ export class OwnedDetail extends React.Component<Props, State> {
   getTxStatusTimer = async (
     txId: HexEncodedString,
     selectedBuyOffer: BuyOffer,
-    onSuccess: () => Promise<void>
+    onFinished: () => Promise<void>
   ) => {
     this.getTxStatusTimerId !== 0 && clearTimeout(this.getTxStatusTimerId);
     this.getTxStatusTimerId = window.setTimeout(async () => {
@@ -313,7 +320,12 @@ export class OwnedDetail extends React.Component<Props, State> {
         );
 
         if (newBuyOffer.isFinished()) {
-          await onSuccess();
+          if (newBuyOffer.isCompleted()) {
+            message.info("successfully broadcast Tx");
+          } else {
+            message.error("failed to broadcast tx");
+          }
+          await onFinished();
           return;
         }
 
@@ -328,10 +340,10 @@ export class OwnedDetail extends React.Component<Props, State> {
           this.setState({estate: newEstate});
         }
 
-        await this.getTxStatusTimer(txId, newBuyOffer, onSuccess);
+        await this.getTxStatusTimer(txId, newBuyOffer, onFinished);
       } catch (e) {
         log.error(e);
-        await this.getTxStatusTimer(txId, selectedBuyOffer, onSuccess);
+        await this.getTxStatusTimer(txId, selectedBuyOffer, onFinished);
       }
     }, 3000);
   };

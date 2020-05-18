@@ -43,7 +43,7 @@ export const renderIssueDividendOwnerTable = (orders: DividendOwner[]) => {
       >
         <Column title="UserName" dataIndex="name" key="name" width={100} />
         <Column title="Address" dataIndex="address" key="address" width={260} />
-        <Column title="Balance" dataIndex="balance" key="balance" width={250} />
+        <Column title="Units" dataIndex="balance" key="balance" width={250} />
       </Table>
     </React.Fragment>
   );

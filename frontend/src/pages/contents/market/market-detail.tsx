@@ -149,6 +149,9 @@ export class MarketDetail extends React.Component<Props, State> {
           visible={sellOrderModalVisible}
           confirmLoading={sellOrderModalConfirmLoading}
           onOK={() => {
+            if (!selectedSellOrder) {
+              return;
+            }
             this.setState({sellOrderModalConfirmLoading: true}, async () => {
               try {
                 if (!isWhitelisted) {
@@ -157,6 +160,27 @@ export class MarketDetail extends React.Component<Props, State> {
                   );
                   return;
                 }
+
+                // FIXME
+                // const openedBuyOffer = (
+                //   await orderRepo.getBuyOffers(
+                //     address,
+                //     selectedSellOrder.quantity,
+                //     selectedSellOrder.perUnitPrice
+                //   )
+                // ).find(offer =>
+                //   offer.getAnotherOpenedOffer(
+                //     address,
+                //     selectedSellOrder.tradeId
+                //   )
+                // );
+                //
+                // if (openedBuyOffer) {
+                //   message.error(
+                //     "You can't place a new buy order because you have already done another one."
+                //   );
+                //   return;
+                // }
 
                 const crossTx: CrossTx = await orderRepo.getBuyRequestTx(
                   selectedSellOrder,
@@ -188,18 +212,21 @@ export class MarketDetail extends React.Component<Props, State> {
                   mnemonic
                 });
 
+                const crossTxWithSign: CrossTx = {
+                  ...crossTx,
+                  value: {
+                    ...crossTx.value,
+                    signatures: [sig]
+                  }
+                };
+                log.debug("crossTx with sign", crossTxWithSign);
+
                 const response = await orderRepo.postBuyOffer(
                   selectedSellOrder,
                   address,
-                  {
-                    ...crossTx,
-                    value: {
-                      ...crossTx.value,
-                      signatures: [sig]
-                    }
-                  }
+                  crossTxWithSign
                 );
-                log.debug(response);
+                log.debug("response", response);
 
                 const newEstate = await estateRepo.getMarketEstate(
                   estate.tokenId,
