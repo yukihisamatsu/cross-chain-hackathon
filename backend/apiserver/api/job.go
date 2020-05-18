@@ -206,11 +206,18 @@ func getCoordinatorStatus(url string, txID string) (TradeRequestStatus, error) {
 	if err := json.Unmarshal(body, &res); err != nil {
 		return 0, err
 	}
-	if res.Result.CoordinatorInfo.IsCompleted() {
-		if res.Result.Completed {
-			return REQUEST_COMPLETED, nil
+
+	if res.Result.Completed {
+		ci := res.Result.CoordinatorInfo
+		if ci.Status == types.CO_STATUS_DECIDED {
+			if ci.Decision == types.CO_DECISION_COMMIT {
+				return REQUEST_COMPLETED, nil
+			} else if ci.Decision == types.CO_DECISION_ABORT {
+				return REQUEST_FAILED, nil
+			}
+			// ELSE?
 		}
-		return REQUEST_FAILED, nil
+		// ELSE?
 	}
 	return REQUEST_ONGOING, nil
 }
