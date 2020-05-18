@@ -66,41 +66,8 @@ export class IssueDetail extends React.Component<Props, State> {
     this.timeOutId !== 0 && clearTimeout(this.timeOutId);
   }
 
-  async componentDidUpdate(
-    prevProps: Readonly<Props>,
-    prevStates: Readonly<State>
-  ) {
-    if (prevProps.user.address !== this.props.user.address) {
-      await this.getEstate();
-    }
-
-    if (
-      prevStates.estate.tokenId !== this.state.estate.tokenId ||
-      prevStates.estate.histories.length !==
-        this.state.estate.histories.length ||
-      prevStates.estate.owners.length !== this.state.estate.owners.length
-    ) {
-      await this.getEstate();
-    }
-  }
-
   async componentDidMount() {
-    const {
-      repos: {dividendRepo},
-      user: {address}
-    } = this.props;
-
     await this.getEstate();
-
-    const {
-      estate: {tokenId}
-    } = this.state;
-
-    const dividend = await dividendRepo.getDividend(address, tokenId);
-    log.debug("dividend", dividend.result.return_value.toNumber());
-
-    const dividendIndex = await dividendRepo.getDividendIndex(address, tokenId);
-    log.debug("dividendIndex", dividendIndex.result.return_value.toNumber());
   }
 
   async getEstate() {
@@ -156,7 +123,7 @@ export class IssueDetail extends React.Component<Props, State> {
       repos: {dividendRepo, estateRepo, userRepo}
     } = this.props;
 
-    const {estate, registeredPerUnit, selectedHistory} = this.state;
+    const {estate, registeredPerUnit} = this.state;
 
     this.setState(
       {
@@ -165,6 +132,10 @@ export class IssueDetail extends React.Component<Props, State> {
       },
       async () => {
         try {
+          const beforeDividendIndex = (
+            await dividendRepo.getDividendIndex(address, estate.tokenId)
+          ).result.return_value.toNumber();
+
           const contractCallParams = dividendRepo.getRegisterDividendParams(
             address,
             estate.tokenId,
@@ -210,7 +181,7 @@ export class IssueDetail extends React.Component<Props, State> {
           });
           log.debug("response", response);
 
-          await this.registerTxStatusTimer(selectedHistory, async () => {
+          await this.registerTxStatusTimer(beforeDividendIndex, async () => {
             message.info("successfully broadcast Tx");
             const newEstate = await estateRepo.getIssuerEstate(
               estate.tokenId,
@@ -233,7 +204,7 @@ export class IssueDetail extends React.Component<Props, State> {
   };
 
   registerTxStatusTimer = async (
-    history: DividendHistory,
+    beforeDividendIndex: number,
     onSuccess: () => Promise<void> | void
   ) => {
     this.timeOutId !== 0 && clearTimeout(this.timeOutId);
@@ -245,21 +216,25 @@ export class IssueDetail extends React.Component<Props, State> {
         } = this.props;
         const {estate} = this.state;
 
-        const dividendIndex = await dividendRepo.getDividend(
+        const dividendIndex = await dividendRepo.getDividendIndex(
           address,
           estate.tokenId
         );
-        log.debug("dividendIndex", dividendIndex);
+        log.debug("beforeDividendIndex", beforeDividendIndex);
+        log.debug(
+          "dividendIndex",
+          dividendIndex.result.return_value.toNumber()
+        );
 
-        if (dividendIndex.result.return_value.gtn(history.index)) {
+        if (dividendIndex.result.return_value.gtn(beforeDividendIndex)) {
           await onSuccess();
           return;
         }
 
-        await this.registerTxStatusTimer(history, onSuccess);
+        await this.registerTxStatusTimer(beforeDividendIndex, onSuccess);
       } catch (e) {
         log.error(e);
-        await this.registerTxStatusTimer(history, onSuccess);
+        await this.registerTxStatusTimer(beforeDividendIndex, onSuccess);
       }
     }, 3000);
   };

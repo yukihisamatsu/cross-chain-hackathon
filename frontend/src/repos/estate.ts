@@ -1,5 +1,4 @@
 import BN from "bn.js";
-import log from "loglevel";
 
 import {
   DIVIDEND_HISTORY_STATUS,
@@ -255,7 +254,6 @@ export class EstateRepository extends BaseRepo {
         "DividendRegistered.tokenID": tokenId
       })
     ).txs;
-    log.debug("registeredTxs", registeredTxs);
 
     const registeredHistories: DividendHistory[] = registeredTxs
       .flatMap(tx => {
@@ -291,7 +289,6 @@ export class EstateRepository extends BaseRepo {
         "DividendPaid.tokenID": tokenId
       })
     ).txs;
-    log.debug("distributedTxs", distributedTxs);
 
     const paidHistoryIndexMap: {
       [index: number]: PaidOnlyDividendHistory;

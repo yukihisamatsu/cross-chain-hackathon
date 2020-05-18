@@ -8,7 +8,7 @@ export const DIVIDEND_HISTORY_STATUS = {
 } as const;
 export type DividendHistoryStatusType = Unbox<typeof DIVIDEND_HISTORY_STATUS>;
 export type PaidOnlyDividendHistory = Pick<
-  DividendHistory,
+  Required<DividendHistory>,
   "distributedHeight" | "distributedTimeStamp" | "distributedTxHash" | "status"
 >;
 
@@ -75,10 +75,11 @@ export class DividendHistory {
   };
 
   merge(paidHistory: PaidOnlyDividendHistory): DividendHistory {
-    return {
-      ...this,
-      ...paidHistory
-    };
+    this.distributedHeight = paidHistory.distributedHeight;
+    this.distributedTimeStamp = paidHistory.distributedTimeStamp;
+    this.distributedTxHash = paidHistory.distributedTxHash;
+    this.status = paidHistory.status;
+    return this;
   }
 
   isRegistering(): boolean {

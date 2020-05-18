@@ -9,7 +9,7 @@ import {BuyOffer, SellOrder} from "~models/order";
 import {User} from "~models/user";
 import {renderEstateDetailInfo} from "~pages/commons/estate/estate-detail-info";
 import {OwnedBuyersBuyOfferCancelModal} from "~pages/contents/owned/parts/owned-buyers-buy-offer-cancel-modal";
-import {renderOwnedDividendTable} from "~pages/contents/owned/parts/owned-dividend-table";
+import {renderOwnedDividendHistoryTable} from "~pages/contents/owned/parts/owned-dividend-history-table";
 import {OwnedSellBuyOfferModal} from "~pages/contents/owned/parts/owned-sell-buy-offer-modal";
 import {OwnedSellOrderCancelModal} from "~pages/contents/owned/parts/owned-sell-order-cancel-modal";
 import {OwnedSellOrderModal} from "~pages/contents/owned/parts/owned-sell-order-modal";
@@ -500,7 +500,9 @@ export class OwnedDetail extends React.Component<Props, State> {
     return (
       <EstateDetailWrap>
         {renderEstateDetailInfo(estate)}
-        {renderOwnedDividendTable(estate.filterDistributedDividendHistories())}
+        {renderOwnedDividendHistoryTable(
+          estate.filterDistributedDividendHistories()
+        )}
         <Spin spinning={isTxBroadcasting} tip="Broadcasting...">
           <EstateOrderTab
             user={user}
