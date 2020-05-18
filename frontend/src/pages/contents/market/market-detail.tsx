@@ -41,6 +41,15 @@ export class MarketDetail extends React.Component<Props, State> {
     };
   }
 
+  getEstateTimerId = 0;
+  componentWillUnmount() {
+    this.getEstateTimerId !== 0 && clearTimeout(this.getEstateTimerId);
+  }
+
+  async componentDidMount() {
+    await this.getEstate();
+  }
+
   async componentDidUpdate(
     prevProps: Readonly<Props>,
     prevStates: Readonly<State>
@@ -49,17 +58,9 @@ export class MarketDetail extends React.Component<Props, State> {
       await this.getEstate();
     }
 
-    if (
-      prevStates.estate.tokenId !== this.state.estate.tokenId ||
-      prevStates.estate.sellOrders.length !==
-        this.state.estate.sellOrders.length
-    ) {
+    if (prevStates.estate.tokenId !== this.state.estate.tokenId) {
       await this.getEstate();
     }
-  }
-
-  async componentDidMount() {
-    await this.getEstate();
   }
 
   async getEstate() {
@@ -81,12 +82,38 @@ export class MarketDetail extends React.Component<Props, State> {
       this.setState({
         estate
       });
+      await this.getEstateTimer();
     } catch (e) {
       message.error(JSON.stringify(e));
       history.push(PATHS.MARKET);
       return;
     }
   }
+
+  getEstateTimer = () => {
+    this.getEstateTimerId !== 0 && clearTimeout(this.getEstateTimerId);
+    this.getEstateTimerId = window.setTimeout(async () => {
+      try {
+        const {
+          user: {address},
+          repos: {estateRepo}
+        } = this.props;
+        const {estate} = this.state;
+
+        const newEstate = await estateRepo.getMarketEstate(
+          estate.tokenId,
+          address
+        );
+        this.setState({
+          estate: newEstate
+        });
+      } catch (e) {
+        log.error(e);
+      } finally {
+        await this.getEstateTimer();
+      }
+    }, 10000);
+  };
 
   handleSellOrderButtonClick = (selectedSellOrder: SellOrder) => () => {
     this.setState({
@@ -97,7 +124,7 @@ export class MarketDetail extends React.Component<Props, State> {
 
   renderSellOrderModal = (estate: MarketEstate) => {
     const {
-      user: {address, mnemonic},
+      user: {address, mnemonic, isWhitelisted},
       repos: {estateRepo, orderRepo, userRepo}
     } = this.props;
 
@@ -124,6 +151,13 @@ export class MarketDetail extends React.Component<Props, State> {
           onOK={() => {
             this.setState({sellOrderModalConfirmLoading: true}, async () => {
               try {
+                if (!isWhitelisted) {
+                  message.error(
+                    "Your account is not included in the Whitelist."
+                  );
+                  return;
+                }
+
                 const crossTx: CrossTx = await orderRepo.getBuyRequestTx(
                   selectedSellOrder,
                   address

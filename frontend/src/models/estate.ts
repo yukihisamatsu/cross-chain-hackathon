@@ -1,12 +1,7 @@
 import {DividendHistory, DividendOwner} from "~models/dividend";
 import {User} from "~models/user";
 import {Unbox} from "~src/heplers/util-types";
-import {
-  BuyOffer,
-  OFFER_STATUS,
-  ORDER_STATUS,
-  SellOrder
-} from "~src/models/order";
+import {BuyOffer, ORDER_STATUS, SellOrder} from "~src/models/order";
 import {Address} from "~src/types";
 
 export const ESTATE_STATUS = {
@@ -147,28 +142,33 @@ export class OwnedEstate extends Estate {
     return ESTATE_STATUS.OWNED;
   }
 
+  sortSellOrdersByUpdateAtDesc() {
+    return SellOrder.sortUpdateAtDesc(this.sellOrders);
+  }
+
   findActiveSellOrder = (): SellOrder | null => {
     return (
-      SellOrder.sortDateDesc(this.sellOrders).find(
+      this.sortSellOrdersByUpdateAtDesc().find(
         order => order.status === ORDER_STATUS.OPENED
       ) ?? null
     );
   };
 
   filterAllOwnedSellOrdersBuyOffers = (owner: Address): BuyOffer[] => {
-    const ret = SellOrder.sortDateDesc(this.sellOrders)
+    const buyOffers = this.sortSellOrdersByUpdateAtDesc()
       .filter(order => order.isOwned(owner) && !order.isCancelled())
       .flatMap(order => order.buyOffers);
 
-    return BuyOffer.sortDateDesc(ret);
+    return BuyOffer.sortDateDesc(buyOffers);
   };
 
   filterOwnedBuyOffers = (offerer: Address): BuyOffer[] => {
-    const ret = SellOrder.sortDateDesc(this.sellOrders)
+    const buyOffers = this.sortSellOrdersByUpdateAtDesc()
+      .filter(order => !order.isCancelled())
       .flatMap(order => order.buyOffers)
       .filter(buyOffer => buyOffer.isOwned(offerer));
 
-    return BuyOffer.sortDateDesc(ret);
+    return BuyOffer.sortDateDesc(buyOffers);
   };
 
   filterDistributedDividendHistories = (): DividendHistory[] => {
@@ -230,14 +230,7 @@ export class MarketEstate extends Estate {
 
   getUnOfferedSellOrders(user: User): SellOrder[] {
     return this.sellOrders.filter(
-      order =>
-        order.status === ORDER_STATUS.OPENED &&
-        order.owner !== user.address &&
-        !order.buyOffers.find(
-          offer =>
-            offer.offerer === user.address &&
-            offer.status === OFFER_STATUS.OPENED
-        )
+      order => order.isOpened() && order.isUnOffered(user.address)
     );
   }
 }

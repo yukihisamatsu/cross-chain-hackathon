@@ -13,14 +13,8 @@ import {
   MarketEstate,
   OwnedEstate
 } from "~models/estate";
-import {BuyOffer, SellOrder} from "~models/order";
-import {
-  Estate as EstateDAO,
-  EstateApi,
-  TradeApi,
-  TradeType,
-  UserApi
-} from "~src/libs/api";
+import {SellOrder} from "~models/order";
+import {Estate as EstateDAO, EstateApi, TradeApi, UserApi} from "~src/libs/api";
 import {EstateContract} from "~src/libs/cosmos/contract/estate";
 import {GetTxsResponseTx, RestClient} from "~src/libs/cosmos/rest-client";
 import {BaseRepo} from "~src/repos/base";
@@ -104,28 +98,11 @@ export class EstateRepository extends BaseRepo {
       trades
     } = dao;
 
-    const sellOrders: SellOrder[] = trades
-      .filter(trade => {
-        return (
-          trade.type === TradeType.SELL &&
-          trade.seller !== owner &&
-          trade.estateId === tokenId
-        );
-      })
-      .map(({id, amount, seller, unitPrice, status, requests, updatedAt}) => {
-        return new SellOrder({
-          tradeId: id,
-          tokenId,
-          owner: seller,
-          perUnitPrice: unitPrice,
-          quantity: amount,
-          status: SellOrder.getStatus(status),
-          buyOffers: Array.isArray(requests)
-            ? requests.map(req => BuyOffer.from(req, amount, unitPrice))
-            : [],
-          updatedAt
-        });
-      });
+    const sellOrders: SellOrder[] = SellOrder.toMarketSellOrders(
+      trades,
+      owner,
+      tokenId
+    );
 
     return new MarketEstate({
       tokenId,
@@ -180,40 +157,11 @@ export class EstateRepository extends BaseRepo {
 
     const units = await this.estateContract.balanceOf(owner, tokenId);
 
-    const sellOrders: SellOrder[] = trades
-      .filter(trade => {
-        return (
-          (trade.seller === owner ||
-            trade.requests.find(req => req.from === owner)) &&
-          trade.estateId === tokenId
-        );
-      })
-      .map(trade => {
-        const {
-          id: tradeId,
-          estateId: tokenId,
-          seller: owner,
-          amount: quantity,
-          unitPrice: perUnitPrice,
-          // buyer,
-          requests,
-          status,
-          updatedAt
-        } = trade;
-
-        return new SellOrder({
-          tradeId,
-          tokenId,
-          owner,
-          quantity,
-          perUnitPrice,
-          status: SellOrder.getStatus(status),
-          buyOffers: Array.isArray(requests)
-            ? requests.map(req => BuyOffer.from(req, quantity, perUnitPrice))
-            : [],
-          updatedAt
-        });
-      });
+    const sellOrders: SellOrder[] = SellOrder.toOwnedSellOrders(
+      trades,
+      owner,
+      tokenId
+    );
 
     return new OwnedEstate({
       tokenId,
