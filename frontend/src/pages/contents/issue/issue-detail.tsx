@@ -41,7 +41,6 @@ interface State {
   selectedHistory: DividendHistory;
   distributedModalVisible: boolean;
   distributedModalConfirmLoading: boolean;
-  txStatusRetryCount: number;
   isTxBroadcasting: boolean;
 }
 
@@ -58,7 +57,6 @@ export class IssueDetail extends React.Component<Props, State> {
       selectedHistory: DividendHistory.default(),
       distributedModalVisible: false,
       distributedModalConfirmLoading: false,
-      txStatusRetryCount: 0,
       isTxBroadcasting: false
     };
   }
@@ -163,8 +161,7 @@ export class IssueDetail extends React.Component<Props, State> {
     this.setState(
       {
         registerModalConfirmLoading: true,
-        isTxBroadcasting: true,
-        txStatusRetryCount: 0
+        isTxBroadcasting: true
       },
       async () => {
         try {
@@ -214,6 +211,7 @@ export class IssueDetail extends React.Component<Props, State> {
           log.debug("response", response);
 
           await this.registerTxStatusTimer(selectedHistory, async () => {
+            message.info("successfully broadcast Tx");
             const newEstate = await estateRepo.getIssuerEstate(
               estate.tokenId,
               address
@@ -221,8 +219,7 @@ export class IssueDetail extends React.Component<Props, State> {
             this.setState({
               estate: newEstate,
               selectedHistory: DividendHistory.default(),
-              isTxBroadcasting: false,
-              txStatusRetryCount: 0
+              isTxBroadcasting: false
             });
           });
         } catch (e) {
@@ -240,14 +237,6 @@ export class IssueDetail extends React.Component<Props, State> {
     onSuccess: () => Promise<void> | void
   ) => {
     this.timeOutId !== 0 && clearTimeout(this.timeOutId);
-
-    const {txStatusRetryCount} = this.state;
-    log.debug("txStatusRetryCount", txStatusRetryCount);
-
-    if (txStatusRetryCount === 10) {
-      throw new Error("retry count exceeded.");
-    }
-
     this.timeOutId = window.setTimeout(async () => {
       try {
         const {
@@ -267,11 +256,9 @@ export class IssueDetail extends React.Component<Props, State> {
           return;
         }
 
-        this.setState({txStatusRetryCount: txStatusRetryCount + 1});
         await this.registerTxStatusTimer(history, onSuccess);
       } catch (e) {
         log.error(e);
-        this.setState({txStatusRetryCount: txStatusRetryCount + 1});
         await this.registerTxStatusTimer(history, onSuccess);
       }
     }, 3000);
@@ -327,8 +314,7 @@ export class IssueDetail extends React.Component<Props, State> {
     this.setState(
       {
         distributedModalConfirmLoading: true,
-        isTxBroadcasting: true,
-        txStatusRetryCount: 0
+        isTxBroadcasting: true
       },
       async () => {
         try {
@@ -361,11 +347,10 @@ export class IssueDetail extends React.Component<Props, State> {
             sequence,
             mnemonic
           });
-          log.debug("sig", sig);
 
           crossTx.value.signatures = [sig];
-
           log.debug("crossTx with sign", crossTx);
+
           const response = await dividendRepo.broadcastDistributeTx(
             crossTx.value
           );
@@ -384,6 +369,7 @@ export class IssueDetail extends React.Component<Props, State> {
             (await this.distributeTxStatusTimer(
               response.data,
               async () => {
+                message.info("successfully broadcast Tx");
                 const newEstate = await estateRepo.getIssuerEstate(
                   estate.tokenId,
                   address
@@ -391,8 +377,7 @@ export class IssueDetail extends React.Component<Props, State> {
                 this.setState({
                   estate: newEstate,
                   selectedHistory: DividendHistory.default(),
-                  isTxBroadcasting: false,
-                  txStatusRetryCount: 0
+                  isTxBroadcasting: false
                 });
               },
               errorMessage => {
@@ -406,8 +391,7 @@ export class IssueDetail extends React.Component<Props, State> {
                 });
                 this.setState({
                   estate,
-                  isTxBroadcasting: false,
-                  txStatusRetryCount: 0
+                  isTxBroadcasting: false
                 });
               }
             ));

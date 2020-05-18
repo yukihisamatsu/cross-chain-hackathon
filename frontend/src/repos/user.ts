@@ -79,7 +79,7 @@ export class UserRepository {
     mnemonic: string;
   }) => {
     const address = Cosmos.getAddress(mnemonic);
-    let balance = -1;
+    let balance = 0;
     try {
       balance = await this.balanceOf(address);
     } catch (e) {
@@ -105,13 +105,7 @@ export class UserRepository {
   };
 
   balanceOf = async (address: Address): Promise<number> => {
-    let balance = -1;
-    try {
-      balance = (await this.coinContract.balanceOf(address)).toNumber();
-    } catch (e) {
-      log.error(e);
-    }
-    return balance;
+    return (await this.coinContract.balanceOf(address)).toNumber();
   };
 
   isWhitelisted = async (self: Address): Promise<boolean> => {

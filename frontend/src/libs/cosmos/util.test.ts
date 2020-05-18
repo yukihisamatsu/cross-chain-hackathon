@@ -2,12 +2,7 @@ import {decodePubKeySecp256k1} from "@tendermint/amino-js";
 import * as secp256k1 from "secp256k1";
 
 import {CrossTx} from "~src/libs/api";
-import {
-  COORDINATOR_CHAIN_ID,
-  Cosmos,
-  Cross,
-  sortObjectByKey
-} from "~src/libs/cosmos/util";
+import {Cosmos, Cross, sortObjectByKey} from "~src/libs/cosmos/util";
 
 describe("cosmos lib", () => {
   const alice =

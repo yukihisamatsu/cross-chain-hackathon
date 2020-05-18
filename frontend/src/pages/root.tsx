@@ -48,7 +48,7 @@ export class Root extends React.Component<Props, State> {
 
   async componentDidUpdate(_: Readonly<Props>, prevState: Readonly<State>) {
     if (prevState.user.address === this.state.user.address) {
-      await this.balanceOfCoinTimer(this.state.user);
+      await this.balanceOfCoinTimer();
     }
   }
 
@@ -56,38 +56,45 @@ export class Root extends React.Component<Props, State> {
     const {
       repos: {userRepo}
     } = this.props;
-    const balance = user.address ? await userRepo.balanceOf(user.address) : 0;
+    let balance: number;
+    try {
+      balance = user.address ? await userRepo.balanceOf(user.address) : 0;
+    } catch (e) {
+      balance = user.balance;
+      log.error(e);
+    }
     const isWhitelisted = user.address
       ? await userRepo.isWhitelisted(user.address)
       : false;
-    this.setState({user: {...user, balance, isWhitelisted}});
-    this.balanceOfCoinTimer(user).catch(log.error);
+    this.setState({user: {...user, balance, isWhitelisted}}, () => {
+      this.balanceOfCoinTimer().catch(log.error);
+    });
   };
 
-  balanceOfCoinTimer = async (_: User) => {
+  balanceOfCoinTimer = async () => {
     const {
       repos: {userRepo}
     } = this.props;
-    const {user} = this.state;
-
     this.timeOutId !== 0 && clearTimeout(this.timeOutId);
+    const {user} = this.state;
     if (!user.address) {
       return;
     }
     this.timeOutId = window.setTimeout(async () => {
+      let balance: number;
       try {
-        const balance = await userRepo.balanceOf(user.address);
-        this.setState({
-          user: {
-            ...user,
-            balance
-          }
-        });
+        balance = await userRepo.balanceOf(user.address);
       } catch (e) {
+        balance = user.balance;
         log.error(e);
-      } finally {
-        await this.balanceOfCoinTimer(user);
       }
+      this.setState({
+        user: {
+          ...user,
+          balance
+        }
+      });
+      await this.balanceOfCoinTimer();
     }, 10000);
   };
 

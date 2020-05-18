@@ -103,12 +103,25 @@ export class OrderRepository extends BaseRepo {
     });
   };
 
+  getBuyOffers = async (
+    address: Address,
+    quantity: number,
+    perUnitPrice: number
+  ): Promise<BuyOffer[]> => {
+    const tradeRequests = await this.apiRequest(async () => {
+      // FIXME
+      return this.tradeApi.getTradeRequestsByUserId(address);
+    });
+
+    return tradeRequests.map(r => BuyOffer.from(r, quantity, perUnitPrice));
+  };
+
   getBuyOffer = async (
     offer: BuyOffer,
     quantity: number,
     perUnitPrice: number
   ): Promise<BuyOffer> => {
-    const response = await this.apiRequest(() => {
+    const response = await this.apiRequest(async () => {
       return this.tradeApi.getTradeRequestById(offer.offerId);
     });
 
