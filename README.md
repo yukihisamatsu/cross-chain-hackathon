@@ -14,7 +14,7 @@ Therefore, we thought that the smart contract between the two blockchains should
 To solve such problem, we need to be able to execute All or Nothing reservation contracts that exist in two different chains, rather than pegging to single blockchain.
 
 For this reason, we decided to develop Cross Framework and take the approach of applying it.
-The following is the following: https://github.com/datachainlab/cross
+Cross Framework spec is the following: https://github.com/datachainlab/cross
 
 ## Conditions
 
