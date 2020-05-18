@@ -4,9 +4,11 @@ import {DateTime} from "luxon";
 import {Unbox} from "~src/heplers/util-types";
 import {
   CrossTx,
+  Trade,
   TradeRequest,
   TradeRequestStatus,
-  TradeStatus
+  TradeStatus,
+  TradeType
 } from "~src/libs/api";
 import {Address} from "~src/types";
 
@@ -97,11 +99,68 @@ export class SellOrder extends Order {
     this.updatedAt = updatedAt;
   }
 
-  static sortDateDesc = (sellOrders: SellOrder[]) => {
+  static sortUpdateAtDesc = (sellOrders: SellOrder[]) => {
     return sellOrders.sort((a: SellOrder, b: SellOrder) => {
       const aTime = DateTime.fromISO(a.updatedAt).toSeconds();
       const bTime = DateTime.fromISO(b.updatedAt).toSeconds();
       return aTime < bTime ? 1 : -1;
+    });
+  };
+
+  static toMarketSellOrders = (
+    trades: Trade[],
+    owner: Address,
+    tokenId: string
+  ) =>
+    trades
+      .filter(trade => {
+        return (
+          trade.type === TradeType.SELL &&
+          trade.seller !== owner &&
+          trade.estateId === tokenId
+        );
+      })
+      .map(SellOrder.fromTrade);
+
+  static toOwnedSellOrders = (
+    trades: Trade[],
+    owner: Address,
+    tokenId: string
+  ) =>
+    trades
+      .filter(trade => {
+        return (
+          (trade.seller === owner ||
+            trade.requests.find(req => req.from === owner)) &&
+          trade.estateId === tokenId
+        );
+      })
+      .map(SellOrder.fromTrade);
+
+  static fromTrade = (trade: Trade): SellOrder => {
+    const {
+      id: tradeId,
+      estateId: tokenId,
+      seller: owner,
+      amount: quantity,
+      unitPrice: perUnitPrice,
+      // buyer,
+      requests,
+      status,
+      updatedAt
+    } = trade;
+
+    return new SellOrder({
+      tradeId,
+      tokenId,
+      owner,
+      quantity,
+      perUnitPrice,
+      status: SellOrder.getStatus(status),
+      buyOffers: Array.isArray(requests)
+        ? requests.map(req => BuyOffer.from(req, quantity, perUnitPrice))
+        : [],
+      updatedAt
     });
   };
 
@@ -120,9 +179,14 @@ export class SellOrder extends Order {
   isOffering(owner: Address) {
     return (
       !this.isOwned(owner) &&
-      this.buyOffers.find(
-        offer => offer.isOwned(owner) && offer.status === OFFER_STATUS.OPENED
-      )
+      this.buyOffers.find(offer => offer.getOwnedOpenedOffers(owner))
+    );
+  }
+
+  isUnOffered(owner: Address) {
+    return (
+      !this.isOwned(owner) &&
+      !this.buyOffers.find(offer => offer.getOwnedOpenedOffers(owner))
     );
   }
 }
@@ -225,6 +289,10 @@ export class BuyOffer {
       return aTime < bTime ? 1 : -1;
     });
   };
+
+  getOwnedOpenedOffers(owner: Address) {
+    return this.isOwned(owner) && this.status === OFFER_STATUS.OPENED;
+  }
 
   isActive(): boolean {
     return (

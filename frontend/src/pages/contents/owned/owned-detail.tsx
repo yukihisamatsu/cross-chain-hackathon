@@ -65,9 +65,11 @@ export class OwnedDetail extends React.Component<Props, State> {
     };
   }
 
-  timeOutId = 0;
+  getEstateTimerId = 0;
+  getTxStatusTimerId = 0;
   componentWillUnmount() {
-    this.timeOutId !== 0 && clearTimeout(this.timeOutId);
+    this.getEstateTimerId !== 0 && clearTimeout(this.getEstateTimerId);
+    this.getTxStatusTimerId !== 0 && clearTimeout(this.getTxStatusTimerId);
   }
 
   async componentDidMount() {
@@ -104,18 +106,43 @@ export class OwnedDetail extends React.Component<Props, State> {
       },
       history
     } = this.props;
-
     try {
       const estate = await estateRepo.getOwnedEstate(id, address);
       setHeaderText(estate.name);
       this.setState({
         estate
       });
+      await this.getEstateTimer();
     } catch (e) {
       message.error(JSON.stringify(e));
       history.push(PATHS.OWNED);
     }
   }
+
+  getEstateTimer = () => {
+    this.getEstateTimerId !== 0 && clearTimeout(this.getEstateTimerId);
+    this.getEstateTimerId = window.setTimeout(async () => {
+      try {
+        const {
+          user: {address},
+          repos: {estateRepo}
+        } = this.props;
+        const {estate} = this.state;
+
+        const newEstate = await estateRepo.getOwnedEstate(
+          estate.tokenId,
+          address
+        );
+        this.setState({
+          estate: newEstate
+        });
+      } catch (e) {
+        log.error(e);
+      } finally {
+        await this.getEstateTimer();
+      }
+    }, 10000);
+  };
 
   handleSellOrderButtonClick = (values: {[key: string]: string | number}) => {
     const unit = values["unit"] as number;
@@ -237,7 +264,7 @@ export class OwnedDetail extends React.Component<Props, State> {
           log.debug("response", response);
 
           response.data &&
-            (await this.txStatusTimer(
+            (await this.getTxStatusTimer(
               response.data,
               selectedBuyOffer,
               async () => {
@@ -264,13 +291,13 @@ export class OwnedDetail extends React.Component<Props, State> {
     );
   };
 
-  txStatusTimer = async (
+  getTxStatusTimer = async (
     txId: HexEncodedString,
     selectedBuyOffer: BuyOffer,
     onSuccess: () => Promise<void>
   ) => {
-    this.timeOutId !== 0 && clearTimeout(this.timeOutId);
-    this.timeOutId = window.setTimeout(async () => {
+    this.getTxStatusTimerId !== 0 && clearTimeout(this.getTxStatusTimerId);
+    this.getTxStatusTimerId = window.setTimeout(async () => {
       try {
         const {
           user: {address},
@@ -301,10 +328,10 @@ export class OwnedDetail extends React.Component<Props, State> {
           this.setState({estate: newEstate});
         }
 
-        await this.txStatusTimer(txId, newBuyOffer, onSuccess);
+        await this.getTxStatusTimer(txId, newBuyOffer, onSuccess);
       } catch (e) {
         log.error(e);
-        await this.txStatusTimer(txId, selectedBuyOffer, onSuccess);
+        await this.getTxStatusTimer(txId, selectedBuyOffer, onSuccess);
       }
     }, 3000);
   };
