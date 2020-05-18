@@ -11,6 +11,7 @@ package api
 
 import (
 	"encoding/binary"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -78,6 +79,9 @@ func (s *TxApiService) GetTxDividend(estateId string, perShare int64) (interface
 	}
 	ccrs := []ContractCallResult{*pay}
 	cis := []ChannelInfo{s.config.Path[KEY_CO_SECURITY]}
+
+	dividends := []uint64{}
+	targetAddrs := []string{}
 	for _, addr := range addrs {
 		dividendResult, err := cross.SimulateContractCall(
 			issuer,
@@ -92,17 +96,23 @@ func (s *TxApiService) GetTxDividend(estateId string, perShare int64) (interface
 		if dividend == 0 {
 			continue
 		}
-		transfer, err := cross.SimulateContractCall(
-			issuer,
-			genCoinTransferCallInfo(s.config, addr, dividend),
-			s.config.Node[KEY_COIN],
-		)
-		if err != nil {
-			return nil, err
-		}
-		ccrs = append(ccrs, *transfer)
-		cis = append(cis, s.config.Path[KEY_CO_COIN])
+		dividends = append(dividends, dividend)
+		targetAddrs = append(targetAddrs, addr)
 	}
+	if len(targetAddrs) == 0 {
+		return nil, fmt.Errorf("target address is empty.")
+	}
+	transferBatch, err := cross.SimulateContractCall(
+		issuer,
+		genCoinTransferBatchCallInfo(s.config, targetAddrs, dividends),
+		s.config.Node[KEY_COIN],
+	)
+	if err != nil {
+		return nil, err
+	}
+	ccrs = append(ccrs, *transferBatch)
+	cis = append(cis, s.config.Path[KEY_CO_COIN])
+
 	crossTx, err := cross.GenerateMsgInitiate(
 		issuer,
 		cis,
@@ -192,6 +202,24 @@ func genCoinTransferCallInfo(c Config, to string, amount uint64) types.ContractC
 		[][]byte{
 			[]byte(to),
 			uint64ToByte(amount),
+		},
+	}
+}
+
+func genCoinTransferBatchCallInfo(c Config, tos []string, amounts []uint64) types.ContractCallInfo {
+	tosB := []byte{}
+	amountsB := []byte{}
+	for i, to := range tos {
+		tosB = append(tosB, []byte(to)...)
+		amountsB = append(amountsB, uint64ToByte(amounts[i])...)
+	}
+
+	return types.ContractCallInfo{
+		c.Contract[KEY_COIN].Id,
+		"transferBatch",
+		[][]byte{
+			tosB,
+			amountsB,
 		},
 	}
 }
