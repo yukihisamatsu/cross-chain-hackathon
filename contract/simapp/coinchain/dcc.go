@@ -2,6 +2,7 @@ package coinchain
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 
 	"github.com/datachainlab/cross-chain-hackathon/contract/simapp/common"
@@ -18,6 +19,7 @@ const (
 	FnNameBalanceOf         = "balanceOf"
 	FnNameMint              = "mint"
 	FnNameTransfer          = "transfer"
+	FnNameTransferBatch     = "transferBatch"
 	FnNameTotalSupply       = "totalSupply"
 	EventNameTransfer       = "Transfer"
 )
@@ -44,6 +46,9 @@ func GetDatachainCoinContract() contract.Contract {
 		},
 		{
 			Name: FnNameTransfer, F: transfer,
+		},
+		{
+			Name: FnNameTransferBatch, F: transferBatch,
 		},
 		{
 			Name: "getSigner", F: getSigner,
@@ -144,6 +149,71 @@ func transfer(ctx contract.Context, store cross.Store) ([]byte, error) {
 	}
 	emitTransfer(ctx, from, to, value)
 	return contract.ToBytes(true), nil
+}
+
+// transferBatch(address _to, uint256 _value) public returns (bool success)
+func transferBatch(ctx contract.Context, store cross.Store) ([]byte, error) {
+	args := ctx.Args()
+	if err := common.VerifyArgsLength(args, 2); err != nil {
+		return nil, err
+	}
+	from := ctx.Signers()[0]
+	tos, err := splitAddrs(args[0])
+	if err != nil {
+		return nil, ErrorInvalidArg
+	}
+	values, err := splitUInt64s(args[1])
+	if err != nil {
+		return nil, ErrorInvalidArg
+	}
+	if len(tos) != len(values) {
+		return nil, ErrorInvalidArg
+	}
+	sums := uint64(0)
+	for _, v := range values {
+		sums += v
+	}
+	if fromAmount, ok := safemath.Sub64(getAmount(from, store), sums); ok {
+		setAmount(from, fromAmount, store)
+	} else {
+		return nil, fmt.Errorf("unsufficient amount of %s: %d", from.String(), getAmount(from, store))
+	}
+
+	for i, to := range tos {
+		if toAmount, ok := safemath.Add64(getAmount(to, store), values[i]); ok {
+			setAmount(to, toAmount, store)
+		} else {
+			return nil, ErrorAdditionOverflow
+		}
+		emitTransfer(ctx, from, to, values[i])
+	}
+	return contract.ToBytes(true), nil
+}
+
+func splitUInt64s(b []byte) ([]uint64, error) {
+	buf := bytes.NewBuffer(b)
+	res := make([]uint64, (len(b)+7)/8)
+	err := binary.Read(buf, binary.BigEndian, &res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func splitAddrs(b []byte) ([]sdk.AccAddress, error) {
+	size := 45 // string address
+	l := (len(b) + (size - 1)) / size
+	res := make([]sdk.AccAddress, l)
+	for i := 0; i < l; i++ {
+		start := i * size
+		ab := b[start:(start + size)]
+		addr, err := common.GetAccAddress(ab)
+		if err != nil {
+			return nil, err
+		}
+		res[i] = addr
+	}
+	return res, nil
 }
 
 func emitTransfer(ctx contract.Context, from, to sdk.AccAddress, value uint64) {
