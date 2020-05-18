@@ -161,26 +161,25 @@ export class MarketDetail extends React.Component<Props, State> {
                   return;
                 }
 
-                // FIXME
-                // const openedBuyOffer = (
-                //   await orderRepo.getBuyOffers(
-                //     address,
-                //     selectedSellOrder.quantity,
-                //     selectedSellOrder.perUnitPrice
-                //   )
-                // ).find(offer =>
-                //   offer.getAnotherOpenedOffer(
-                //     address,
-                //     selectedSellOrder.tradeId
-                //   )
-                // );
-                //
-                // if (openedBuyOffer) {
-                //   message.error(
-                //     "You can't place a new buy order because you have already done another one."
-                //   );
-                //   return;
-                // }
+                const openedBuyOffer = (
+                  await orderRepo.getOpenedBuyOffers(
+                    address,
+                    selectedSellOrder.quantity,
+                    selectedSellOrder.perUnitPrice
+                  )
+                ).find(offer =>
+                  offer.getAnotherOpenedOffer(
+                    address,
+                    selectedSellOrder.tradeId
+                  )
+                );
+
+                if (openedBuyOffer) {
+                  message.error(
+                    "You can't place a new buy order because you have already done another one."
+                  );
+                  return;
+                }
 
                 const crossTx: CrossTx = await orderRepo.getBuyRequestTx(
                   selectedSellOrder,

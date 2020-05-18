@@ -152,11 +152,27 @@ func (c *TradeApiController) GetTradeRequestById(w http.ResponseWriter, r *http.
 	EncodeJSONResponse(result, nil, w)
 }
 
-// GetTradeRequestsByUserId - get requests by user id
+// GetTradeRequestsByUserIdAndStatus - get requests by user id
 func (c *TradeApiController) GetTradeRequestsByUserId(w http.ResponseWriter, r *http.Request) {
+	var err error
 	query := r.URL.Query()
 	userId := query.Get("userId")
-	result, err := c.service.GetTradeRequestsByUserId(userId)
+	tsQuery := query.Get("tradeStatus")
+	trQuery := query.Get("tradeRequestStatus")
+
+	tStatus, err := parseIntParameter(tsQuery)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	trStatus, err := parseIntParameter(trQuery)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	result, err := c.service.GetTradeRequestsByUserId(userId, TradeStatus(tStatus), TradeRequestStatus(trStatus))
 	if err != nil {
 		w.WriteHeader(HttpStatus(err))
 		return

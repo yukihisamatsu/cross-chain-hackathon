@@ -6,6 +6,7 @@ import {
   StdTx,
   TradeApi,
   TradeRequest,
+  TradeRequestStatus,
   TradeStatus,
   TradeType,
   TxApi
@@ -103,14 +104,17 @@ export class OrderRepository extends BaseRepo {
     });
   };
 
-  getBuyOffers = async (
+  getOpenedBuyOffers = async (
     address: Address,
     quantity: number,
     perUnitPrice: number
   ): Promise<BuyOffer[]> => {
     const tradeRequests = await this.apiRequest(async () => {
-      // FIXME
-      return this.tradeApi.getTradeRequestsByUserId(address);
+      return this.tradeApi.getTradeRequestsByUserId(
+        address,
+        TradeStatus.TRADE_OPENED,
+        TradeRequestStatus.REQUEST_OPENED
+      );
     });
 
     return tradeRequests.map(r => BuyOffer.from(r, quantity, perUnitPrice));

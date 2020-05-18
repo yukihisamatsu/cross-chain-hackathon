@@ -167,7 +167,7 @@ paths:
 
   /trade_requests:
     get:
-      summary: get requests by user id
+      summary: get requests by user id and status
       operationId: getTradeRequestsByUserId
       tags:
         - trade
@@ -178,6 +178,18 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/user_id"
+        - name: tradeStatus
+          in: query
+          description: trade status
+          required: true
+          schema:
+            $ref: "#/components/schemas/TradeStatus"
+        - name: tradeRequestStatus
+          in: query
+          description: trade request status
+          required: true
+          schema:
+            $ref: "#/components/schemas/TradeRequestStatus"
       responses:
         "200":
           description: success to post
