@@ -28,6 +28,7 @@ interface Props extends RouteComponentProps<{id: string}> {
   config: Config;
   repos: Repositories;
   user: User;
+  setUser: (user: User) => Promise<void>;
   setHeaderText: (headerText: string) => void;
 }
 
@@ -310,6 +311,7 @@ export class IssueDetail extends React.Component<Props, State> {
               };
             })
           );
+          crossTx.value.memo = selectedHistory.registeredTxHash;
 
           const {
             accountNumber,
@@ -345,6 +347,8 @@ export class IssueDetail extends React.Component<Props, State> {
               response.data,
               async () => {
                 message.info("successfully broadcast Tx");
+                const {user, setUser} = this.props;
+                await setUser(user);
                 const newEstate = await estateRepo.getIssuerEstate(
                   estate.tokenId,
                   address

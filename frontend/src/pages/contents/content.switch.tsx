@@ -67,7 +67,7 @@ export const ContentSwitch = (props: Props) => {
       <Route
         path={`${PATHS.ISSUE}/:id`}
         render={props =>
-          renderIssueDetail(config, repos, user, setHeaderTitle, props)
+          renderIssueDetail(config, repos, user, setUser, setHeaderTitle, props)
         }
         exact={true}
       />
@@ -193,6 +193,7 @@ const renderIssueDetail = (
   config: Config,
   repos: Repositories,
   user: User,
+  setUser: (user: User) => Promise<void>,
   setHeaderTitle: (headerText: string) => void,
   rProps: RouteComponentProps<{id: string}>
 ) => {
@@ -202,6 +203,7 @@ const renderIssueDetail = (
         config={config}
         repos={repos}
         user={user}
+        setUser={setUser}
         setHeaderText={setHeaderTitle}
         {...rProps}
       />

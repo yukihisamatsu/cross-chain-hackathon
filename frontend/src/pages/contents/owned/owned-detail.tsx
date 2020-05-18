@@ -269,13 +269,13 @@ export class OwnedDetail extends React.Component<Props, State> {
               response.data,
               selectedBuyOffer,
               async () => {
+                const {user, setUser} = this.props;
+                await setUser(user);
+
                 const newEstate = await estateRepo.getOwnedEstate(
                   estate.tokenId,
                   address
                 );
-                const {user, setUser} = this.props;
-                await setUser(user);
-
                 if (newEstate.units === 0) {
                   history.push(PATHS.OWNED);
                   return;
