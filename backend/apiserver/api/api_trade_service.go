@@ -134,16 +134,27 @@ func (s *TradeApiService) GetTradeRequestById(id int64) (interface{}, error) {
 	return &tr, nil
 }
 
-// GetTradeRequestsByUserId - get requests by user id
-func (s *TradeApiService) GetTradeRequestsByUserId(userId string) (interface{}, error) {
+// GetTradeRequestsByUserIdAndStatus - get requests by user id
+func (s *TradeApiService) GetTradeRequestsByUserId(userId string, tradeStatus TradeStatus, tradeRequestStatus TradeRequestStatus) (interface{}, error) {
 	db, err := rdb.InitDB()
 	if err != nil {
 		log.Println(err)
 		return nil, ErrorFailedDBConnect
 	}
 
-	q := `SELECT id, tradeId, "from", crossTx, status, updatedAt FROM trade_request WHERE "from" = ?`
-	rows, err := db.Query(q, userId)
+	q := `
+SELECT
+       tr.id,
+       tr.tradeId, 
+       tr."from",
+       tr.crossTx, 
+       tr.status,
+       tr.updatedAt
+FROM trade_request as tr
+    INNER JOIN trade as t ON tr.tradeId = t.id
+WHERE tr."from" = ? AND t.status = ? AND tr.status = ?`
+
+	rows, err := db.Query(q, userId, tradeStatus, tradeRequestStatus)
 	if err != nil {
 		log.Println(err)
 		return nil, ErrorFailedDBGet

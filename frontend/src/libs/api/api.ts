@@ -686,7 +686,6 @@ export class DividendApi extends BaseAPI {
     public getDividendsByEstateId(estateId: string, options?: any) {
         return DividendApiFp(this.configuration).getDividendsByEstateId(estateId, options).then((request) => request(this.axios, this.basePath));
     }
-
 }
 
 
@@ -858,7 +857,6 @@ export class EstateApi extends BaseAPI {
     public getEstates(options?: any) {
         return EstateApiFp(this.configuration).getEstates(options).then((request) => request(this.axios, this.basePath));
     }
-
 }
 
 
@@ -1014,15 +1012,25 @@ export const TradeApiAxiosParamCreator = function (configuration?: Configuration
         },
         /**
          * 
-         * @summary get requests by user id
+         * @summary get requests by user id and status
          * @param {string} userId user id
+         * @param {TradeStatus} tradeStatus trade status
+         * @param {TradeRequestStatus} tradeRequestStatus trade request status
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTradeRequestsByUserId: async (userId: string, options: any = {}): Promise<RequestArgs> => {
+        getTradeRequestsByUserId: async (userId: string, tradeStatus: TradeStatus, tradeRequestStatus: TradeRequestStatus, options: any = {}): Promise<RequestArgs> => {
             // verify required parameter 'userId' is not null or undefined
             if (userId === null || userId === undefined) {
                 throw new RequiredError('userId','Required parameter userId was null or undefined when calling getTradeRequestsByUserId.');
+            }
+            // verify required parameter 'tradeStatus' is not null or undefined
+            if (tradeStatus === null || tradeStatus === undefined) {
+                throw new RequiredError('tradeStatus','Required parameter tradeStatus was null or undefined when calling getTradeRequestsByUserId.');
+            }
+            // verify required parameter 'tradeRequestStatus' is not null or undefined
+            if (tradeRequestStatus === null || tradeRequestStatus === undefined) {
+                throw new RequiredError('tradeRequestStatus','Required parameter tradeRequestStatus was null or undefined when calling getTradeRequestsByUserId.');
             }
             const localVarPath = `/trade_requests`;
             const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
@@ -1036,6 +1044,14 @@ export const TradeApiAxiosParamCreator = function (configuration?: Configuration
 
             if (userId !== undefined) {
                 localVarQueryParameter['userId'] = userId;
+            }
+
+            if (tradeStatus !== undefined) {
+                localVarQueryParameter['tradeStatus'] = tradeStatus;
+            }
+
+            if (tradeRequestStatus !== undefined) {
+                localVarQueryParameter['tradeRequestStatus'] = tradeRequestStatus;
             }
 
 
@@ -1188,13 +1204,15 @@ export const TradeApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary get requests by user id
+         * @summary get requests by user id and status
          * @param {string} userId user id
+         * @param {TradeStatus} tradeStatus trade status
+         * @param {TradeRequestStatus} tradeRequestStatus trade request status
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getTradeRequestsByUserId(userId: string, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TradeRequest>>> {
-            const localVarAxiosArgs = await TradeApiAxiosParamCreator(configuration).getTradeRequestsByUserId(userId, options);
+        async getTradeRequestsByUserId(userId: string, tradeStatus: TradeStatus, tradeRequestStatus: TradeRequestStatus, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TradeRequest>>> {
+            const localVarAxiosArgs = await TradeApiAxiosParamCreator(configuration).getTradeRequestsByUserId(userId, tradeStatus, tradeRequestStatus, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
                 const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
                 return axios.request(axiosRequestArgs);
@@ -1279,13 +1297,15 @@ export const TradeApiFactory = function (configuration?: Configuration, basePath
         },
         /**
          * 
-         * @summary get requests by user id
+         * @summary get requests by user id and status
          * @param {string} userId user id
+         * @param {TradeStatus} tradeStatus trade status
+         * @param {TradeRequestStatus} tradeRequestStatus trade request status
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getTradeRequestsByUserId(userId: string, options?: any): AxiosPromise<Array<TradeRequest>> {
-            return TradeApiFp(configuration).getTradeRequestsByUserId(userId, options).then((request) => request(axios, basePath));
+        getTradeRequestsByUserId(userId: string, tradeStatus: TradeStatus, tradeRequestStatus: TradeRequestStatus, options?: any): AxiosPromise<Array<TradeRequest>> {
+            return TradeApiFp(configuration).getTradeRequestsByUserId(userId, tradeStatus, tradeRequestStatus, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1367,14 +1387,16 @@ export class TradeApi extends BaseAPI {
 
     /**
      * 
-     * @summary get requests by user id
+     * @summary get requests by user id and status
      * @param {string} userId user id
+     * @param {TradeStatus} tradeStatus trade status
+     * @param {TradeRequestStatus} tradeRequestStatus trade request status
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof TradeApi
      */
-    public getTradeRequestsByUserId(userId: string, options?: any) {
-        return TradeApiFp(this.configuration).getTradeRequestsByUserId(userId, options).then((request) => request(this.axios, this.basePath));
+    public getTradeRequestsByUserId(userId: string, tradeStatus: TradeStatus, tradeRequestStatus: TradeRequestStatus, options?: any) {
+        return TradeApiFp(this.configuration).getTradeRequestsByUserId(userId, tradeStatus, tradeRequestStatus, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1400,7 +1422,6 @@ export class TradeApi extends BaseAPI {
     public postTradeRequest(postTradeRequestInput?: PostTradeRequestInput, options?: any) {
         return TradeApiFp(this.configuration).postTradeRequest(postTradeRequestInput, options).then((request) => request(this.axios, this.basePath));
     }
-
 }
 
 
@@ -1611,7 +1632,6 @@ export class TxApi extends BaseAPI {
     public getTxTradeRequest(tradeId: number, from: string, options?: any) {
         return TxApiFp(this.configuration).getTxTradeRequest(tradeId, from, options).then((request) => request(this.axios, this.basePath));
     }
-
 }
 
 
@@ -1783,7 +1803,6 @@ export class UserApi extends BaseAPI {
     public getUsers(options?: any) {
         return UserApiFp(this.configuration).getUsers(options).then((request) => request(this.axios, this.basePath));
     }
-
 }
 
 

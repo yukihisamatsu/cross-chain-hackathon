@@ -420,6 +420,8 @@ export class IssueDetail extends React.Component<Props, State> {
 
     const resetState = () =>
       this.setState({
+        registeredPerUnit: 0,
+        registeredTotal: 0,
         distributedModalVisible: false,
         distributedModalConfirmLoading: false
       });
