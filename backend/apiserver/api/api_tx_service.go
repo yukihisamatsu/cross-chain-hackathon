@@ -10,6 +10,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/binary"
 	"log"
 	"strconv"
@@ -65,6 +66,7 @@ func (s *TxApiService) GetTxDividend(estateId string, perShare int64) (interface
 		s.config.Node[KEY_SECURITY],
 	)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	index := binary.BigEndian.Uint64(indexResult.Result.ReturnValue)
@@ -74,10 +76,13 @@ func (s *TxApiService) GetTxDividend(estateId string, perShare int64) (interface
 		s.config.Node[KEY_SECURITY],
 	)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	ccrs := []ContractCallResult{*pay}
 	cis := []ChannelInfo{s.config.Path[KEY_CO_SECURITY]}
+
+	cumDividend := uint64(0)
 	for _, addr := range addrs {
 		dividendResult, err := cross.SimulateContractCall(
 			issuer,
@@ -85,6 +90,7 @@ func (s *TxApiService) GetTxDividend(estateId string, perShare int64) (interface
 			s.config.Node[KEY_SECURITY],
 		)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		dividend := binary.BigEndian.Uint64(dividendResult.Result.ReturnValue)
@@ -97,11 +103,20 @@ func (s *TxApiService) GetTxDividend(estateId string, perShare int64) (interface
 			genCoinTransferCallInfo(s.config, addr, dividend),
 			s.config.Node[KEY_COIN],
 		)
+		if err := correctTransferOpValue(cumDividend, transfer); err != nil {
+			log.Println(err)
+			return nil, err
+		}
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		ccrs = append(ccrs, *transfer)
 		cis = append(cis, s.config.Path[KEY_CO_COIN])
+
+		// for demo.
+		// for correcting op value
+		cumDividend += dividend
 	}
 	crossTx, err := cross.GenerateMsgInitiate(
 		issuer,
@@ -114,6 +129,14 @@ func (s *TxApiService) GetTxDividend(estateId string, perShare int64) (interface
 		return nil, err
 	}
 	return &crossTx, nil
+}
+
+func getIssuerBalance(ccr ContractCallResult) (uint64, error) {
+	b, err := base64StrToUint64(ccr.Result.OPs[0].Value.V)
+	if err != nil {
+		return 0, err
+	}
+	return b, err
 }
 
 // GetTxTradeRequest - get a CrossTx to be signed
@@ -228,6 +251,31 @@ func genPayDividendCallInfo(c Config, tokenId, index uint64) types.ContractCallI
 			uint64ToByte(index),
 		},
 	}
+}
+
+// HACK for demo only
+func correctTransferOpValue(cumDividend uint64, ccr *ContractCallResult) error {
+	ccrB, err := base64StrToUint64(ccr.Result.OPs[0].Value.V)
+	if err != nil {
+		return err
+	}
+	corrected := uint64ToBase64(ccrB - cumDividend)
+	ccr.Result.OPs[0].Value.V = corrected
+	return nil
+}
+
+func base64StrToUint64(str string) (uint64, error) {
+	strB, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint64(strB), nil
+}
+
+func uint64ToBase64(val uint64) string {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, val)
+	return base64.StdEncoding.EncodeToString(b)
 }
 
 // HACK
