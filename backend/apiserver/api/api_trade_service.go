@@ -10,12 +10,14 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
 
-	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
 	"github.com/jmoiron/sqlx"
+
+	"github.com/datachainlab/cross-chain-hackathon/backend/apiserver/rdb"
 )
 
 // TradeApiService is a service that implents the logic for the TradeApiServicer
@@ -166,25 +168,60 @@ func (s *TradeApiService) GetTradeRequestsByUserId(userId string) (interface{}, 
 }
 
 // PostTrade - post a new sell offer
-func (s *TradeApiService) PostTrade(trade Trade) (interface{}, error) {
+func (s *TradeApiService) PostTrade(trade Trade) (res interface{}, err error) {
 	db, err := rdb.InitDB()
 	if err != nil {
 		log.Println(err)
-		return nil, ErrorFailedDBConnect
+		err = ErrorFailedDBConnect
+		return
 	}
 
-	q := `INSERT INTO trade(estateId, unitPrice, amount, seller, type) values(?, ?, ?, ?, ?)`
-	if _, err := db.Exec(q, trade.EstateId, trade.UnitPrice, trade.Amount, trade.Seller, trade.Type); err != nil {
+	tx, err := db.BeginTx(
+		context.Background(),
+		&sql.TxOptions{Isolation: sql.LevelRepeatableRead},
+	)
+	if err != nil {
 		log.Println(err)
-		return nil, ErrorFailedDBSet
+		err = ErrorFailedDBBeginTx
+		return
 	}
 
-	res := &Trade{}
-	if err := db.Get(res, "select id, estateId, unitPrice, amount, seller, type, updatedAt from trade where rowid = last_insert_rowid()"); err != nil {
+	defer func() {
+		if err != nil {
+			if re := tx.Rollback(); re != nil {
+				err = ErrorFailedDBRollbackTx
+			}
+		}
+	}()
+
+	q := `SELECT id, estateId, unitPrice, amount, buyer, seller, type, status, updatedAt FROM trade WHERE estateId = ? AND seller = ? AND status = 0`
+	row := tx.QueryRow(q, trade.EstateId, trade.Seller)
+	opened := Trade{}
+	var buyer sql.NullString
+	if err = row.Scan(&opened.Id, &opened.EstateId, &opened.UnitPrice, &opened.Amount, &buyer, &opened.Seller, &opened.Type, &opened.Status, &opened.UpdatedAt); err == nil {
 		log.Println(err)
-		return nil, err
+		err = ErrorRecordAlreadyExit
+		return
 	}
-	return res, nil
+
+	q = `INSERT INTO trade(estateId, unitPrice, amount, seller, type) values(?, ?, ?, ?, ?)`
+	if _, err = tx.Exec(q, trade.EstateId, trade.UnitPrice, trade.Amount, trade.Seller, trade.Type); err != nil {
+		log.Println(err)
+		err = ErrorFailedDBSet
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+
+	t := &Trade{}
+	if err = db.Get(t, "select id, estateId, unitPrice, amount, seller, type, updatedAt from trade where rowid = last_insert_rowid()"); err != nil {
+		log.Println(err)
+		return
+	}
+	res = t
+
+	return
 }
 
 // PostTradeRequest - post a new trade request
